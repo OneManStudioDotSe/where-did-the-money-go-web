@@ -449,6 +449,8 @@ function App() {
         onOpenSettings={() => setShowSettingsPanel(true)}
         currentRoute={route}
         onNavigate={navigate}
+        hasData={transactions.length > 0}
+        onReset={handleClearData}
       />
 
       {/* Main Content */}

@@ -8,6 +8,8 @@ interface HeaderProps {
   onOpenSettings: () => void;
   currentRoute: string;
   onNavigate: (route: string) => void;
+  hasData?: boolean;
+  onReset?: () => void;
 }
 
 const navItems = [
@@ -17,7 +19,7 @@ const navItems = [
   { label: 'About', href: '#/about' },
 ];
 
-export function Header({ isDark, onToggleDark, onOpenSettings, currentRoute, onNavigate }: HeaderProps) {
+export function Header({ isDark, onToggleDark, onOpenSettings, currentRoute, onNavigate, hasData, onReset }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const isActive = (href: string) => {
@@ -95,6 +97,20 @@ export function Header({ isDark, onToggleDark, onOpenSettings, currentRoute, onN
 
             {/* Right Side Actions */}
             <div className="flex items-center gap-2">
+              {/* Start Over Button - Only show when data is loaded */}
+              {hasData && onReset && (
+                <button
+                  onClick={onReset}
+                  className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-danger-600 dark:hover:text-danger-400 hover:bg-danger-50 dark:hover:bg-danger-900/20 rounded-lg transition-colors"
+                  aria-label="Start over"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  <span>Start Over</span>
+                </button>
+              )}
+
               {/* Dark Mode Toggle */}
               <DarkModeToggle isDark={isDark} onToggle={onToggleDark} />
 
