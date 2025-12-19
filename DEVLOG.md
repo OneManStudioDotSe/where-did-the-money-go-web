@@ -673,6 +673,120 @@ npm run dev
 
 ---
 
+## Entry #012 - 2025-12-19
+
+### UI Overhaul - Phase 8 Complete
+
+**What was done:**
+- Implemented comprehensive UI overhaul including dark mode, multiple icon sets, and new layout components
+- Created 4 switchable icon sets: Emoji (default), Icons8 3D Fluency, Phosphor, OpenMoji
+- Added full dark mode support with system preference detection
+- Changed primary color theme from blue to teal/cyan (#14b8a6)
+- Built sticky header with logo, navigation, and mobile hamburger menu
+- Created footer with About, Disclaimer, Privacy links
+- Implemented hash-based routing for content pages
+- Created content pages: Features, How It Works, About, Privacy, Disclaimer
+- Built reusable Card component with variants (default, elevated, interactive)
+- Added dark mode classes (`dark:`) to ALL components in the application
+- Created Settings Context for app-wide settings without prop drilling
+
+**Key Features:**
+
+1. **Multiple Icon Sets:**
+   - Icon configuration in `src/config/icon-sets.ts`
+   - CDN-based loading for Icons8, Phosphor, OpenMoji
+   - CategoryIcon component handles all icon rendering
+   - Settings panel allows switching between sets
+
+2. **Dark Mode:**
+   - `useDarkMode` hook manages theme state
+   - Supports: light, dark, system (auto-detect)
+   - Persisted to localStorage
+   - DarkModeToggle component with sun/moon icons
+   - Pattern: `bg-white dark:bg-slate-800`, `text-gray-900 dark:text-white`
+
+3. **Layout Components:**
+   - Header: sticky, logo left, nav right, mobile menu
+   - Footer: links, copyright, creator info
+   - MobileMenu: slide-out drawer with overlay
+
+4. **Content Pages:**
+   - Hash-based routing (`#/features`, `#/about`, etc.)
+   - useHashRouter hook for navigation
+   - Real content (not placeholder text)
+
+5. **Card Component:**
+   - Three variants: default, elevated, interactive
+   - Subcomponents: CardHeader, CardContent, CardFooter
+   - Dark mode compatible
+
+**Files Created:**
+- `src/config/icon-sets.ts` - Icon set configurations
+- `src/components/ui/CategoryIcon.tsx` - Universal icon component
+- `src/components/ui/Card.tsx` - Reusable card with variants
+- `src/components/DarkModeToggle.tsx` - Theme toggle button
+- `src/components/layout/Header.tsx` - Sticky header
+- `src/components/layout/Footer.tsx` - Footer component
+- `src/components/layout/MobileMenu.tsx` - Mobile navigation
+- `src/hooks/useDarkMode.ts` - Dark mode state management
+- `src/hooks/useHashRouter.ts` - Hash-based routing
+- `src/context/SettingsContext.tsx` - Settings context provider
+- `src/pages/FeaturesPage.tsx` - Features showcase
+- `src/pages/HowItWorksPage.tsx` - Step-by-step guide
+- `src/pages/AboutPage.tsx` - About the app
+- `src/pages/PrivacyPage.tsx` - Privacy policy
+- `src/pages/DisclaimerPage.tsx` - Legal disclaimer
+
+**Files Modified:**
+- `src/index.css` - Teal color palette, dark mode base
+- `src/App.tsx` - Layout with Header/Footer, routing
+- `src/components/SettingsPanel.tsx` - Dark mode + icon set options
+- `src/components/TransactionList.tsx` - Dark mode classes
+- `src/components/FilterPanel.tsx` - Dark mode classes
+- `src/components/SpendingVisualization.tsx` - Dark mode classes
+- `src/components/FileUpload.tsx` - Dark mode classes
+- `src/components/ProjectRoadmap.tsx` - Dark mode classes, updated Phase 8
+- `src/components/CategorySelector.tsx` - Dark mode classes
+- `src/components/TimePeriodSelector.tsx` - Dark mode classes
+- `src/components/UncategorizedCarousel.tsx` - Dark mode classes
+- `src/components/TransactionEditModal.tsx` - Dark mode classes
+- `src/components/index.ts` - Export new components
+
+**Key Decisions:**
+
+1. **CDN-based Icons:** Avoided npm packages for icon libraries
+   - Reduces bundle size
+   - Faster initial load (no upfront download)
+   - Easy to add more icon sets later
+
+2. **Hash-based Routing:** No React Router dependency
+   - Simpler implementation
+   - Works with static hosting
+   - Smaller bundle
+
+3. **Dark Mode Pattern:** Used Tailwind's `dark:` variant consistently
+   - `bg-white dark:bg-slate-800` for containers
+   - `text-gray-900 dark:text-white` for primary text
+   - `border-gray-200 dark:border-slate-700` for borders
+
+4. **Settings Context:** Created to avoid prop drilling
+   - Theme, icon set accessible everywhere
+   - Single source of truth for app settings
+
+**Challenges Faced:**
+- Ensuring consistent dark mode styling across ~15 components
+- Avoiding duplicate className attributes during edits
+- CDN icon loading states and fallbacks
+
+**Solutions Applied:**
+- Systematic approach: updated components one by one
+- Used consistent dark mode color mapping
+- CategoryIcon handles loading states gracefully
+
+**No New npm Dependencies Added**
+
+---
+
 ## Entry Template
 
 ```markdown

@@ -10,11 +10,75 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Planned
-- Subscription detection
-- Custom category creation
-- AI-powered insights
-- Multiple icon sets (minimal, colorful)
-- Dark mode support
+- Subscription detection algorithm
+- Custom category creation UI
+- AI-powered insights and recommendations
+- Export to CSV/JSON
+
+---
+
+## [0.6.0] - 2025-12-19 - UI Overhaul
+
+### Added
+- **Multiple Icon Sets**
+  - 4 icon sets: Emoji (default), Icons8 3D Fluency, Phosphor, OpenMoji
+  - CDN-based loading for external icon sets
+  - Icon set selector in settings panel
+  - Universal CategoryIcon component with loading states
+
+- **Dark Mode Support**
+  - Full dark theme with slate backgrounds
+  - System preference detection (prefers-color-scheme)
+  - Manual toggle: Light / Dark / System
+  - Smooth transitions between modes
+  - All components updated with `dark:` Tailwind variants
+
+- **Teal/Cyan Color Theme**
+  - New primary color palette (teal-500: #14b8a6)
+  - Consistent color application across all UI elements
+  - Updated success, danger, warning color variants
+
+- **Header & Navigation**
+  - Sticky header with logo
+  - Navigation links: Features, How It Works, About
+  - Settings and dark mode toggle in header
+  - Mobile hamburger menu with slide-out drawer
+
+- **Footer**
+  - Links: About, Disclaimer, Privacy
+  - Creator info and copyright
+  - Consistent styling with header
+
+- **Content Pages**
+  - Features page with feature grid
+  - How It Works step-by-step guide
+  - About page explaining the app
+  - Privacy policy (data stays local)
+  - Disclaimer page
+
+- **Card Component**
+  - Reusable Card with variants: default, elevated, interactive
+  - CardHeader, CardContent, CardFooter subcomponents
+  - Hover effects and shadow options
+
+- **Hash-Based Routing**
+  - SPA navigation without React Router dependency
+  - Clean URL structure (#/features, #/about, etc.)
+
+- **Settings Context**
+  - App-wide settings available via React Context
+  - Avoids prop drilling for theme and icon preferences
+
+### Changed
+- **Layout**: Header and footer now wrap all pages
+- **Settings Panel**: Expanded with dark mode and icon set options
+- **All Components**: Updated with dark mode support
+
+### Technical Details
+- No new npm dependencies (CDN-based icons)
+- Hash-based routing using native browser APIs
+- Context API for settings management
+- ~20 files created/modified for complete UI overhaul
 
 ---
 
