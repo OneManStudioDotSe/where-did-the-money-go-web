@@ -56,13 +56,138 @@ A chronological journal of development decisions, progress, and learnings.
 **Questions to Resolve:**
 - [ ] Which charting library? (Chart.js, Recharts, D3, etc.)
 - [ ] State management approach? (Context, Zustand, Redux, etc.)
-- [ ] CSS approach? (Tailwind, CSS Modules, Styled Components)
+- [x] CSS approach? → **Tailwind CSS 4**
 - [ ] Testing strategy?
 
 **Next Steps:**
 - Set up project scaffolding
 - Define TypeScript interfaces for core data models
 - Create sample CSV for development
+
+---
+
+## Entry #002 - 2025-12-19
+
+### Tech Stack Finalized & Phase 1 Setup
+
+**What was done:**
+- Finalized tech stack based on user requirements
+- Initialized Vite + React + TypeScript project
+- Configured Tailwind CSS 4 with custom theme
+- Created folder structure (components, utils, hooks, data, types)
+- Defined core TypeScript interfaces for transactions, categories, and CSV parsing
+- Created default category definitions (13 categories, 40+ subcategories)
+- Created 100+ Swedish merchant mappings for auto-categorization
+- Documented CSV format specification (Swedish bank export format)
+- Documented category hierarchy and mapping rules
+
+**Tech Stack Decisions:**
+
+1. **Build Tool:** Vite 6
+   - Fastest development experience
+   - Native TypeScript support
+   - Excellent HMR performance
+
+2. **Framework:** React 19
+   - Component-based architecture fits our modular approach
+   - Large ecosystem for future expansion
+   - Familiar to most developers
+
+3. **Language:** TypeScript
+   - Type safety for financial calculations
+   - Better IDE support and refactoring
+   - Self-documenting interfaces
+
+4. **Styling:** Tailwind CSS 4
+   - Using new @tailwindcss/vite plugin
+   - Custom theme with category colors
+   - Utility-first for rapid UI development
+   - No additional CSS files needed
+
+5. **Dependencies:** Minimal
+   - Only essential packages
+   - Avoiding dependency bloat
+   - Each addition must be justified
+
+**Files Created:**
+- `src/types/transaction.ts` - Transaction, Badge interfaces
+- `src/types/category.ts` - Category, Subcategory, Mapping interfaces
+- `src/types/csv.ts` - CSV parsing configuration types
+- `src/types/index.ts` - Central exports
+- `src/data/categories.ts` - Default category definitions
+- `src/data/category-mappings.ts` - Swedish merchant patterns
+- `docs/CSV_FORMAT.md` - Swedish bank CSV specification
+- `docs/CATEGORIES.md` - Category hierarchy documentation
+- `sample-data/transactions.csv` - Development test data
+
+**Key Design Decisions:**
+
+1. **Category Mapping Priority System:**
+   - Higher priority patterns checked first
+   - Streaming services: 90 (most specific)
+   - General patterns: 40-60 (catch-all)
+
+2. **Swedish Character Handling:**
+   - Both UTF-8 and corrupted encodings supported
+   - Duplicate patterns for å/ä/ö variations
+
+3. **Transaction Model:**
+   - Badges for quick visual identification
+   - Subscription flag for recurring detection
+   - Raw data preserved for debugging
+
+**Running the Project:**
+```bash
+# Install dependencies (first time only)
+npm install
+
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
+```
+
+**Next Steps:**
+- Implement CSV parser utility
+- Create file upload component
+- Build transaction list view
+- Add category service for auto-mapping
+
+---
+
+## Entry #003 - 2025-12-19
+
+### Interactive UI Enhancements
+
+**What was done:**
+- Made the Categories status card clickable with interactive modal
+- Made the CSV Parser status card clickable with specification details
+- Categories modal displays all 13 categories with their subcategories using color-coded badges
+- CSV Parser modal shows complete format specification including:
+  - File format details (encoding, delimiter, date format, decimal separator)
+  - Expected columns table with Swedish headers
+  - Amount convention (positive = income, negative = expense)
+  - Example CSV row
+
+**Key Decisions:**
+1. **Modal-based information display:**
+   - Clean UI without cluttering the main page
+   - Click-to-expand pattern for progressive disclosure
+   - Consistent modal design language
+
+2. **Dynamic data display:**
+   - Categories and subcategory counts computed from actual data
+   - Merchant mapping count reflects real mappings in the codebase
+   - Category colors used for visual consistency
+
+**Files Modified:**
+- `src/App.tsx` - Added modal states, category/CSV info modals
+
+**No New Dependencies Added**
 
 ---
 
