@@ -243,16 +243,16 @@ export function TimePeriodSelector({
   }, [transactions, selectedPeriod]);
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+    <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 mb-6">
       {/* Period Type Selector */}
       <div className="p-4">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="font-medium text-gray-900">View by Time Period</h3>
+          <h3 className="font-medium text-gray-900 dark:text-white">View by Time Period</h3>
           <div className="flex items-center gap-2">
             {selectedPeriod && (
               <button
                 onClick={handleClearPeriod}
-                className="text-sm text-gray-500 hover:text-gray-700"
+                className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
               >
                 Clear selection
               </button>
@@ -260,7 +260,7 @@ export function TimePeriodSelector({
             <button
               onClick={() => setShowSettings(!showSettings)}
               className={`p-1.5 rounded-lg transition-colors ${
-                showSettings ? 'bg-primary-50 text-primary-600' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+                showSettings ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400' : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700'
               }`}
               title="Period settings"
             >
@@ -274,18 +274,18 @@ export function TimePeriodSelector({
 
         {/* Settings Panel */}
         {showSettings && (
-          <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+          <div className="mb-4 p-3 bg-gray-50 dark:bg-slate-700/50 rounded-lg border border-gray-200 dark:border-slate-600">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-700">Month Start Day</p>
-                <p className="text-xs text-gray-500">
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Month Start Day</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
                   Swedish salary is typically paid on the 25th. Set when your month "begins".
                 </p>
               </div>
               <select
                 value={monthStartDay}
                 onChange={(e) => handleMonthStartDayChange(parseInt(e.target.value, 10))}
-                className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+                className="px-3 py-1.5 text-sm border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
               >
                 {Array.from({ length: 28 }, (_, i) => i + 1).map((day) => (
                   <option key={day} value={day}>
@@ -311,10 +311,10 @@ export function TimePeriodSelector({
                 disabled={count === 0}
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border transition-all ${
                   isActive
-                    ? 'border-primary-500 bg-primary-50 text-primary-700'
+                    ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
                     : count === 0
-                    ? 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed'
-                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-700'
+                    ? 'border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                    : 'border-gray-200 dark:border-slate-600 hover:border-gray-300 dark:hover:border-slate-500 hover:bg-gray-50 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300'
                 }`}
               >
                 <span className="text-lg">{config.icon}</span>
@@ -322,8 +322,8 @@ export function TimePeriodSelector({
                 <span
                   className={`text-xs px-1.5 py-0.5 rounded-full ${
                     isActive
-                      ? 'bg-primary-200 text-primary-700'
-                      : 'bg-gray-100 text-gray-500'
+                      ? 'bg-primary-200 dark:bg-primary-800 text-primary-700 dark:text-primary-300'
+                      : 'bg-gray-100 dark:bg-slate-600 text-gray-500 dark:text-gray-400'
                   }`}
                 >
                   {count}
@@ -336,8 +336,8 @@ export function TimePeriodSelector({
 
       {/* Period Selection Dropdown */}
       {activePeriodType && availablePeriods.length > 0 && (
-        <div className="border-t border-gray-200 p-4">
-          <p className="text-sm text-gray-500 mb-3">
+        <div className="border-t border-gray-200 dark:border-slate-700 p-4">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
             Select a {periodTypeConfig[activePeriodType].label.toLowerCase()} to view:
           </p>
           <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto">
@@ -354,7 +354,7 @@ export function TimePeriodSelector({
                   className={`px-3 py-1.5 rounded-lg border text-sm transition-all ${
                     isSelected
                       ? 'border-primary-500 bg-primary-500 text-white'
-                      : 'border-gray-200 hover:border-primary-300 hover:bg-primary-50 text-gray-700'
+                      : 'border-gray-200 dark:border-slate-600 hover:border-primary-300 dark:hover:border-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/30 text-gray-700 dark:text-gray-300'
                   }`}
                 >
                   {period.label}
@@ -367,24 +367,24 @@ export function TimePeriodSelector({
 
       {/* Selected Period Info with Large Numbers */}
       {selectedPeriod && periodTotals && (
-        <div className="border-t border-gray-200 bg-gradient-to-r from-primary-50 to-primary-100">
+        <div className="border-t border-gray-200 dark:border-slate-700 bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/30 dark:to-primary-800/30">
           <div className="p-4">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <span className="text-2xl">{periodTypeConfig[selectedPeriod.type].icon}</span>
                 <div>
-                  <p className="font-semibold text-primary-900 text-lg">{selectedPeriod.label}</p>
-                  <p className="text-xs text-primary-700">
+                  <p className="font-semibold text-primary-900 dark:text-primary-100 text-lg">{selectedPeriod.label}</p>
+                  <p className="text-xs text-primary-700 dark:text-primary-300">
                     {formatSwedishDate(selectedPeriod.start)} — {formatSwedishDate(selectedPeriod.end)}
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => onPeriodChange(null)}
-                className="p-2 hover:bg-primary-200 rounded-lg transition-colors"
+                className="p-2 hover:bg-primary-200 dark:hover:bg-primary-800/50 rounded-lg transition-colors"
               >
                 <svg
-                  className="w-5 h-5 text-primary-600"
+                  className="w-5 h-5 text-primary-600 dark:text-primary-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -401,25 +401,25 @@ export function TimePeriodSelector({
 
             {/* Large Period Stats */}
             <div className="grid grid-cols-4 gap-4">
-              <div className="bg-white/60 rounded-lg p-3 text-center">
-                <p className="text-xs text-gray-600 mb-1">Transactions</p>
-                <p className="text-2xl font-bold text-gray-900">{periodTotals.count}</p>
+              <div className="bg-white/60 dark:bg-slate-800/60 rounded-lg p-3 text-center">
+                <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Transactions</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{periodTotals.count}</p>
               </div>
-              <div className="bg-white/60 rounded-lg p-3 text-center">
-                <p className="text-xs text-gray-600 mb-1">Expenses</p>
-                <p className="text-2xl font-bold text-danger-600">
+              <div className="bg-white/60 dark:bg-slate-800/60 rounded-lg p-3 text-center">
+                <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Expenses</p>
+                <p className="text-2xl font-bold text-danger-600 dark:text-danger-400">
                   -{periodTotals.expenses.toLocaleString('sv-SE', { maximumFractionDigits: 0 })}
                 </p>
               </div>
-              <div className="bg-white/60 rounded-lg p-3 text-center">
-                <p className="text-xs text-gray-600 mb-1">Income</p>
-                <p className="text-2xl font-bold text-success-600">
+              <div className="bg-white/60 dark:bg-slate-800/60 rounded-lg p-3 text-center">
+                <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Income</p>
+                <p className="text-2xl font-bold text-success-600 dark:text-success-400">
                   +{periodTotals.income.toLocaleString('sv-SE', { maximumFractionDigits: 0 })}
                 </p>
               </div>
-              <div className="bg-white/60 rounded-lg p-3 text-center">
-                <p className="text-xs text-gray-600 mb-1">Net</p>
-                <p className={`text-2xl font-bold ${periodTotals.net >= 0 ? 'text-success-600' : 'text-danger-600'}`}>
+              <div className="bg-white/60 dark:bg-slate-800/60 rounded-lg p-3 text-center">
+                <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Net</p>
+                <p className={`text-2xl font-bold ${periodTotals.net >= 0 ? 'text-success-600 dark:text-success-400' : 'text-danger-600 dark:text-danger-400'}`}>
                   {periodTotals.net >= 0 ? '+' : ''}{periodTotals.net.toLocaleString('sv-SE', { maximumFractionDigits: 0 })}
                 </p>
               </div>
