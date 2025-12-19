@@ -235,8 +235,8 @@ export function ProjectRoadmap() {
         </div>
       </div>
 
-      {/* Phase Cards */}
-      <div className="space-y-3">
+      {/* Phase Cards - Responsive grid: 1 column on mobile, 2 columns on larger screens */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
         {projectPhases.map((phase) => (
           <div
             key={phase.id}
