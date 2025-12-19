@@ -2,7 +2,7 @@ import { useState } from 'react'
 import './index.css'
 import { defaultCategories } from './data/categories'
 import { defaultCategoryMappings } from './data/category-mappings'
-import { FileUpload, TransactionList, FilterPanel, defaultFilters } from './components'
+import { FileUpload, TransactionList, FilterPanel, defaultFilters, ProjectRoadmap } from './components'
 import { parseTransactionsFromCSV, categorizeTransactions, getCategorizedStats } from './utils'
 import { useTransactionFilters } from './hooks'
 import type { Transaction, TransactionFilters } from './types/transaction'
@@ -177,26 +177,18 @@ function App() {
               )}
             </div>
 
-            {/* Status Grid */}
-            <div className="grid md:grid-cols-3 gap-6 mb-8">
-              {/* Phase 1 Status */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-3 h-3 bg-success-500 rounded-full"></div>
-                  <h3 className="font-medium text-gray-900">Phase 1: Foundation</h3>
-                </div>
-                <p className="text-sm text-gray-600">
-                  Project structure, CSV parsing, and category mapping complete.
-                </p>
-              </div>
+            {/* Project Roadmap */}
+            <ProjectRoadmap />
 
+            {/* Quick Info Cards */}
+            <div className="grid md:grid-cols-2 gap-6 mb-8">
               {/* Categories Status - Clickable */}
               <button
                 onClick={() => setShowCategoriesModal(true)}
                 className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-left hover:border-primary-300 hover:shadow-md transition-all cursor-pointer"
               >
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-3 h-3 bg-success-500 rounded-full"></div>
+                  <span className="text-2xl">🏷️</span>
                   <h3 className="font-medium text-gray-900">Categories</h3>
                   <span className="ml-auto text-xs text-primary-600 font-medium">Click to view →</span>
                 </div>
@@ -211,7 +203,7 @@ function App() {
                 className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-left hover:border-primary-300 hover:shadow-md transition-all cursor-pointer"
               >
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-3 h-3 bg-success-500 rounded-full"></div>
+                  <span className="text-2xl">📄</span>
                   <h3 className="font-medium text-gray-900">CSV Parser</h3>
                   <span className="ml-auto text-xs text-primary-600 font-medium">View specs →</span>
                 </div>
@@ -221,23 +213,20 @@ function App() {
               </button>
             </div>
 
-            {/* Development Info */}
+            {/* Tech Stack */}
             <div className="bg-gray-100 rounded-lg p-6">
-              <h3 className="font-medium text-gray-900 mb-2">Development Mode</h3>
-              <p className="text-sm text-gray-600 mb-4">
-                This is a development build. Features will be added iteratively.
-              </p>
+              <h3 className="font-medium text-gray-900 mb-2">Built With</h3>
               <div className="flex flex-wrap gap-2">
-                <span className="px-2 py-1 bg-white rounded text-xs font-medium text-gray-700">
+                <span className="px-3 py-1.5 bg-white rounded-lg text-sm font-medium text-gray-700 shadow-sm">
                   React 19
                 </span>
-                <span className="px-2 py-1 bg-white rounded text-xs font-medium text-gray-700">
+                <span className="px-3 py-1.5 bg-white rounded-lg text-sm font-medium text-gray-700 shadow-sm">
                   TypeScript
                 </span>
-                <span className="px-2 py-1 bg-white rounded text-xs font-medium text-gray-700">
+                <span className="px-3 py-1.5 bg-white rounded-lg text-sm font-medium text-gray-700 shadow-sm">
                   Tailwind CSS 4
                 </span>
-                <span className="px-2 py-1 bg-white rounded text-xs font-medium text-gray-700">
+                <span className="px-3 py-1.5 bg-white rounded-lg text-sm font-medium text-gray-700 shadow-sm">
                   Vite 6
                 </span>
               </div>
