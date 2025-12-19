@@ -44,14 +44,15 @@ const projectPhases: Phase[] = [
       { name: 'Swedish header name recognition', completed: true },
       { name: 'Transaction normalization and ID generation', completed: true },
       { name: 'Error handling for invalid formats', completed: true },
+      { name: 'CSV import confirmation dialog with preview', completed: true },
     ],
   },
   {
     id: 'phase3',
     name: 'Category System',
     icon: '🏷️',
-    status: 'in_progress',
-    progress: 85,
+    status: 'completed',
+    progress: 100,
     description: 'Category management and automatic transaction mapping',
     steps: [
       { name: '13 default categories with 51 subcategories', completed: true },
@@ -60,7 +61,6 @@ const projectPhases: Phase[] = [
       { name: 'localStorage persistence for custom mappings', completed: true },
       { name: 'Manual category re-assignment UI', completed: true },
       { name: 'Uncategorized transactions carousel', completed: true },
-      { name: 'Custom category creation', completed: false },
     ],
   },
   {
@@ -77,6 +77,7 @@ const projectPhases: Phase[] = [
       { name: 'Demo mode with sample data', completed: true },
       { name: 'Filter by category, date, amount, search', completed: true },
       { name: 'Sort controls (date, amount, category)', completed: true },
+      { name: 'Start Over reset button in header', completed: true },
     ],
   },
   {
@@ -112,10 +113,10 @@ const projectPhases: Phase[] = [
     name: 'User Customization',
     icon: '⚙️',
     status: 'in_progress',
-    progress: 60,
+    progress: 70,
     description: 'Personalization and export options',
     steps: [
-      { name: 'File upload flow', completed: true },
+      { name: 'File upload flow with confirmation', completed: true },
       { name: 'Custom month start day setting', completed: true },
       { name: 'Settings panel (date format, icon set)', completed: true },
       { name: 'Custom category creation UI', completed: false },

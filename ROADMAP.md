@@ -21,7 +21,6 @@ Phase 9: AI Insights         → Analysis, recommendations, patterns
 ---
 
 ## Phase 1: Foundation ✅
-
 **Goal:** Establish project structure, core data models, and development environment.
 
 ### Iteration 1.1: Project Setup ✅
@@ -163,10 +162,7 @@ Phase 9: AI Insights         → Analysis, recommendations, patterns
 ---
 
 ## Phase 2: Data Processing ✅
-
 **Goal:** Parse CSV files, detect column types, normalize transaction data.
-
-
 
 ### Iteration 2.1: CSV Parser ✅ 
 **Focus:** Reading and parsing CSV content
@@ -247,88 +243,81 @@ Phase 9: AI Insights         → Analysis, recommendations, patterns
 
 ---
 
-### Iteration 2.4: Column Mapping UI
-**Focus:** Manual column assignment when auto-detection fails
+### Iteration 2.4: CSV Import Confirmation ✅
+**Focus:** Preview and confirm CSV parsing before import
 
 **Tasks:**
-- [ ] Create mapping interface component:
-  - Show sample data preview
-  - Dropdown selectors for each column type
-  - Visual indicators for mapped/unmapped
-  - Validation feedback
+- [x] Create CSV confirmation dialog component:
+  - Show detected columns with types and confidence scores
+  - Display column-to-field mapping (Date, Amount, Description, etc.)
+  - Delimiter selection (semicolon, comma, tab)
+  - Data preview (first 3 rows)
+  - Required column validation with clear feedback
+  - Import confirmation button with row count
 
 **Deliverables:**
-- `src/components/features/ColumnMapper.tsx`
-- Integration with parser flow
+- ✅ `src/components/CsvConfirmationDialog.tsx`
+- ✅ Integration with file upload flow in App.tsx
 
 ---
 
-## Phase 3: Category System
-
+## Phase 3: Category System ✅
 **Goal:** Implement category management and transaction categorization.
 
-### Iteration 3.1: Category Data Structure
+### Iteration 3.1: Category Data Structure ✅
 **Focus:** Categories and subcategories definitions
 
 **Tasks:**
-- [ ] Implement category store/context:
-  - Load default categories
-  - CRUD operations for categories
+- [x] Implement category service:
+  - Load default categories from `src/data/categories.ts`
   - Category lookup utilities
 
-- [ ] Create category utilities:
-  - Get category by ID
-  - Get subcategory by ID
-  - List subcategories for category
-  - Flatten category tree
+- [x] Create category utilities:
+  - `getCategoryById` - Get category by ID
+  - `getSubcategoryName` - Get subcategory by ID
+  - `getCategoryOptions` - Flatten category tree for dropdowns
+  - `getCategoryColor`, `getCategoryIcon` - Get category display info
 
 **Deliverables:**
-- `src/services/category-service.ts`
-- Category state management
+- ✅ `src/utils/category-service.ts`
+- ✅ `src/data/categories.ts` - 13 categories with 51 subcategories
 
 ---
 
-### Iteration 3.2: Category Mapping Engine
+### Iteration 3.2: Category Mapping Engine ✅
 **Focus:** Automatic transaction categorization
 
 **Tasks:**
-- [ ] Implement mapping engine:
-  - Pattern matching (exact, contains, regex)
-  - Priority ordering
-  - Custom vs default mappings
+- [x] Implement mapping engine:
+  - Pattern matching (exact, contains, starts_with, regex)
+  - Priority ordering via `getAllMappings()`
+  - Custom vs default mappings support
 
-- [ ] Mapping evaluation:
-  ```typescript
-  function categorizeTransaction(
-    transaction: Transaction,
-    mappings: CategoryMapping[]
-  ): { categoryId: string; subcategoryId: string } | null
-  ```
+- [x] Mapping evaluation:
+  - `findCategory(description)` - Find matching category
+  - `categorizeTransaction(transaction)` - Apply category to transaction
+  - `categorizeTransactions(transactions[])` - Batch categorization
 
 **Deliverables:**
-- `src/services/category-mapper.ts`
-- Mapping priority system
+- ✅ `src/utils/category-service.ts` - Mapping engine included
+- ✅ `src/data/category-mappings.ts` - 183 Swedish merchant patterns
 
 ---
 
-### Iteration 3.3: Persistence Layer
+### Iteration 3.3: Persistence Layer ✅
 **Focus:** Save user customizations locally
 
 **Tasks:**
-- [ ] LocalStorage service:
-  - Save custom mappings
-  - Save manual category assignments
-  - Version migrations
-  - Data validation on load
+- [x] LocalStorage service:
+  - `getCustomMappings()` / `saveCustomMappings()` - Custom mapping persistence
+  - `addCustomMapping()` / `removeCustomMapping()` - CRUD operations
+  - Settings persistence in `SettingsPanel.tsx`
 
-- [ ] Create persistence hooks:
-  ```typescript
-  function useLocalStorage<T>(key: string, defaultValue: T): [T, (value: T) => void]
-  ```
+- [x] Manual category assignments saved per-session (in React state)
 
 **Deliverables:**
-- `src/services/storage-service.ts`
-- `src/hooks/useLocalStorage.ts`
+- ✅ Custom mappings persistence in `src/utils/category-service.ts`
+- ✅ Settings persistence in `src/components/SettingsPanel.tsx`
 
 ---
 
@@ -357,42 +346,40 @@ Phase 9: AI Insights         → Analysis, recommendations, patterns
 
 **Goal:** Build the application shell and primary interface components.
 
-### Iteration 4.1: Application Shell 
+### Iteration 4.1: Application Shell ✅
 **Focus:** Layout structure and navigation
 
 **Tasks:**
-- [ ] Create app layout:
+- [x] Create app layout:
   - Header with app title/logo
   - Main content area
-  - Optional sidebar for filters
-  - Footer (minimal)
+  - Filter panel (collapsible)
+  - Footer with links
 
-- [ ] Implement grid system:
+- [x] Implement grid system:
   - CSS Grid-based layout
   - Variable width/height sections
   - Responsive breakpoints
 
-- [ ] Design color palette:
-  ```
-  Primary: Modern blue/purple tones
-  Secondary: Warm accent colors
-  Background: Light with subtle gradients
-  Cards: White with soft shadows
-  Categories: Distinct colors per category
-  ```
+- [x] Design color palette:
+  - Primary: Teal/Cyan tones
+  - Success/Danger colors for income/expense
+  - Dark mode with slate backgrounds
+
+- [x] "Start Over" reset button in header when data is loaded
 
 **Deliverables:**
-- `src/components/layout/AppShell.tsx`
-- `src/components/layout/GridSection.tsx`
-- Theme configuration
+- ✅ `src/components/layout/Header.tsx` - With reset button
+- ✅ `src/components/layout/Footer.tsx`
+- ✅ Theme configuration in `src/index.css`
 
 ---
 
-### Iteration 4.2: Transaction Components
+### Iteration 4.2: Transaction Components ✅
 **Focus:** Display individual and lists of transactions
 
 **Tasks:**
-- [ ] Transaction item component:
+- [x] Transaction item component:
   - Date display
   - Amount (color-coded: expense/income)
   - Description
@@ -400,14 +387,14 @@ Phase 9: AI Insights         → Analysis, recommendations, patterns
   - Subscription badge
   - Action notes/badges
 
-- [ ] Transaction list component:
-  - Virtualized for performance
+- [x] Transaction list component:
+  - Sortable columns
   - Grouping headers (by date)
   - Empty state
+  - Click to edit category
 
 **Deliverables:**
-- `src/components/features/TransactionItem.tsx`
-- `src/components/features/TransactionList.tsx`
+- ✅ `src/components/TransactionList.tsx`
 
 ---
 
@@ -436,7 +423,7 @@ Phase 9: AI Insights         → Analysis, recommendations, patterns
 
 ---
 
-### Iteration 4.4: Badge System
+### Iteration 4.4: Badge System 
 **Focus:** Visual indicators for transaction states
 
 **Tasks:**
@@ -853,15 +840,15 @@ Phase 9: AI Insights         → Analysis, recommendations, patterns
 |-------|--------|----------|
 | Phase 1: Foundation | ✅ Completed | 100% |
 | Phase 2: Data Processing | ✅ Completed | 100% |
-| Phase 3: Category System | 🟡 Partial | 85% |
+| Phase 3: Category System | ✅ Completed | 100% |
 | Phase 4: Core UI | ✅ Completed | 100% |
 | Phase 5: Visualizations | ✅ Completed | 100% |
 | Phase 6: Smart Features | 🟡 Partial | 75% |
-| Phase 7: User Customization | 🟡 Partial | 60% |
+| Phase 7: User Customization | 🟡 Partial | 70% |
 | Phase 8: UI Themes & Icons | ✅ Completed | 100% |
 | Phase 9: AI Insights | Not Started | 0% |
 
-**Last Updated:** 2025-12-19 (v0.6.0 - UI Overhaul)
+**Last Updated:** 2025-12-19 (v0.6.1 - CSV Confirmation & Reset Flow)
 
 ---
 
