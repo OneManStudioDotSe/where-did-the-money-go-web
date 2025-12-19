@@ -425,6 +425,111 @@ npm run dev
 
 ---
 
+## Entry #008 - 2025-12-19
+
+### Transaction List Improvements
+
+**What was done:**
+- Added sortable column headers to TransactionList:
+  - Date (newest/oldest)
+  - Description (A-Z/Z-A)
+  - Category (A-Z/Z-A)
+  - Amount (highest/lowest)
+  - Sort direction indicators (up/down arrows)
+- Added Condensed/Expanded view toggle:
+  - Condensed: smaller padding, shorter date format, compact badges
+  - Expanded: full badges, detailed category display
+- Added transaction row tooltips showing full details on hover
+- Custom month start day setting in TimePeriodSelector:
+  - Settings gear icon opens configuration panel
+  - Dropdown to select day 1-28
+  - Persisted to localStorage
+  - Useful for Swedish salary cycles (typically paid on 25th)
+
+**Key Decisions:**
+1. **In-component sorting:** State managed within TransactionList for simplicity
+2. **CSS-based tooltips:** Using group-hover instead of JS tooltip library
+3. **Month start day:** Affects how transactions are grouped into "months"
+
+**Files Modified:**
+- `src/components/TransactionList.tsx` - Sorting, condensed view, tooltips
+- `src/components/TimePeriodSelector.tsx` - Settings panel for month start day
+
+**No New Dependencies Added**
+
+---
+
+## Entry #009 - 2025-12-19
+
+### Spending Visualization Component
+
+**What was done:**
+- Created comprehensive SpendingVisualization component with:
+  - Bar chart showing category breakdown
+  - Donut chart showing spending distribution
+  - Toggle between chart types
+  - Quick stats summary (expenses, income, net)
+  - Trends & Averages section
+  - Category totals table with expandable subcategories
+- Updated App.tsx layout:
+  - Two-column grid on large screens
+  - Visualization panel next to transaction list
+  - Both update when time period changes
+
+**Key Features:**
+
+1. **Bar Chart:**
+   - Horizontal bars with category colors
+   - Width represents percentage of total spending
+   - Shows transaction count inside bar
+   - Category icon and name on left
+   - Amount on right
+
+2. **Donut Chart:**
+   - Custom SVG implementation (no library)
+   - Interactive segments with hover effects
+   - Center shows total or hovered category
+   - Color legend below
+
+3. **Trends & Averages:**
+   - Compares current period to historical average
+   - Shows percentage change with up/down arrows
+   - Red = spending more than average
+   - Green = spending less than average
+   - Daily average calculation
+
+4. **Category Totals Table:**
+   - Click to expand subcategories
+   - Toggle view mode (categories only / with subcategories)
+   - Shows amount, percentage, and transaction count
+   - Sorted by spending amount
+
+**Key Decisions:**
+
+1. **Custom SVG Charts:** Built donut chart from scratch using SVG path calculations
+   - No external chart library dependency
+   - Full control over styling and interactivity
+   - Smaller bundle size
+
+2. **Trend Calculation:** Groups all transactions by period type, calculates average
+   - Uses same period type as currently selected
+   - Shows how current period compares to typical spending
+
+3. **Layout:** Side-by-side on large screens, stacked on mobile
+   - Both panels share the same filtered data
+   - Period selection affects both simultaneously
+
+**Files Created:**
+- `src/components/SpendingVisualization.tsx` - Main visualization component
+
+**Files Modified:**
+- `src/components/index.ts` - Export SpendingVisualization
+- `src/App.tsx` - Two-column layout with visualization
+
+**No New Dependencies Added**
+
+---
+
 ## Entry Template
 
 ```markdown

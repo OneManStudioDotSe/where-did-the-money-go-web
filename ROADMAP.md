@@ -161,7 +161,7 @@ Phase 8: AI Insights         → Analysis, recommendations, patterns
 
 ---
 
-## Phase 2: Data Processing ✅ COMPLETED (merged into Phase 1)
+## Phase 2: Data Processing ✅ COMPLETED
 
 **Goal:** Parse CSV files, detect column types, normalize transaction data.
 
@@ -412,10 +412,11 @@ Phase 8: AI Insights         → Analysis, recommendations, patterns
 **Focus:** Data organization controls
 
 **Tasks:**
-- [ ] Sort controls:
+- [x] Sort controls:
   - By date (newest/oldest)
   - By amount (highest/lowest)
   - By category (alphabetical)
+  - By description (alphabetical)
 
 - [x] Filter controls:
   - By category
@@ -426,7 +427,7 @@ Phase 8: AI Insights         → Analysis, recommendations, patterns
 - [x] Active filter indicators
 
 **Deliverables:**
-- `src/components/features/SortControls.tsx` (pending)
+- ✅ `src/components/TransactionList.tsx` - Sortable column headers with indicators
 - ✅ `src/components/FilterPanel.tsx`
 - ✅ `src/hooks/useTransactionFilters.ts`
 
@@ -453,68 +454,74 @@ Phase 8: AI Insights         → Analysis, recommendations, patterns
 
 ---
 
-## Phase 5: Visualizations
+## Phase 5: Visualizations ✅ COMPLETED
 
 **Goal:** Implement charts and graphical data representations.
 
-### Iteration 5.1: Chart Library Setup
-**Focus:** Integrate charting solution
+### Iteration 5.1: Spending Visualization Component ✅ COMPLETED
+**Focus:** Custom SVG-based charts (no external library)
 
 **Tasks:**
-- [ ] Evaluate and choose library:
-  - Recharts (React-friendly)
-  - Chart.js (versatile)
-  - Visx (D3-based, customizable)
+- [x] Bar chart for category breakdown:
+  - Horizontal bars with percentage widths
+  - Category icons and colors
+  - Transaction count display
+  - Hover effects for highlighting
 
-- [ ] Create chart wrapper components
-- [ ] Define consistent chart styling
+- [x] Donut chart for spending distribution:
+  - Interactive SVG segments
+  - Hover state showing category details
+  - Center display with total/selected amount
+  - Color legend
+
+- [x] Chart type toggle (bar/donut)
 
 **Deliverables:**
-- Chart library installed and configured
-- Base chart components
+- ✅ `src/components/SpendingVisualization.tsx` - Complete visualization component
 
 ---
 
-### Iteration 5.2: Category Breakdown Chart
-**Focus:** Visualize spending by category
+### Iteration 5.2: Trends & Averages ✅ COMPLETED
+**Focus:** Period comparison and statistics
 
 **Tasks:**
-- [ ] Bar chart: spending per category
-- [ ] Pie/donut chart: category distribution
-- [ ] Interactive: click to drill into subcategories
+- [x] Current period total vs historical average
+- [x] Percentage change indicators (up/down arrows)
+- [x] Transaction count comparison
+- [x] Daily average for selected period
+- [x] Period-specific calculations based on time grouping
 
 **Deliverables:**
-- `src/components/charts/CategoryBreakdown.tsx`
-- `src/components/charts/CategoryPie.tsx`
+- ✅ TrendSection within SpendingVisualization component
 
 ---
 
-### Iteration 5.3: Timeline Charts
-**Focus:** Spending over time
+### Iteration 5.3: Category Totals Table ✅ COMPLETED
+**Focus:** Detailed category breakdown
 
 **Tasks:**
-- [ ] Line chart: monthly spending trend
-- [ ] Grouped bar: compare months
-- [ ] Time period selector: week/month/quarter
+- [x] Expandable category rows
+- [x] Subcategory details on expand
+- [x] View mode toggle (categories/subcategories)
+- [x] Amount, percentage, and count columns
+- [x] Sorted by spending amount
 
 **Deliverables:**
-- `src/components/charts/SpendingTrend.tsx`
-- `src/components/charts/MonthlyComparison.tsx`
+- ✅ CategoryTotalsTable within SpendingVisualization component
 
 ---
 
-### Iteration 5.4: Interactive Features
-**Focus:** Chart interactivity and details
+### Iteration 5.4: Layout Integration ✅ COMPLETED
+**Focus:** Side-by-side visualization and transaction list
 
 **Tasks:**
-- [ ] Tooltips with transaction details
-- [ ] Click handlers to filter transactions
-- [ ] Zoom/pan for timeline charts
-- [ ] Legend interactions
+- [x] Two-column grid layout on large screens
+- [x] Stacked layout on mobile
+- [x] Both panels update with time period selection
+- [x] Quick stats summary (expenses, income, net)
 
 **Deliverables:**
-- Enhanced chart components
-- Chart-to-data linking
+- ✅ Updated App.tsx layout with grid system
 
 ---
 
@@ -562,32 +569,37 @@ Phase 8: AI Insights         → Analysis, recommendations, patterns
   - Net change
   - Transaction count
 
-- [ ] Comparison to previous period (future enhancement)
+- [x] Custom month start day (e.g., 25th for Swedish salary)
 
 **Deliverables:**
-- ✅ `src/components/TimePeriodSelector.tsx` - Period selection UI
+- ✅ `src/components/TimePeriodSelector.tsx` - Period selection UI with settings
 - ✅ `src/hooks/useTimePeriodFilter.ts` - Period filtering hook
 
 ---
 
-### Iteration 6.3: Category Totals
+### Iteration 6.3: Category Totals ✅ COMPLETED
 **Focus:** Summary statistics per category
 
 **Tasks:**
-- [ ] Calculate totals:
+- [x] Calculate totals:
   - Total per category
   - Total per subcategory
   - Percentage of overall spending
 
-- [ ] Summary cards UI:
+- [x] Summary table UI:
   - Category icon and name
   - Total amount
   - Transaction count
-  - Trend indicator
+  - Expandable subcategories
+
+- [x] Trends and averages:
+  - Current period vs average comparison
+  - Percentage change indicators
+  - Daily average calculation
 
 **Deliverables:**
-- `src/components/features/CategorySummary.tsx`
-- Summary calculation utilities
+- ✅ CategoryTotalsTable in `src/components/SpendingVisualization.tsx`
+- ✅ TrendSection in `src/components/SpendingVisualization.tsx`
 
 ---
 
@@ -744,13 +756,13 @@ Phase 8: AI Insights         → Analysis, recommendations, patterns
 | Phase 1: Foundation | ✅ Completed | 100% |
 | Phase 2: Data Processing | ✅ Completed | 100% |
 | Phase 3: Category System | 🟡 Partial | 60% |
-| Phase 4: Core UI | 🟡 Partial | 60% |
-| Phase 5: Visualizations | Not Started | 0% |
-| Phase 6: Smart Features | 🟡 Partial | 25% |
-| Phase 7: User Customization | 🟡 Partial | 30% |
+| Phase 4: Core UI | ✅ Completed | 100% |
+| Phase 5: Visualizations | ✅ Completed | 100% |
+| Phase 6: Smart Features | 🟡 Partial | 75% |
+| Phase 7: User Customization | 🟡 Partial | 40% |
 | Phase 8: AI Insights | Not Started | 0% |
 
-**Last Updated:** 2025-12-19 (v0.3.0 - Time Period Grouping)
+**Last Updated:** 2025-12-19 (v0.4.0 - Spending Visualization)
 
 ---
 

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import './index.css'
 import { defaultCategories } from './data/categories'
 import { defaultCategoryMappings } from './data/category-mappings'
-import { FileUpload, TransactionList, FilterPanel, defaultFilters, ProjectRoadmap, TimePeriodSelector } from './components'
+import { FileUpload, TransactionList, FilterPanel, defaultFilters, ProjectRoadmap, TimePeriodSelector, SpendingVisualization } from './components'
 import type { TimePeriod } from './components'
 import { parseTransactionsFromCSV, categorizeTransactions, getCategorizedStats } from './utils'
 import { useTransactionFilters, useTimePeriodFilter } from './hooks'
@@ -338,8 +338,20 @@ function App() {
               filteredCount={filteredCount}
             />
 
-            {/* Transaction List */}
-            <TransactionList transactions={filteredTransactions} />
+            {/* Main Content: Visualization + Transaction List */}
+            <div className="grid lg:grid-cols-2 gap-6">
+              {/* Visualization Panel */}
+              <SpendingVisualization
+                transactions={filteredTransactions}
+                selectedPeriod={selectedPeriod}
+                allTransactions={transactions}
+              />
+
+              {/* Transaction List */}
+              <div>
+                <TransactionList transactions={filteredTransactions} />
+              </div>
+            </div>
           </>
         )}
       </main>

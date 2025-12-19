@@ -10,10 +10,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Planned
-- Chart visualizations (category breakdown, spending trends)
 - Subscription detection
 - Manual category re-assignment UI
 - AI-powered insights
+
+---
+
+## [0.4.0] - 2025-12-19 - Spending Visualization
+
+### Added
+- **Spending Visualization Component** (`src/components/SpendingVisualization.tsx`)
+  - Side-by-side layout with transaction list on large screens
+  - Toggle between Bar Chart and Donut Chart views
+  - Quick stats summary (expenses, income, net change)
+
+- **Bar Chart**
+  - Horizontal bars showing spending by category
+  - Percentage and transaction count display
+  - Category icons and colors
+  - Hover effects for highlighting
+
+- **Donut Chart**
+  - Interactive SVG-based pie chart
+  - Hover state showing category details
+  - Center display with total/selected amount
+  - Color legend for categories
+
+- **Trends & Averages Section**
+  - Current period total vs historical average
+  - Percentage change indicators (up/down arrows)
+  - Transaction count comparison
+  - Daily average for selected period
+
+- **Category Totals Table**
+  - Expandable category rows
+  - Subcategory breakdown on expand
+  - Toggle between Categories/Subcategories view
+  - Amount, percentage, and count columns
+
+- **UI Improvements**
+  - Sortable transaction list columns (date, description, category, amount)
+  - Sort direction indicators on column headers
+  - Condensed/Expanded view toggle for transactions
+  - Transaction row tooltips
+  - Custom month start day setting (for Swedish salary cycles)
+
+### Technical Details
+- Custom SVG charts (no external charting library)
+- Two-column responsive grid layout
+- All visualizations update with time period selection
+- No new external dependencies
 
 ---
 
