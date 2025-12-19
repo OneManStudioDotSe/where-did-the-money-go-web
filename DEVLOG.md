@@ -313,6 +313,61 @@ npm run dev
 
 ---
 
+## Entry #006 - 2025-12-19
+
+### Transaction Filtering & Search
+
+**What was done:**
+- Implemented comprehensive filtering system for transactions
+- Created FilterPanel component with:
+  - Real-time search by transaction description
+  - Category multi-select filter with checkboxes
+  - Date range picker (from/to)
+  - Amount range filter (min/max in kr)
+  - Quick filters: "Uncategorized only" and "Subscriptions only"
+  - Active filter badges showing applied filters
+  - Clear all filters button
+  - Expandable/collapsible filter panel
+  - Results count showing filtered vs total transactions
+- Created useTransactionFilters hook for filtering logic:
+  - Memoized filtering for performance
+  - Supports all filter types with AND logic
+  - Amount filter uses absolute value
+  - Date range is inclusive
+- Integrated filtering into App.tsx:
+  - Filters reset when clearing data or loading new file
+  - FilterPanel appears above transaction list
+  - TransactionList receives filtered results
+
+**Key Decisions:**
+
+1. **Collapsible Filter Panel:**
+   - Search is always visible for quick access
+   - Advanced filters expand on demand
+   - Badge count shows active filter types
+
+2. **Amount Filtering:**
+   - Uses absolute value so users don't need to think about negative amounts
+   - Min/max allows flexible range queries
+
+3. **Filter Logic:**
+   - All filters use AND logic (must match all)
+   - Category filter: transaction must match ANY selected category
+   - Empty filters are ignored (no filtering applied)
+
+**Files Created:**
+- `src/components/FilterPanel.tsx` - Filter UI component
+- `src/hooks/useTransactionFilters.ts` - Filter logic hook
+- `src/hooks/index.ts` - Hook exports
+
+**Files Modified:**
+- `src/components/index.ts` - Added FilterPanel export
+- `src/App.tsx` - Integrated filtering state and components
+
+**No New Dependencies Added**
+
+---
+
 ## Entry Template
 
 ```markdown

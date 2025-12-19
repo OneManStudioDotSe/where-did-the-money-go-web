@@ -10,11 +10,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Planned
-- Transaction filtering and search
 - Chart visualizations (category breakdown, spending trends)
 - Subscription detection
 - Manual category re-assignment UI
 - AI-powered insights
+
+---
+
+## [0.2.0] - 2025-12-19 - Filtering & Search
+
+### Added
+- **Transaction Filtering & Search**
+  - Real-time search by transaction description
+  - Filter by category (multi-select)
+  - Filter by date range (from/to picker)
+  - Filter by amount range (min/max)
+  - Quick filters: "Uncategorized only", "Subscriptions only"
+  - Collapsible filter panel with search always visible
+  - Active filter badges showing applied filters
+  - Results count (X of Y transactions)
+  - Clear all filters button
+
+- **Filter Hook** (`src/hooks/useTransactionFilters.ts`)
+  - Memoized filtering for performance
+  - Reusable filter logic separated from UI
+
+### Technical Details
+- No external dependencies for filtering
+- AND logic for all filter types
+- Amount filter uses absolute value for intuitive UX
+- Filters reset when loading new data
 
 ---
 

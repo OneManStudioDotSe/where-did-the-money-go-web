@@ -408,7 +408,7 @@ Phase 8: AI Insights         → Analysis, recommendations, patterns
 
 ---
 
-### Iteration 4.3: Sorting and Filtering
+### Iteration 4.3: Sorting and Filtering ✅ COMPLETED
 **Focus:** Data organization controls
 
 **Tasks:**
@@ -417,18 +417,18 @@ Phase 8: AI Insights         → Analysis, recommendations, patterns
   - By amount (highest/lowest)
   - By category (alphabetical)
 
-- [ ] Filter controls:
+- [x] Filter controls:
   - By category
   - By date range
   - By amount range
   - Search by description
 
-- [ ] Active filter indicators
+- [x] Active filter indicators
 
 **Deliverables:**
-- `src/components/features/SortControls.tsx`
-- `src/components/features/FilterPanel.tsx`
-- `src/hooks/useTransactionFilters.ts`
+- `src/components/features/SortControls.tsx` (pending)
+- ✅ `src/components/FilterPanel.tsx`
+- ✅ `src/hooks/useTransactionFilters.ts`
 
 ---
 
@@ -740,13 +740,13 @@ Phase 8: AI Insights         → Analysis, recommendations, patterns
 | Phase 1: Foundation | ✅ Completed | 100% |
 | Phase 2: Data Processing | ✅ Completed | 100% |
 | Phase 3: Category System | 🟡 Partial | 60% |
-| Phase 4: Core UI | 🟡 Partial | 40% |
+| Phase 4: Core UI | 🟡 Partial | 60% |
 | Phase 5: Visualizations | Not Started | 0% |
 | Phase 6: Smart Features | Not Started | 0% |
 | Phase 7: User Customization | 🟡 Partial | 30% |
 | Phase 8: AI Insights | Not Started | 0% |
 
-**Last Updated:** 2025-12-19
+**Last Updated:** 2025-12-19 (v0.2.0 - Filtering & Search)
 
 ---
 

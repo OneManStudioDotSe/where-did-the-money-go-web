@@ -2,9 +2,10 @@ import { useState } from 'react'
 import './index.css'
 import { defaultCategories } from './data/categories'
 import { defaultCategoryMappings } from './data/category-mappings'
-import { FileUpload, TransactionList } from './components'
+import { FileUpload, TransactionList, FilterPanel, defaultFilters } from './components'
 import { parseTransactionsFromCSV, categorizeTransactions, getCategorizedStats } from './utils'
-import type { Transaction } from './types/transaction'
+import { useTransactionFilters } from './hooks'
+import type { Transaction, TransactionFilters } from './types/transaction'
 import type { CsvParseError } from './types/csv'
 
 function App() {
@@ -15,6 +16,13 @@ function App() {
   const [error, setError] = useState<CsvParseError | null>(null)
   const [fileName, setFileName] = useState<string | null>(null)
   const [isDemoMode, setIsDemoMode] = useState(false)
+  const [filters, setFilters] = useState<TransactionFilters>(defaultFilters)
+
+  // Apply filters to transactions
+  const { filteredTransactions, totalCount, filteredCount } = useTransactionFilters(
+    transactions,
+    filters
+  )
 
   const totalSubcategories = defaultCategories.reduce(
     (sum, cat) => sum + cat.subcategories.length,
@@ -86,6 +94,7 @@ function App() {
     setError(null)
     setFileName(null)
     setIsDemoMode(false)
+    setFilters(defaultFilters)
   }
 
   const stats = getCategorizedStats(transactions)
@@ -313,8 +322,16 @@ function App() {
               </div>
             </div>
 
+            {/* Filter Panel */}
+            <FilterPanel
+              filters={filters}
+              onFiltersChange={setFilters}
+              totalCount={totalCount}
+              filteredCount={filteredCount}
+            />
+
             {/* Transaction List */}
-            <TransactionList transactions={transactions} />
+            <TransactionList transactions={filteredTransactions} />
           </>
         )}
       </main>
