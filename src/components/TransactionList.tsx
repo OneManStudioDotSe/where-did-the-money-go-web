@@ -58,12 +58,22 @@ function SortIcon({ field, currentSort }: { field: TransactionSortField; current
   );
 }
 
-function TooltipContent({ content }: { content: string }) {
+function InfoTooltip({ content }: { content: string }) {
   return (
-    <div className="absolute z-50 hidden group-hover:block bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 text-xs text-white bg-gray-900 rounded-lg shadow-lg whitespace-nowrap pointer-events-none">
-      {content}
-      <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1">
-        <div className="border-4 border-transparent border-t-gray-900" />
+    <div className="group/tooltip relative flex items-center justify-center">
+      <button
+        className="w-5 h-5 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </button>
+      <div className="absolute z-50 hidden group-hover/tooltip:block bottom-full right-0 mb-2 px-3 py-2 text-xs text-white bg-gray-900 rounded-lg shadow-lg whitespace-nowrap pointer-events-none">
+        {content}
+        <div className="absolute top-full right-2 -mt-1">
+          <div className="border-4 border-transparent border-t-gray-900" />
+        </div>
       </div>
     </div>
   );
@@ -202,18 +212,17 @@ export function TransactionList({ transactions, onTransactionClick }: Transactio
               <div
                 key={transaction.id}
                 onClick={() => onTransactionClick?.(transaction)}
-                className={`group relative grid grid-cols-12 gap-4 px-4 py-1.5 items-center hover:bg-gray-50 transition-colors ${
+                className={`grid grid-cols-12 gap-2 px-4 py-1.5 items-center hover:bg-gray-50 transition-colors ${
                   onTransactionClick ? 'cursor-pointer' : ''
                 }`}
               >
-                <TooltipContent content={tooltipContent} />
                 {/* Date */}
                 <div className="col-span-2 text-xs text-gray-500">
                   {formatDateCondensed(transaction.date)}
                 </div>
 
                 {/* Description */}
-                <div className="col-span-5 text-sm text-gray-900 truncate">
+                <div className="col-span-4 text-sm text-gray-900 truncate">
                   {transaction.description}
                 </div>
 
@@ -242,6 +251,11 @@ export function TransactionList({ transactions, onTransactionClick }: Transactio
                 >
                   {formatAmount(transaction.amount)}
                 </div>
+
+                {/* Info Icon */}
+                <div className="col-span-1 flex justify-end">
+                  <InfoTooltip content={tooltipContent} />
+                </div>
               </div>
             );
           }
@@ -250,11 +264,10 @@ export function TransactionList({ transactions, onTransactionClick }: Transactio
             <div
               key={transaction.id}
               onClick={() => onTransactionClick?.(transaction)}
-              className={`group relative grid grid-cols-12 gap-4 px-4 py-3 items-center hover:bg-gray-50 transition-colors ${
+              className={`grid grid-cols-12 gap-2 px-4 py-3 items-center hover:bg-gray-50 transition-colors ${
                 onTransactionClick ? 'cursor-pointer' : ''
               }`}
             >
-              <TooltipContent content={tooltipContent} />
               {/* Date */}
               <div className="col-span-2 text-sm text-gray-600">
                 {formatDate(transaction.date)}
@@ -314,11 +327,16 @@ export function TransactionList({ transactions, onTransactionClick }: Transactio
 
               {/* Amount */}
               <div
-                className={`col-span-3 text-right text-sm font-medium ${
+                className={`col-span-2 text-right text-sm font-medium ${
                   transaction.amount >= 0 ? 'text-success-600' : 'text-gray-900'
                 }`}
               >
                 {formatAmount(transaction.amount)}
+              </div>
+
+              {/* Info Icon */}
+              <div className="col-span-1 flex justify-end">
+                <InfoTooltip content={tooltipContent} />
               </div>
             </div>
           );

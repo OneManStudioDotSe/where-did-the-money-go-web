@@ -2,8 +2,8 @@ import { useState } from 'react'
 import './index.css'
 import { defaultCategories } from './data/categories'
 import { defaultCategoryMappings } from './data/category-mappings'
-import { FileUpload, TransactionList, FilterPanel, defaultFilters, ProjectRoadmap, TimePeriodSelector, SpendingVisualization } from './components'
-import type { TimePeriod } from './components'
+import { FileUpload, TransactionList, FilterPanel, defaultFilters, ProjectRoadmap, TimePeriodSelector, SpendingVisualization, SettingsPanel, loadSettings } from './components'
+import type { TimePeriod, AppSettings } from './components'
 import { parseTransactionsFromCSV, categorizeTransactions, getCategorizedStats } from './utils'
 import { useTransactionFilters, useTimePeriodFilter } from './hooks'
 import type { Transaction, TransactionFilters } from './types/transaction'
@@ -12,6 +12,8 @@ import type { CsvParseError } from './types/csv'
 function App() {
   const [showCategoriesModal, setShowCategoriesModal] = useState(false)
   const [showCsvInfoModal, setShowCsvInfoModal] = useState(false)
+  const [showSettingsPanel, setShowSettingsPanel] = useState(false)
+  const [appSettings, setAppSettings] = useState<AppSettings>(() => loadSettings())
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<CsvParseError | null>(null)
@@ -120,13 +122,25 @@ function App() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <h1 className="text-2xl font-bold text-gray-900">
-            Where Did The Money Go?
-          </h1>
-          <p className="text-gray-500 mt-1">
-            Personal expense tracker - All data stays on your device
-          </p>
+        <div className="max-w-7xl mx-auto px-4 py-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">
+              Where Did The Money Go?
+            </h1>
+            <p className="text-gray-500 mt-1">
+              Personal expense tracker - All data stays on your device
+            </p>
+          </div>
+          <button
+            onClick={() => setShowSettingsPanel(true)}
+            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+            title="Settings"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </button>
         </div>
       </header>
 
@@ -339,16 +353,18 @@ function App() {
             />
 
             {/* Main Content: Visualization + Transaction List */}
-            <div className="grid lg:grid-cols-2 gap-6">
-              {/* Visualization Panel */}
-              <SpendingVisualization
-                transactions={filteredTransactions}
-                selectedPeriod={selectedPeriod}
-                allTransactions={transactions}
-              />
+            <div className="grid lg:grid-cols-5 gap-6">
+              {/* Visualization Panel - 2/5 width */}
+              <div className="lg:col-span-2">
+                <SpendingVisualization
+                  transactions={filteredTransactions}
+                  selectedPeriod={selectedPeriod}
+                  allTransactions={transactions}
+                />
+              </div>
 
-              {/* Transaction List */}
-              <div>
+              {/* Transaction List - 3/5 width */}
+              <div className="lg:col-span-3">
                 <TransactionList transactions={filteredTransactions} />
               </div>
             </div>
@@ -544,6 +560,14 @@ function App() {
           </div>
         </div>
       )}
+
+      {/* Settings Panel */}
+      <SettingsPanel
+        isOpen={showSettingsPanel}
+        onClose={() => setShowSettingsPanel(false)}
+        settings={appSettings}
+        onSettingsChange={setAppSettings}
+      />
     </div>
   )
 }

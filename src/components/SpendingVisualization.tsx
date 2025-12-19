@@ -9,7 +9,7 @@ interface SpendingVisualizationProps {
   allTransactions: Transaction[]; // For calculating trends/averages
 }
 
-type ChartType = 'bar' | 'donut';
+type ChartType = 'bar' | 'bar-vertical' | 'donut';
 type ViewMode = 'category' | 'subcategory';
 
 interface CategoryTotal {
@@ -221,6 +221,59 @@ function BarChart({ categories, maxBars = 10 }: { categories: CategoryTotal[]; m
           </div>
         );
       })}
+    </div>
+  );
+}
+
+function VerticalBarChart({ categories, maxBars = 8 }: { categories: CategoryTotal[]; maxBars?: number }) {
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const displayCategories = categories.slice(0, maxBars);
+  const maxValue = Math.max(...displayCategories.map((c) => c.total));
+  const chartHeight = 180;
+
+  return (
+    <div>
+      <div className="flex items-end justify-center gap-2" style={{ height: chartHeight }}>
+        {displayCategories.map((category, index) => {
+          const barHeight = maxValue > 0 ? (category.total / maxValue) * (chartHeight - 30) : 0;
+          const isHovered = hoveredIndex === index;
+
+          return (
+            <div
+              key={category.categoryId || 'uncategorized'}
+              className="flex flex-col items-center"
+              onMouseEnter={() => setHoveredIndex(index)}
+              onMouseLeave={() => setHoveredIndex(null)}
+            >
+              {/* Tooltip on hover */}
+              {isHovered && (
+                <div className="absolute -mt-16 px-2 py-1 bg-gray-900 text-white text-xs rounded shadow-lg whitespace-nowrap z-10">
+                  {category.name}: {formatAmount(category.total)} kr ({category.percentage.toFixed(1)}%)
+                </div>
+              )}
+              {/* Bar */}
+              <div
+                className="w-8 rounded-t-md transition-all duration-300"
+                style={{
+                  height: `${barHeight}px`,
+                  backgroundColor: category.color,
+                  opacity: isHovered ? 1 : 0.85,
+                  transform: isHovered ? 'scaleY(1.02)' : 'scaleY(1)',
+                  transformOrigin: 'bottom',
+                }}
+              />
+              {/* Icon */}
+              <div className="mt-2 text-base">{category.icon}</div>
+            </div>
+          );
+        })}
+      </div>
+      {/* Y-axis labels */}
+      <div className="flex justify-between text-xs text-gray-400 mt-2 px-4">
+        <span>0</span>
+        <span>{formatAmount(maxValue / 2)} kr</span>
+        <span>{formatAmount(maxValue)} kr</span>
+      </div>
     </div>
   );
 }
@@ -601,7 +654,25 @@ export function SpendingVisualization({
                     ? 'bg-primary-50 text-primary-700'
                     : 'bg-white text-gray-600 hover:bg-gray-50'
                 }`}
-                title="Bar Chart"
+                title="Horizontal Bar Chart"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 12h10M4 18h14"
+                  />
+                </svg>
+              </button>
+              <button
+                onClick={() => setChartType('bar-vertical')}
+                className={`p-1.5 transition-colors border-l border-gray-200 ${
+                  chartType === 'bar-vertical'
+                    ? 'bg-primary-50 text-primary-700'
+                    : 'bg-white text-gray-600 hover:bg-gray-50'
+                }`}
+                title="Vertical Bar Chart"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -669,9 +740,9 @@ export function SpendingVisualization({
               Expenses by Category
               <span className="text-gray-400 font-normal ml-2">({categoryTotals.length} categories)</span>
             </h4>
-            {chartType === 'bar' ? (
-              <BarChart categories={categoryTotals} />
-            ) : (
+            {chartType === 'bar' && <BarChart categories={categoryTotals} />}
+            {chartType === 'bar-vertical' && <VerticalBarChart categories={categoryTotals} />}
+            {chartType === 'donut' && (
               <div className="flex justify-center">
                 <DonutChart categories={categoryTotals} size={220} />
               </div>

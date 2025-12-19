@@ -13,6 +13,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Subscription detection
 - Manual category re-assignment UI
 - AI-powered insights
+- Multiple icon sets (minimal, colorful)
+- Dark mode support
+
+---
+
+## [0.4.1] - 2025-12-19 - UI Improvements
+
+### Added
+- **Vertical Bar Chart**
+  - New chart type option alongside horizontal bars and donut chart
+  - Category icons displayed below bars
+  - Hover tooltips showing category details
+
+- **Settings Panel** (`src/components/SettingsPanel.tsx`)
+  - Date format selection (ISO, European, US, German)
+  - Month start day setting (1-28, for Swedish salary cycles)
+  - Icon set selection (emoji, minimal, colorful - last two coming soon)
+  - Settings persisted to localStorage
+
+- **Info Icon Tooltip**
+  - Transaction tooltips now appear on hover over (i) icon
+  - Cleaner transaction row without hover effects
+  - Positioned at far right of each transaction row
+
+### Changed
+- **Layout Ratio**
+  - Visualization panel now takes 2/5 width
+  - Transaction list now takes 3/5 width
+  - Better balance for data-heavy views
+
+### Technical Details
+- Custom SVG vertical bar chart (no external library)
+- Settings button in header with gear icon
+- Modal-based settings panel with save/cancel
+- Nested group hover for isolated tooltip behavior
 
 ---
 

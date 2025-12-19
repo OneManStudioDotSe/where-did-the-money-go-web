@@ -14,7 +14,8 @@ Phase 4: Core UI             → Layout, components, transaction display
 Phase 5: Visualizations      → Charts, graphs, interactive displays
 Phase 6: Smart Features      → Subscriptions, grouping, totals
 Phase 7: User Customization  → File upload, custom categories, export
-Phase 8: AI Insights         → Analysis, recommendations, patterns
+Phase 8: UI Themes & Icons   → Multiple icon sets, themes, dark mode
+Phase 9: AI Insights         → Analysis, recommendations, patterns
 ```
 
 ---
@@ -637,20 +638,19 @@ Phase 8: AI Insights         → Analysis, recommendations, patterns
 
 ---
 
-### Iteration 7.3: Settings Panel
+### Iteration 7.3: Settings Panel ✅ COMPLETED
 **Focus:** User preferences
 
 **Tasks:**
-- [ ] Settings storage
-- [ ] Options:
-  - Date format preference
-  - Currency display
-  - Default time period
-  - Theme (light/dark - future)
+- [x] Settings storage (localStorage)
+- [x] Options:
+  - Date format preference (ISO, European, US, German)
+  - Month start day (1-28, for Swedish salary cycles)
+  - Icon set selection (emoji, minimal, colorful)
 
 **Deliverables:**
-- `src/components/features/Settings.tsx`
-- Settings context/store
+- ✅ `src/components/SettingsPanel.tsx` - Modal settings panel
+- ✅ Settings persistence with localStorage
 
 ---
 
@@ -674,11 +674,72 @@ Phase 8: AI Insights         → Analysis, recommendations, patterns
 
 ---
 
-## Phase 8: AI Insights
+## Phase 8: UI Themes & Icons
+
+**Goal:** Provide multiple icon sets and UI customization options.
+
+### Iteration 8.1: Minimal Icon Set
+**Focus:** Geometric shapes for categories
+
+**Tasks:**
+- [ ] Create minimal icon set with geometric shapes (circles, squares, triangles)
+- [ ] Map all categories to minimal icons
+- [ ] Add icon set selector in settings
+
+**Deliverables:**
+- Icon mapping for minimal set
+- Integration with existing category display
+
+---
+
+### Iteration 8.2: Colorful Icon Set
+**Focus:** Colored circles/dots for categories
+
+**Tasks:**
+- [ ] Create colorful icon set with colored circles
+- [ ] Unique color for each category
+- [ ] Add icon set selector in settings
+
+**Deliverables:**
+- Icon mapping for colorful set
+- Color palette for categories
+
+---
+
+### Iteration 8.3: Custom Color Themes
+**Focus:** User-selectable color schemes
+
+**Tasks:**
+- [ ] Define additional color themes
+- [ ] Theme switcher in settings
+- [ ] Persist theme preference
+
+**Deliverables:**
+- Multiple color theme definitions
+- Theme context/provider
+
+---
+
+### Iteration 8.4: Dark Mode
+**Focus:** Dark theme support
+
+**Tasks:**
+- [ ] Dark mode color palette
+- [ ] System preference detection
+- [ ] Manual toggle in settings
+- [ ] Smooth transition between modes
+
+**Deliverables:**
+- Dark mode styles
+- Dark mode toggle
+
+---
+
+## Phase 9: AI Insights
 
 **Goal:** Provide intelligent spending analysis and recommendations.
 
-### Iteration 8.1: Pattern Analysis
+### Iteration 9.1: Pattern Analysis
 **Focus:** Identify spending patterns
 
 **Tasks:**
@@ -694,7 +755,7 @@ Phase 8: AI Insights         → Analysis, recommendations, patterns
 
 ---
 
-### Iteration 8.2: Recommendation Engine
+### Iteration 9.2: Recommendation Engine
 **Focus:** Generate actionable insights
 
 **Tasks:**
@@ -713,7 +774,7 @@ Phase 8: AI Insights         → Analysis, recommendations, patterns
 
 ---
 
-### Iteration 8.3: Insights UI
+### Iteration 9.3: Insights UI
 **Focus:** Display insights attractively
 
 **Tasks:**
@@ -759,10 +820,11 @@ Phase 8: AI Insights         → Analysis, recommendations, patterns
 | Phase 4: Core UI | ✅ Completed | 100% |
 | Phase 5: Visualizations | ✅ Completed | 100% |
 | Phase 6: Smart Features | 🟡 Partial | 75% |
-| Phase 7: User Customization | 🟡 Partial | 40% |
-| Phase 8: AI Insights | Not Started | 0% |
+| Phase 7: User Customization | 🟡 Partial | 60% |
+| Phase 8: UI Themes & Icons | Not Started | 0% |
+| Phase 9: AI Insights | Not Started | 0% |
 
-**Last Updated:** 2025-12-19 (v0.4.0 - Spending Visualization)
+**Last Updated:** 2025-12-19 (v0.4.1 - UI Improvements)
 
 ---
 

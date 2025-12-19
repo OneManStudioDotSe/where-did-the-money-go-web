@@ -530,6 +530,68 @@ npm run dev
 
 ---
 
+## Entry #010 - 2025-12-19
+
+### UI Improvements & Settings Panel
+
+**What was done:**
+- Changed layout ratio from 50/50 to 2/5 (visualization) and 3/5 (transactions)
+- Added vertical bar chart as third visualization option
+- Moved transaction tooltip to info icon (?) at far right of each row
+- Created comprehensive Settings Panel with:
+  - Date format selection (ISO, European, US, German)
+  - Month start day setting (1-28)
+  - Icon set selection (emoji, minimal, colorful - last two coming soon)
+- Added new Phase 8 "UI Themes & Icons" to development roadmap
+- Renumbered AI Insights to Phase 9
+
+**Key Features:**
+
+1. **Layout Ratio Change:**
+   - Grid changed from `grid-cols-2` to `grid-cols-5`
+   - Visualization gets `col-span-2` (40%)
+   - Transactions get `col-span-3` (60%)
+   - Better balance for data-heavy transaction lists
+
+2. **Vertical Bar Chart:**
+   - Custom SVG-based implementation
+   - Shows top 8 spending categories
+   - Category icons displayed below bars
+   - Hover state with tooltip showing details
+   - Bar height represents percentage of max spending
+
+3. **Info Icon Tooltip:**
+   - Replaced row-wide hover tooltip with targeted info icon
+   - Uses nested group hover (`group/tooltip`) for isolation
+   - Icon positioned at far right of transaction row
+   - Shows date, description, category, and amount on hover
+
+4. **Settings Panel:**
+   - Modal design with header, content, and footer
+   - Date format: Affects date display throughout app
+   - Month start day: For Swedish salary cycles (typically 25th)
+   - Icon set: Placeholder for future icon set implementations
+   - Settings persisted to localStorage
+
+5. **Roadmap Update:**
+   - New Phase 8 covers UI themes and icons
+   - Planned features: minimal icons, colorful icons, custom themes, dark mode
+   - AI Insights moved to Phase 9
+
+**Files Created:**
+- `src/components/SettingsPanel.tsx` - Settings modal component
+
+**Files Modified:**
+- `src/App.tsx` - Layout ratio, settings button, settings panel integration
+- `src/components/SpendingVisualization.tsx` - Vertical bar chart, chart toggle
+- `src/components/TransactionList.tsx` - Info icon tooltip
+- `src/components/ProjectRoadmap.tsx` - New Phase 8, renumbered Phase 9
+- `src/components/index.ts` - Export SettingsPanel
+
+**No New Dependencies Added**
+
+---
+
 ## Entry Template
 
 ```markdown
