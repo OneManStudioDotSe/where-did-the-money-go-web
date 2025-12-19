@@ -191,6 +191,128 @@ npm run preview
 
 ---
 
+## Entry #004 - 2025-12-19
+
+### Phase 1 Iteration 1.3 - CSV Parser & Core Features
+
+**What was done:**
+- Implemented complete CSV parser utility with:
+  - BOM removal for UTF-8 files
+  - Quoted field handling
+  - Auto-detection of column types (date, amount, balance, description, verification)
+  - Swedish header name recognition
+  - Configurable delimiter and format options
+- Created FileUpload component with:
+  - Drag & drop support
+  - Click to browse
+  - File type validation
+  - Loading state indicator
+  - Error display
+- Built category mapping service with:
+  - Pattern matching (exact, contains, starts_with, regex)
+  - Priority-based matching system
+  - localStorage for custom mappings
+  - Helper functions for category lookups
+- Created TransactionList component with:
+  - Grid-based layout with Date, Description, Category, Amount columns
+  - Color-coded category badges
+  - Transaction badges (income, uncategorized, high value)
+  - Swedish locale number formatting
+- Integrated all components into App.tsx with:
+  - State management for transactions
+  - Summary statistics display (expenses, income, categorization %, net change)
+  - Conditional rendering (upload view vs analysis view)
+
+**Files Created:**
+- `src/utils/csv-parser.ts` - CSV parsing and column detection
+- `src/utils/category-service.ts` - Category matching and lookups
+- `src/utils/index.ts` - Utility exports
+- `src/components/FileUpload.tsx` - Drag & drop file upload
+- `src/components/TransactionList.tsx` - Transaction table display
+- `src/components/index.ts` - Component exports
+
+**Files Modified:**
+- `src/App.tsx` - Full integration of upload flow and transaction display
+
+**Key Decisions:**
+
+1. **Column Auto-Detection:**
+   - Analyze sample values to detect data types
+   - Boost confidence based on Swedish header names
+   - Fall back to heuristics for unnamed columns
+
+2. **Pattern Matching Priority:**
+   - Higher priority patterns checked first
+   - Custom user mappings override defaults
+   - Sorted by priority before matching
+
+3. **State Management:**
+   - Using React useState for now (simple, no extra deps)
+   - Will evaluate Zustand if state becomes complex
+
+4. **No New Dependencies:**
+   - All parsing done with vanilla TypeScript
+   - No external CSV libraries needed
+
+**Testing Notes:**
+The parser is ready to test with real Swedish bank CSV exports. Upload a file to see:
+- Auto-categorization of known merchants
+- Summary statistics
+- Transaction list with category badges
+
+**Running the Project:**
+```bash
+npm run dev
+# Open http://localhost:5173
+# Drag & drop a CSV file to test
+```
+
+**Next Steps (Phase 2):**
+- Add transaction filtering and search
+- Implement category breakdown charts
+- Add ability to manually re-categorize transactions
+- Build subscription detection
+
+---
+
+## Entry #005 - 2025-12-19
+
+### Demo Mode Feature
+
+**What was done:**
+- Added "Demo Mode" functionality for users to explore the app without their own data
+- Created `/public/demo-data.csv` from sample transaction data
+- Added demo section in the welcome card with:
+  - Clear "DEMO" badge label
+  - Description explaining the feature purpose
+  - "Load Demo Data" button
+- When viewing demo data:
+  - Shows prominent "DEMO MODE" banner at top
+  - Header shows "DEMO" badge next to title
+  - Button changes to "Exit Demo" instead of "Upload New File"
+  - Clear messaging that sample data is being viewed
+
+**UI/UX Decisions:**
+1. **Prominent but not intrusive demo indicator:**
+   - Blue-themed banner matches primary color scheme
+   - Badge in header for quick identification
+   - Always clear way to exit demo mode
+
+2. **Demo description:**
+   - Explains what users will see (categories, summaries)
+   - Sets expectations before loading
+   - Positioned below file upload, suggesting "try before you commit"
+
+**Files Modified:**
+- `src/App.tsx` - Added demo mode state, handler, and UI elements
+
+**Files Created:**
+- `public/demo-data.csv` - Sample transactions served as static asset
+
+**No New Dependencies Added**
+
+---
+
 ## Entry Template
 
 ```markdown

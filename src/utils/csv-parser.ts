@@ -1,0 +1,444 @@
+import type {
+  CsvConfig,
+  CsvParseResult,
+  CsvParseError,
+  ColumnMapping,
+  ColumnAnalysis,
+  ColumnType,
+} from '../types/csv';
+import type { Transaction, RawTransaction, TransactionBadge } from '../types/transaction';
+import { DEFAULT_CSV_CONFIG } from '../types/csv';
+
+/**
+ * Remove BOM (Byte Order Mark) from the beginning of a string
+ */
+function removeBOM(text: string): string {
+  if (text.charCodeAt(0) === 0xfeff) {
+    return text.slice(1);
+  }
+  return text;
+}
+
+/**
+ * Parse a CSV string into rows and columns
+ */
+export function parseCSV(
+  content: string,
+  config: CsvConfig = DEFAULT_CSV_CONFIG
+): CsvParseResult | CsvParseError {
+  const cleanContent = removeBOM(content.trim());
+
+  if (!cleanContent) {
+    return {
+      type: 'empty_file',
+      message: 'The file is empty',
+    };
+  }
+
+  const lines = cleanContent.split(/\r?\n/).filter((line) => line.trim());
+
+  if (lines.length === 0) {
+    return {
+      type: 'empty_file',
+      message: 'No data rows found in the file',
+    };
+  }
+
+  const parseRow = (line: string): string[] => {
+    const values: string[] = [];
+    let current = '';
+    let inQuotes = false;
+
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      const nextChar = line[i + 1];
+
+      if (char === '"') {
+        if (inQuotes && nextChar === '"') {
+          current += '"';
+          i++;
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (char === config.delimiter && !inQuotes) {
+        values.push(current.trim());
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    values.push(current.trim());
+
+    return values;
+  };
+
+  const headers = config.hasHeader ? parseRow(lines[0]) : [];
+  const dataLines = config.hasHeader ? lines.slice(1) : lines;
+  const rows = dataLines.map(parseRow);
+
+  // Validate consistent column count
+  const expectedColumns = headers.length || rows[0]?.length || 0;
+  const invalidRows = rows.filter((row) => row.length !== expectedColumns);
+
+  if (invalidRows.length > rows.length * 0.1) {
+    return {
+      type: 'invalid_format',
+      message: 'Too many rows have inconsistent column counts',
+      details: `Expected ${expectedColumns} columns, but ${invalidRows.length} rows have different counts`,
+    };
+  }
+
+  return {
+    headers,
+    rows,
+    rowCount: rows.length,
+    config,
+  };
+}
+
+/**
+ * Detect the type of a column based on its values
+ */
+function detectColumnType(values: string[]): { type: ColumnType; confidence: number } {
+  const nonEmpty = values.filter((v) => v.trim());
+  if (nonEmpty.length === 0) return { type: 'unknown', confidence: 0 };
+
+  // Date detection (YYYY-MM-DD)
+  const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+  const dateMatches = nonEmpty.filter((v) => datePattern.test(v.trim())).length;
+  if (dateMatches / nonEmpty.length > 0.9) {
+    return { type: 'date', confidence: dateMatches / nonEmpty.length };
+  }
+
+  // Amount/Balance detection (numeric with possible negative)
+  const numericPattern = /^-?\d+([.,]\d+)?$/;
+  const numericMatches = nonEmpty.filter((v) => numericPattern.test(v.trim())).length;
+  if (numericMatches / nonEmpty.length > 0.9) {
+    // Check for negative values to distinguish amount from balance
+    const hasNegatives = nonEmpty.some((v) => v.trim().startsWith('-'));
+    const avgAbsValue =
+      nonEmpty.reduce((sum, v) => {
+        const num = parseFloat(v.replace(',', '.'));
+        return sum + (isNaN(num) ? 0 : Math.abs(num));
+      }, 0) / nonEmpty.length;
+
+    // Balance values tend to be larger and more varied
+    if (hasNegatives) {
+      return { type: 'amount', confidence: numericMatches / nonEmpty.length };
+    }
+    return { type: avgAbsValue > 1000 ? 'balance' : 'amount', confidence: 0.7 };
+  }
+
+  // Verification number (numeric string, no decimals)
+  const verificationPattern = /^\d{8,}$/;
+  const verificationMatches = nonEmpty.filter((v) => verificationPattern.test(v.trim())).length;
+  if (verificationMatches / nonEmpty.length > 0.8) {
+    return { type: 'verification', confidence: verificationMatches / nonEmpty.length };
+  }
+
+  // Default to description for text columns
+  const avgLength = nonEmpty.reduce((sum, v) => sum + v.length, 0) / nonEmpty.length;
+  if (avgLength > 5) {
+    return { type: 'description', confidence: 0.6 };
+  }
+
+  return { type: 'unknown', confidence: 0 };
+}
+
+/**
+ * Analyze columns and suggest mappings
+ */
+export function analyzeColumns(result: CsvParseResult): ColumnAnalysis[] {
+  const { headers, rows } = result;
+  const analyses: ColumnAnalysis[] = [];
+
+  const columnCount = headers.length || rows[0]?.length || 0;
+
+  for (let i = 0; i < columnCount; i++) {
+    const columnName = headers[i] || `Column ${i + 1}`;
+    const sampleValues = rows.slice(0, 10).map((row) => row[i] || '');
+    const allValues = rows.map((row) => row[i] || '');
+
+    const { type, confidence } = detectColumnType(allValues);
+
+    // Boost confidence based on Swedish header names
+    let adjustedType = type;
+    let adjustedConfidence = confidence;
+
+    const lowerHeader = columnName.toLowerCase();
+    if (lowerHeader.includes('datum') || lowerHeader.includes('date')) {
+      if (type === 'date') adjustedConfidence = Math.max(adjustedConfidence, 0.95);
+    }
+    if (lowerHeader.includes('belopp') || lowerHeader.includes('amount')) {
+      adjustedType = 'amount';
+      adjustedConfidence = Math.max(adjustedConfidence, 0.95);
+    }
+    if (lowerHeader.includes('saldo') || lowerHeader.includes('balance')) {
+      adjustedType = 'balance';
+      adjustedConfidence = Math.max(adjustedConfidence, 0.95);
+    }
+    if (lowerHeader === 'text' || lowerHeader.includes('beskrivning')) {
+      adjustedType = 'description';
+      adjustedConfidence = Math.max(adjustedConfidence, 0.95);
+    }
+    if (lowerHeader.includes('verifikation') || lowerHeader.includes('verification')) {
+      adjustedType = 'verification';
+      adjustedConfidence = Math.max(adjustedConfidence, 0.95);
+    }
+
+    analyses.push({
+      columnName,
+      columnIndex: i,
+      sampleValues,
+      detectedType: adjustedType,
+      confidence: adjustedConfidence,
+    });
+  }
+
+  return analyses;
+}
+
+/**
+ * Auto-detect column mappings from analysis
+ */
+export function autoDetectMappings(analyses: ColumnAnalysis[]): ColumnMapping {
+  const mapping: ColumnMapping = {
+    dateColumn: null,
+    valueDateColumn: null,
+    amountColumn: null,
+    descriptionColumn: null,
+    balanceColumn: null,
+    verificationColumn: null,
+  };
+
+  // Sort by confidence for each type
+  const byType = (type: ColumnType) =>
+    analyses
+      .filter((a) => a.detectedType === type)
+      .sort((a, b) => b.confidence - a.confidence);
+
+  const dates = byType('date');
+  if (dates.length >= 1) {
+    mapping.dateColumn = dates[0].columnName;
+    // Second date column is likely value date
+    if (dates.length >= 2) {
+      mapping.valueDateColumn = dates[1].columnName;
+    }
+  }
+
+  const amounts = byType('amount');
+  if (amounts.length >= 1) {
+    mapping.amountColumn = amounts[0].columnName;
+  }
+
+  const descriptions = byType('description');
+  if (descriptions.length >= 1) {
+    mapping.descriptionColumn = descriptions[0].columnName;
+  }
+
+  const balances = byType('balance');
+  if (balances.length >= 1) {
+    mapping.balanceColumn = balances[0].columnName;
+  }
+
+  const verifications = byType('verification');
+  if (verifications.length >= 1) {
+    mapping.verificationColumn = verifications[0].columnName;
+  }
+
+  return mapping;
+}
+
+/**
+ * Parse amount string to number
+ */
+function parseAmount(value: string, decimalSeparator: string = '.'): number {
+  if (!value || !value.trim()) return 0;
+
+  let cleaned = value.trim();
+
+  // Handle Swedish decimal separator (could be comma or period)
+  if (decimalSeparator === ',') {
+    cleaned = cleaned.replace(',', '.');
+  }
+
+  // Remove thousand separators
+  cleaned = cleaned.replace(/\s/g, '');
+
+  const num = parseFloat(cleaned);
+  return isNaN(num) ? 0 : num;
+}
+
+/**
+ * Parse date string to Date object
+ */
+function parseDate(value: string): Date {
+  if (!value || !value.trim()) return new Date();
+
+  // Try YYYY-MM-DD format
+  const match = value.trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (match) {
+    return new Date(parseInt(match[1]), parseInt(match[2]) - 1, parseInt(match[3]));
+  }
+
+  // Fallback to Date parsing
+  const date = new Date(value);
+  return isNaN(date.getTime()) ? new Date() : date;
+}
+
+/**
+ * Generate a unique ID for a transaction
+ */
+function generateTransactionId(row: Record<string, string>, index: number): string {
+  const data = JSON.stringify(row) + index;
+  let hash = 0;
+  for (let i = 0; i < data.length; i++) {
+    const char = data.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash = hash & hash;
+  }
+  return `txn-${Math.abs(hash).toString(36)}`;
+}
+
+/**
+ * Determine badges for a transaction
+ */
+function getBadges(amount: number, categoryId: string | null): TransactionBadge[] {
+  const badges: TransactionBadge[] = [];
+
+  if (amount > 0) {
+    badges.push({ type: 'income', label: 'Income' });
+  }
+
+  if (!categoryId) {
+    badges.push({ type: 'uncategorized', label: 'Uncategorized' });
+  }
+
+  // High value threshold (customize as needed)
+  if (Math.abs(amount) > 5000) {
+    badges.push({ type: 'high_value', label: 'High Value' });
+  }
+
+  return badges;
+}
+
+/**
+ * Convert parsed CSV rows to Transaction objects
+ */
+export function convertToTransactions(
+  result: CsvParseResult,
+  mapping: ColumnMapping
+): Transaction[] {
+  const { headers, rows, config } = result;
+
+  const getColumnIndex = (columnName: string | null): number => {
+    if (columnName === null) return -1;
+    const index = headers.indexOf(columnName);
+    return index;
+  };
+
+  const dateIdx = getColumnIndex(mapping.dateColumn);
+  const valueDateIdx = getColumnIndex(mapping.valueDateColumn);
+  const amountIdx = getColumnIndex(mapping.amountColumn);
+  const descIdx = getColumnIndex(mapping.descriptionColumn);
+  const balanceIdx = getColumnIndex(mapping.balanceColumn);
+  const verificationIdx = getColumnIndex(mapping.verificationColumn);
+
+  if (dateIdx === -1 || amountIdx === -1 || descIdx === -1) {
+    console.warn('Missing required columns for transaction conversion');
+    return [];
+  }
+
+  return rows.map((row, index) => {
+    const rawData: Record<string, string> = {};
+    headers.forEach((header, i) => {
+      rawData[header] = row[i] || '';
+    });
+
+    const amount = parseAmount(row[amountIdx] || '', config.decimalSeparator);
+    const date = parseDate(row[dateIdx] || '');
+    const valueDate =
+      valueDateIdx !== -1 ? parseDate(row[valueDateIdx] || '') : date;
+
+    return {
+      id: generateTransactionId(rawData, index),
+      date,
+      valueDate,
+      amount,
+      description: row[descIdx] || '',
+      categoryId: null,
+      subcategoryId: null,
+      isSubscription: false,
+      balance: balanceIdx !== -1 ? parseAmount(row[balanceIdx] || '', config.decimalSeparator) : 0,
+      verificationNumber: verificationIdx !== -1 ? row[verificationIdx] || '' : '',
+      badges: getBadges(amount, null),
+      rawData,
+    };
+  });
+}
+
+/**
+ * Parse raw transaction data from Swedish bank format
+ */
+export function parseSwedishBankCSV(content: string): RawTransaction[] | CsvParseError {
+  const result = parseCSV(content, DEFAULT_CSV_CONFIG);
+
+  if ('type' in result) {
+    return result; // Return error
+  }
+
+  const analyses = analyzeColumns(result);
+  const mapping = autoDetectMappings(analyses);
+
+  // Validate we have the minimum required columns
+  if (!mapping.dateColumn || !mapping.amountColumn || !mapping.descriptionColumn) {
+    return {
+      type: 'missing_columns',
+      message: 'Could not detect required columns',
+      details: `Found: date=${mapping.dateColumn}, amount=${mapping.amountColumn}, description=${mapping.descriptionColumn}`,
+    };
+  }
+
+  const { headers, rows } = result;
+  const dateIdx = headers.indexOf(mapping.dateColumn);
+  const valueDateIdx = mapping.valueDateColumn ? headers.indexOf(mapping.valueDateColumn) : -1;
+  const amountIdx = headers.indexOf(mapping.amountColumn);
+  const descIdx = headers.indexOf(mapping.descriptionColumn);
+  const balanceIdx = mapping.balanceColumn ? headers.indexOf(mapping.balanceColumn) : -1;
+  const verificationIdx = mapping.verificationColumn
+    ? headers.indexOf(mapping.verificationColumn)
+    : -1;
+
+  return rows.map((row) => ({
+    bookingDate: row[dateIdx] || '',
+    valueDate: valueDateIdx !== -1 ? row[valueDateIdx] || '' : row[dateIdx] || '',
+    verificationNumber: verificationIdx !== -1 ? row[verificationIdx] || '' : '',
+    text: row[descIdx] || '',
+    amount: row[amountIdx] || '',
+    balance: balanceIdx !== -1 ? row[balanceIdx] || '' : '',
+  }));
+}
+
+/**
+ * Full pipeline: parse CSV content and return Transaction objects
+ */
+export function parseTransactionsFromCSV(content: string): Transaction[] | CsvParseError {
+  const result = parseCSV(content, DEFAULT_CSV_CONFIG);
+
+  if ('type' in result) {
+    return result;
+  }
+
+  const analyses = analyzeColumns(result);
+  const mapping = autoDetectMappings(analyses);
+
+  if (!mapping.dateColumn || !mapping.amountColumn || !mapping.descriptionColumn) {
+    return {
+      type: 'missing_columns',
+      message: 'Could not detect required columns',
+      details: `Found: date=${mapping.dateColumn}, amount=${mapping.amountColumn}, description=${mapping.descriptionColumn}`,
+    };
+  }
+
+  return convertToTransactions(result, mapping);
+}

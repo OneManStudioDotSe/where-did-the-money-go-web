@@ -10,110 +10,109 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Planned
-- Project scaffolding and initial setup
-- Core data models and TypeScript interfaces
-- CSV parsing and column detection
-- Category/subcategory system
-- Basic transaction list view
-- Chart visualizations
+- Transaction filtering and search
+- Chart visualizations (category breakdown, spending trends)
 - Subscription detection
+- Manual category re-assignment UI
 - AI-powered insights
 
 ---
 
 ## Version History
 
-### [0.1.0] - TBD - Foundation Phase
+### [0.1.0] - 2025-12-19 - Foundation & Core Features
 
 #### Added
-- Initial project setup with chosen framework
-- TypeScript configuration
-- Core data models:
-  - Transaction interface
+- **Project Setup**
+  - Vite 6 + React 19 + TypeScript project
+  - Tailwind CSS 4 with custom theme colors
+  - Folder structure (components, utils, hooks, data, types)
+
+- **Core Data Models** (`src/types/`)
+  - Transaction interface with badges, category assignments
   - Category/Subcategory structures
-  - Column mapping types
-- Sample CSV data for development
-- Basic project structure
+  - CSV parsing types with column mapping
+  - Filter and sort type definitions
+
+- **Category System** (`src/data/`)
+  - 13 default categories with 51 subcategories
+  - 183 Swedish merchant pattern mappings
+  - Priority-based matching system
+
+- **CSV Parser** (`src/utils/csv-parser.ts`)
+  - BOM removal for UTF-8 files
+  - Semicolon delimiter support
+  - Auto-column detection (date, amount, description, balance)
+  - Swedish header name recognition
+  - Transaction normalization
+
+- **Category Service** (`src/utils/category-service.ts`)
+  - Pattern matching (exact, contains, starts_with, regex)
+  - Custom mapping persistence to localStorage
+  - Category lookup helpers
+
+- **UI Components**
+  - FileUpload component with drag & drop
+  - TransactionList with category badges
+  - Interactive modals for category/CSV info
+  - Summary statistics display
+  - **Demo Mode** - Try the app with sample Swedish bank transactions
+    - Load Demo Data button on welcome screen
+    - Demo Mode banner when viewing sample data
+    - Clear visual indicators (badges) throughout
+
+- **Documentation**
+  - CSV format specification (docs/CSV_FORMAT.md)
+  - Category hierarchy documentation (docs/CATEGORIES.md)
+  - Development log (DEVLOG.md)
+  - Roadmap with progress tracking
+
+#### Technical Details
+- No external CSV parsing libraries (vanilla TypeScript)
+- No state management library yet (React useState)
+- Swedish locale number formatting
+- Mobile-responsive layout
 
 ---
 
-### [0.2.0] - TBD - CSV Processing Phase
+### [0.2.0] - TBD - Filtering & Charts Phase
 
-#### Added
-- CSV file reader utility
-- Column type detection algorithm
-- Transaction parser and normalizer
-- Column mapping UI for unrecognized formats
-- Basic validation and error handling
-
----
-
-### [0.3.0] - TBD - Category System Phase
-
-#### Added
-- Category and subcategory definitions
-- Transaction-to-category mapping engine
-- Hardcoded initial category mappings
-- Uncategorized transaction detection
-- Manual category assignment UI
-- localStorage persistence for custom mappings
+#### Planned
+- Transaction filtering by category, date, amount
+- Search functionality
+- Category breakdown chart
+- Monthly spending trends
+- Interactive chart filtering
 
 ---
 
-### [0.4.0] - TBD - Basic UI Phase
+### [0.3.0] - TBD - Smart Features Phase
 
-#### Added
-- Application shell and layout
-- Grid-based dashboard structure
-- Transaction list component
-- Category badges and indicators
-- Sorting functionality (date, amount, category)
-- Responsive design foundations
-
----
-
-### [0.5.0] - TBD - Visualization Phase
-
-#### Added
-- Chart library integration
-- Expense breakdown by category (bar chart)
-- Monthly spending trends (line chart)
-- Category distribution (pie/donut chart)
-- Interactive chart tooltips
-- Chart filtering by time period
-
----
-
-### [0.6.0] - TBD - Advanced Features Phase
-
-#### Added
+#### Planned
 - Subscription detection algorithm
-- Subscription badges on transactions
 - Time-based grouping (day, week, month, quarter)
 - Category totals and summaries
 - Enhanced filtering options
 
 ---
 
-### [0.7.0] - TBD - User Customization Phase
+### [0.4.0] - TBD - User Customization Phase
 
-#### Added
-- User file upload functionality
+#### Planned
 - Custom category creation
-- Bulk category assignment
-- Export functionality
+- Manual category re-assignment
+- Export functionality (CSV, JSON)
 - Settings panel
 
 ---
 
-### [0.8.0] - TBD - AI Insights Phase
+### [0.5.0] - TBD - AI Insights Phase
 
-#### Added
+#### Planned
 - AI insight generation system
 - Spending pattern analysis
 - Savings recommendations
 - Anomaly detection
-- Insight cards UI
 
 ---
 
