@@ -545,24 +545,28 @@ Phase 8: AI Insights         → Analysis, recommendations, patterns
 
 ---
 
-### Iteration 6.2: Time-Based Grouping
+### Iteration 6.2: Time-Based Grouping ✅ COMPLETED
 **Focus:** Organize transactions by time periods
 
 **Tasks:**
-- [ ] Grouping utilities:
+- [x] Grouping utilities:
   - By day
   - By week
   - By month
   - By quarter
+  - By year
 
-- [ ] Period summaries:
+- [x] Period summaries:
   - Total spent
-  - Average per category
-  - Comparison to previous period
+  - Total income
+  - Net change
+  - Transaction count
+
+- [ ] Comparison to previous period (future enhancement)
 
 **Deliverables:**
-- `src/utils/date-grouping.ts`
-- Period selector UI
+- ✅ `src/components/TimePeriodSelector.tsx` - Period selection UI
+- ✅ `src/hooks/useTimePeriodFilter.ts` - Period filtering hook
 
 ---
 
@@ -742,11 +746,11 @@ Phase 8: AI Insights         → Analysis, recommendations, patterns
 | Phase 3: Category System | 🟡 Partial | 60% |
 | Phase 4: Core UI | 🟡 Partial | 60% |
 | Phase 5: Visualizations | Not Started | 0% |
-| Phase 6: Smart Features | Not Started | 0% |
+| Phase 6: Smart Features | 🟡 Partial | 25% |
 | Phase 7: User Customization | 🟡 Partial | 30% |
 | Phase 8: AI Insights | Not Started | 0% |
 
-**Last Updated:** 2025-12-19 (v0.2.0 - Filtering & Search)
+**Last Updated:** 2025-12-19 (v0.3.0 - Time Period Grouping)
 
 ---
 
