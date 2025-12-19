@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import type { Transaction, TransactionSortField, SortDirection } from '../types/transaction';
 import { getCategoryName, getSubcategoryName, getCategoryColor, getCategoryIcon } from '../utils/category-service';
+import { TransactionBadges } from './ui/Badge';
 
 interface TransactionListProps {
   transactions: Transaction[];
@@ -222,8 +223,14 @@ export function TransactionList({ transactions, onTransactionClick }: Transactio
                 </div>
 
                 {/* Description */}
-                <div className="col-span-4 text-sm text-gray-900 dark:text-white truncate">
-                  {transaction.description}
+                <div className="col-span-4 flex items-center gap-2">
+                  <span className="text-sm text-gray-900 dark:text-white truncate">
+                    {transaction.description}
+                  </span>
+                  <TransactionBadges
+                    transaction={transaction}
+                    showLabels={false}
+                  />
                 </div>
 
                 {/* Category */}
@@ -279,26 +286,11 @@ export function TransactionList({ transactions, onTransactionClick }: Transactio
                   {transaction.description}
                 </p>
                 {/* Badges */}
-                {transaction.badges.length > 0 && (
-                  <div className="flex gap-1 mt-1">
-                    {transaction.badges.map((badge) => (
-                      <span
-                        key={badge.type}
-                        className={`px-1.5 py-0.5 text-xs rounded-full ${
-                          badge.type === 'income'
-                            ? 'bg-success-500/10 text-success-600 dark:text-success-400'
-                            : badge.type === 'uncategorized'
-                            ? 'bg-warning-500/10 text-warning-600 dark:text-warning-400'
-                            : badge.type === 'high_value'
-                            ? 'bg-danger-500/10 text-danger-600 dark:text-danger-400'
-                            : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400'
-                        }`}
-                      >
-                        {badge.label}
-                      </span>
-                    ))}
-                  </div>
-                )}
+                <TransactionBadges
+                  transaction={transaction}
+                  showLabels={false}
+                  className="mt-1"
+                />
               </div>
 
               {/* Category */}

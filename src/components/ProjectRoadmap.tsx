@@ -78,6 +78,7 @@ const projectPhases: Phase[] = [
       { name: 'Filter by category, date, amount, search', completed: true },
       { name: 'Sort controls (date, amount, category)', completed: true },
       { name: 'Start Over reset button in header', completed: true },
+      { name: 'Badge system (uncategorized, subscription, high-value)', completed: true },
     ],
   },
   {

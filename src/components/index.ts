@@ -21,3 +21,5 @@ export { MobileMenu } from './layout/MobileMenu';
 // UI components
 export { Card, CardHeader, CardContent, CardFooter } from './ui/Card';
 export { CategoryIcon } from './ui/CategoryIcon';
+export { Badge, TransactionBadges, getTransactionBadges } from './ui/Badge';
+export type { BadgeType } from './ui/Badge';

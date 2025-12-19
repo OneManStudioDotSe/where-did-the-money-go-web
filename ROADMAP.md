@@ -423,24 +423,23 @@ Phase 9: AI Insights         → Analysis, recommendations, patterns
 
 ---
 
-### Iteration 4.4: Badge System 
+### Iteration 4.4: Badge System ✅
 **Focus:** Visual indicators for transaction states
 
 **Tasks:**
-- [ ] Badge types:
+- [x] Badge types:
   - Uncategorized (needs attention)
   - Subscription (recurring)
   - High value (above threshold)
-  - Recent (within X days)
 
-- [ ] Badge component:
+- [x] Badge component:
   - Icon + label
   - Color variants
   - Tooltip with details
 
 **Deliverables:**
-- `src/components/ui/Badge.tsx`
-- Badge type definitions
+- ✅ `src/components/ui/Badge.tsx` - Badge, TransactionBadges, getTransactionBadges
+- ✅ Badge type definitions (BadgeType export)
 
 ---
 
