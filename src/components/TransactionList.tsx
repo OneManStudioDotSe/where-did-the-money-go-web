@@ -1,9 +1,15 @@
-import type { Transaction } from '../types/transaction';
+import { useState, useMemo } from 'react';
+import type { Transaction, TransactionSortField, SortDirection } from '../types/transaction';
 import { getCategoryName, getSubcategoryName, getCategoryColor, getCategoryIcon } from '../utils/category-service';
 
 interface TransactionListProps {
   transactions: Transaction[];
   onTransactionClick?: (transaction: Transaction) => void;
+}
+
+interface SortState {
+  field: TransactionSortField;
+  direction: SortDirection;
 }
 
 function formatAmount(amount: number): string {
@@ -22,7 +28,83 @@ function formatDate(date: Date): string {
   });
 }
 
+function formatDateCondensed(date: Date): string {
+  return date.toLocaleDateString('sv-SE', {
+    month: 'short',
+    day: 'numeric',
+  });
+}
+
+function SortIcon({ field, currentSort }: { field: TransactionSortField; currentSort: SortState }) {
+  const isActive = currentSort.field === field;
+
+  return (
+    <span className={`inline-flex flex-col ml-1 ${isActive ? 'text-primary-600' : 'text-gray-400'}`}>
+      <svg
+        className={`w-3 h-3 -mb-1 ${isActive && currentSort.direction === 'asc' ? 'text-primary-600' : ''}`}
+        fill="currentColor"
+        viewBox="0 0 20 20"
+      >
+        <path d="M5 10l5-5 5 5H5z" />
+      </svg>
+      <svg
+        className={`w-3 h-3 ${isActive && currentSort.direction === 'desc' ? 'text-primary-600' : ''}`}
+        fill="currentColor"
+        viewBox="0 0 20 20"
+      >
+        <path d="M5 10l5 5 5-5H5z" />
+      </svg>
+    </span>
+  );
+}
+
+function TooltipContent({ content }: { content: string }) {
+  return (
+    <div className="absolute z-50 hidden group-hover:block bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 text-xs text-white bg-gray-900 rounded-lg shadow-lg whitespace-nowrap pointer-events-none">
+      {content}
+      <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1">
+        <div className="border-4 border-transparent border-t-gray-900" />
+      </div>
+    </div>
+  );
+}
+
 export function TransactionList({ transactions, onTransactionClick }: TransactionListProps) {
+  const [sort, setSort] = useState<SortState>({ field: 'date', direction: 'desc' });
+  const [isCondensed, setIsCondensed] = useState(false);
+
+  const sortedTransactions = useMemo(() => {
+    return [...transactions].sort((a, b) => {
+      let comparison = 0;
+
+      switch (sort.field) {
+        case 'date':
+          comparison = a.date.getTime() - b.date.getTime();
+          break;
+        case 'amount':
+          comparison = Math.abs(a.amount) - Math.abs(b.amount);
+          break;
+        case 'category':
+          const catA = getCategoryName(a.categoryId) || 'zzz';
+          const catB = getCategoryName(b.categoryId) || 'zzz';
+          comparison = catA.localeCompare(catB, 'sv-SE');
+          break;
+        case 'description':
+          comparison = a.description.localeCompare(b.description, 'sv-SE');
+          break;
+      }
+
+      return sort.direction === 'asc' ? comparison : -comparison;
+    });
+  }, [transactions, sort]);
+
+  const handleSort = (field: TransactionSortField) => {
+    setSort((prev) => ({
+      field,
+      direction: prev.field === field && prev.direction === 'desc' ? 'asc' : 'desc',
+    }));
+  };
+
   if (transactions.length === 0) {
     return (
       <div className="text-center py-12 text-gray-500">
@@ -46,17 +128,65 @@ export function TransactionList({ transactions, onTransactionClick }: Transactio
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      {/* Toolbar */}
+      <div className="flex items-center justify-between px-4 py-2 bg-gray-50 border-b border-gray-200">
+        <div className="text-sm text-gray-600">
+          {sortedTransactions.length} transaction{sortedTransactions.length !== 1 ? 's' : ''}
+        </div>
+        <button
+          onClick={() => setIsCondensed(!isCondensed)}
+          className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg border transition-colors ${
+            isCondensed
+              ? 'border-primary-300 bg-primary-50 text-primary-700'
+              : 'border-gray-200 text-gray-600 hover:bg-gray-100'
+          }`}
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            {isCondensed ? (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            ) : (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+            )}
+          </svg>
+          {isCondensed ? 'Condensed' : 'Expanded'}
+        </button>
+      </div>
+
       {/* Header */}
-      <div className="grid grid-cols-12 gap-4 px-4 py-3 bg-gray-50 border-b border-gray-200 text-sm font-medium text-gray-600">
-        <div className="col-span-2">Date</div>
-        <div className="col-span-4">Description</div>
-        <div className="col-span-3">Category</div>
-        <div className="col-span-3 text-right">Amount</div>
+      <div className={`grid ${isCondensed ? 'grid-cols-12' : 'grid-cols-12'} gap-4 px-4 py-3 bg-gray-50 border-b border-gray-200 text-sm font-medium text-gray-600`}>
+        <button
+          onClick={() => handleSort('date')}
+          className={`${isCondensed ? 'col-span-2' : 'col-span-2'} flex items-center text-left hover:text-gray-900 transition-colors`}
+        >
+          <SortIcon field="date" currentSort={sort} />
+          <span className="ml-1">Date</span>
+        </button>
+        <button
+          onClick={() => handleSort('description')}
+          className={`${isCondensed ? 'col-span-5' : 'col-span-4'} flex items-center text-left hover:text-gray-900 transition-colors`}
+        >
+          <SortIcon field="description" currentSort={sort} />
+          <span className="ml-1">Description</span>
+        </button>
+        <button
+          onClick={() => handleSort('category')}
+          className={`${isCondensed ? 'col-span-3' : 'col-span-3'} flex items-center text-left hover:text-gray-900 transition-colors`}
+        >
+          <SortIcon field="category" currentSort={sort} />
+          <span className="ml-1">Category</span>
+        </button>
+        <button
+          onClick={() => handleSort('amount')}
+          className={`${isCondensed ? 'col-span-2' : 'col-span-3'} flex items-center justify-end hover:text-gray-900 transition-colors`}
+        >
+          <span className="mr-1">Amount</span>
+          <SortIcon field="amount" currentSort={sort} />
+        </button>
       </div>
 
       {/* Transactions */}
       <div className="divide-y divide-gray-100">
-        {transactions.map((transaction) => {
+        {sortedTransactions.map((transaction) => {
           const categoryColor = getCategoryColor(transaction.categoryId);
           const categoryIcon = getCategoryIcon(transaction.categoryId);
           const categoryName = getCategoryName(transaction.categoryId);
@@ -65,14 +195,66 @@ export function TransactionList({ transactions, onTransactionClick }: Transactio
             transaction.subcategoryId
           );
 
+          const tooltipContent = `${formatDate(transaction.date)} | ${transaction.description} | ${categoryName || 'Uncategorized'}${subcategoryName ? ` > ${subcategoryName}` : ''} | ${formatAmount(transaction.amount)}`;
+
+          if (isCondensed) {
+            return (
+              <div
+                key={transaction.id}
+                onClick={() => onTransactionClick?.(transaction)}
+                className={`group relative grid grid-cols-12 gap-4 px-4 py-1.5 items-center hover:bg-gray-50 transition-colors ${
+                  onTransactionClick ? 'cursor-pointer' : ''
+                }`}
+              >
+                <TooltipContent content={tooltipContent} />
+                {/* Date */}
+                <div className="col-span-2 text-xs text-gray-500">
+                  {formatDateCondensed(transaction.date)}
+                </div>
+
+                {/* Description */}
+                <div className="col-span-5 text-sm text-gray-900 truncate">
+                  {transaction.description}
+                </div>
+
+                {/* Category */}
+                <div className="col-span-3">
+                  {transaction.categoryId ? (
+                    <div className="flex items-center gap-1.5">
+                      <span
+                        className="w-5 h-5 rounded flex items-center justify-center text-xs"
+                        style={{ backgroundColor: `${categoryColor}20` }}
+                      >
+                        {categoryIcon}
+                      </span>
+                      <span className="text-xs text-gray-600 truncate">{categoryName}</span>
+                    </div>
+                  ) : (
+                    <span className="text-xs text-gray-400">—</span>
+                  )}
+                </div>
+
+                {/* Amount */}
+                <div
+                  className={`col-span-2 text-right text-sm font-medium ${
+                    transaction.amount >= 0 ? 'text-success-600' : 'text-gray-900'
+                  }`}
+                >
+                  {formatAmount(transaction.amount)}
+                </div>
+              </div>
+            );
+          }
+
           return (
             <div
               key={transaction.id}
               onClick={() => onTransactionClick?.(transaction)}
-              className={`grid grid-cols-12 gap-4 px-4 py-3 items-center hover:bg-gray-50 transition-colors ${
+              className={`group relative grid grid-cols-12 gap-4 px-4 py-3 items-center hover:bg-gray-50 transition-colors ${
                 onTransactionClick ? 'cursor-pointer' : ''
               }`}
             >
+              <TooltipContent content={tooltipContent} />
               {/* Date */}
               <div className="col-span-2 text-sm text-gray-600">
                 {formatDate(transaction.date)}

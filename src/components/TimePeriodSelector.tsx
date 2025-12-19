@@ -39,9 +39,20 @@ function formatSwedishDate(date: Date): string {
   return date.toLocaleDateString('sv-SE', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
+function getAdjustedMonth(date: Date, monthStartDay: number): { month: number; year: number } {
+  // If the date is before the month start day, it belongs to the previous month
+  if (date.getDate() < monthStartDay) {
+    const prevMonth = date.getMonth() === 0 ? 11 : date.getMonth() - 1;
+    const prevYear = date.getMonth() === 0 ? date.getFullYear() - 1 : date.getFullYear();
+    return { month: prevMonth, year: prevYear };
+  }
+  return { month: date.getMonth(), year: date.getFullYear() };
+}
+
 function getPeriodsFromTransactions(
   transactions: Transaction[],
-  type: TransactionGrouping
+  type: TransactionGrouping,
+  monthStartDay: number = 1
 ): TimePeriod[] {
   if (transactions.length === 0) return [];
 
@@ -81,11 +92,27 @@ function getPeriodsFromTransactions(
         break;
       }
       case 'month': {
-        key = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
-        start = new Date(date.getFullYear(), date.getMonth(), 1);
-        end = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59, 999);
-        label = date.toLocaleDateString('sv-SE', { year: 'numeric', month: 'long' });
-        shortLabel = date.toLocaleDateString('sv-SE', { month: 'short' });
+        // Use adjusted month based on custom start day
+        const adjusted = getAdjustedMonth(date, monthStartDay);
+        key = `${adjusted.year}-${(adjusted.month + 1).toString().padStart(2, '0')}`;
+
+        // Start date: monthStartDay of the adjusted month
+        start = new Date(adjusted.year, adjusted.month, monthStartDay);
+        start.setHours(0, 0, 0, 0);
+
+        // End date: day before monthStartDay of the next month
+        const nextMonth = adjusted.month === 11 ? 0 : adjusted.month + 1;
+        const nextYear = adjusted.month === 11 ? adjusted.year + 1 : adjusted.year;
+        end = new Date(nextYear, nextMonth, monthStartDay - 1);
+        end.setHours(23, 59, 59, 999);
+
+        // Label shows the month name
+        const labelDate = new Date(adjusted.year, adjusted.month, 15);
+        label = labelDate.toLocaleDateString('sv-SE', { year: 'numeric', month: 'long' });
+        if (monthStartDay !== 1) {
+          label += ` (${monthStartDay}th)`;
+        }
+        shortLabel = labelDate.toLocaleDateString('sv-SE', { month: 'short' });
         break;
       }
       case 'quarter': {
@@ -124,11 +151,17 @@ export function TimePeriodSelector({
   selectedPeriod,
 }: TimePeriodSelectorProps) {
   const [activePeriodType, setActivePeriodType] = useState<TransactionGrouping | null>(null);
+  const [monthStartDay, setMonthStartDay] = useState<number>(() => {
+    // Load from localStorage if available
+    const saved = localStorage.getItem('period-month-start-day');
+    return saved ? parseInt(saved, 10) : 1;
+  });
+  const [showSettings, setShowSettings] = useState(false);
 
   const availablePeriods = useMemo(() => {
     if (!activePeriodType) return [];
-    return getPeriodsFromTransactions(transactions, activePeriodType);
-  }, [transactions, activePeriodType]);
+    return getPeriodsFromTransactions(transactions, activePeriodType, monthStartDay);
+  }, [transactions, activePeriodType, monthStartDay]);
 
   const handlePeriodTypeClick = (type: TransactionGrouping) => {
     if (activePeriodType === type) {
@@ -159,6 +192,15 @@ export function TimePeriodSelector({
     onPeriodChange(null);
   };
 
+  const handleMonthStartDayChange = (day: number) => {
+    setMonthStartDay(day);
+    localStorage.setItem('period-month-start-day', day.toString());
+    // Clear selection when changing the start day
+    if (selectedPeriod?.type === 'month') {
+      onPeriodChange(null);
+    }
+  };
+
   // Calculate transaction counts per period type for preview
   const periodTypeCounts = useMemo(() => {
     const counts: Record<TransactionGrouping, number> = {
@@ -171,11 +213,34 @@ export function TimePeriodSelector({
 
     const types: TransactionGrouping[] = ['day', 'week', 'month', 'quarter', 'year'];
     types.forEach((type) => {
-      counts[type] = getPeriodsFromTransactions(transactions, type).length;
+      counts[type] = getPeriodsFromTransactions(transactions, type, monthStartDay).length;
     });
 
     return counts;
-  }, [transactions]);
+  }, [transactions, monthStartDay]);
+
+  // Calculate totals for selected period
+  const periodTotals = useMemo(() => {
+    if (!selectedPeriod) return null;
+
+    const periodTransactions = transactions.filter(
+      (t) => t.date >= selectedPeriod.start && t.date <= selectedPeriod.end
+    );
+
+    const expenses = periodTransactions
+      .filter((t) => t.amount < 0)
+      .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+    const income = periodTransactions
+      .filter((t) => t.amount > 0)
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    return {
+      expenses,
+      income,
+      net: income - expenses,
+      count: periodTransactions.length,
+    };
+  }, [transactions, selectedPeriod]);
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
@@ -183,15 +248,54 @@ export function TimePeriodSelector({
       <div className="p-4">
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-medium text-gray-900">View by Time Period</h3>
-          {selectedPeriod && (
+          <div className="flex items-center gap-2">
+            {selectedPeriod && (
+              <button
+                onClick={handleClearPeriod}
+                className="text-sm text-gray-500 hover:text-gray-700"
+              >
+                Clear selection
+              </button>
+            )}
             <button
-              onClick={handleClearPeriod}
-              className="text-sm text-gray-500 hover:text-gray-700"
+              onClick={() => setShowSettings(!showSettings)}
+              className={`p-1.5 rounded-lg transition-colors ${
+                showSettings ? 'bg-primary-50 text-primary-600' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+              }`}
+              title="Period settings"
             >
-              Clear selection
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
             </button>
-          )}
+          </div>
         </div>
+
+        {/* Settings Panel */}
+        {showSettings && (
+          <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-700">Month Start Day</p>
+                <p className="text-xs text-gray-500">
+                  Swedish salary is typically paid on the 25th. Set when your month "begins".
+                </p>
+              </div>
+              <select
+                value={monthStartDay}
+                onChange={(e) => handleMonthStartDayChange(parseInt(e.target.value, 10))}
+                className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+              >
+                {Array.from({ length: 28 }, (_, i) => i + 1).map((day) => (
+                  <option key={day} value={day}>
+                    {day === 1 ? '1st (default)' : day === 25 ? '25th (Swedish salary)' : `${day}${day === 2 ? 'nd' : day === 3 ? 'rd' : 'th'}`}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
 
         {/* Period Type Buttons */}
         <div className="flex flex-wrap gap-2">
@@ -205,7 +309,7 @@ export function TimePeriodSelector({
                 key={type}
                 onClick={() => handlePeriodTypeClick(type)}
                 disabled={count === 0}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all ${
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border transition-all ${
                   isActive
                     ? 'border-primary-500 bg-primary-50 text-primary-700'
                     : count === 0
@@ -218,8 +322,8 @@ export function TimePeriodSelector({
                 <span
                   className={`text-xs px-1.5 py-0.5 rounded-full ${
                     isActive
-                      ? 'bg-primary-200 text-primary-800'
-                      : 'bg-gray-100 text-gray-600'
+                      ? 'bg-primary-200 text-primary-700'
+                      : 'bg-gray-100 text-gray-500'
                   }`}
                 >
                   {count}
@@ -261,37 +365,65 @@ export function TimePeriodSelector({
         </div>
       )}
 
-      {/* Selected Period Info */}
-      {selectedPeriod && (
-        <div className="border-t border-gray-200 px-4 py-3 bg-primary-50">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-lg">{periodTypeConfig[selectedPeriod.type].icon}</span>
-              <div>
-                <p className="font-medium text-primary-900">{selectedPeriod.label}</p>
-                <p className="text-xs text-primary-700">
-                  {formatSwedishDate(selectedPeriod.start)} — {formatSwedishDate(selectedPeriod.end)}
+      {/* Selected Period Info with Large Numbers */}
+      {selectedPeriod && periodTotals && (
+        <div className="border-t border-gray-200 bg-gradient-to-r from-primary-50 to-primary-100">
+          <div className="p-4">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">{periodTypeConfig[selectedPeriod.type].icon}</span>
+                <div>
+                  <p className="font-semibold text-primary-900 text-lg">{selectedPeriod.label}</p>
+                  <p className="text-xs text-primary-700">
+                    {formatSwedishDate(selectedPeriod.start)} — {formatSwedishDate(selectedPeriod.end)}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => onPeriodChange(null)}
+                className="p-2 hover:bg-primary-200 rounded-lg transition-colors"
+              >
+                <svg
+                  className="w-5 h-5 text-primary-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {/* Large Period Stats */}
+            <div className="grid grid-cols-4 gap-4">
+              <div className="bg-white/60 rounded-lg p-3 text-center">
+                <p className="text-xs text-gray-600 mb-1">Transactions</p>
+                <p className="text-2xl font-bold text-gray-900">{periodTotals.count}</p>
+              </div>
+              <div className="bg-white/60 rounded-lg p-3 text-center">
+                <p className="text-xs text-gray-600 mb-1">Expenses</p>
+                <p className="text-2xl font-bold text-danger-600">
+                  -{periodTotals.expenses.toLocaleString('sv-SE', { maximumFractionDigits: 0 })}
+                </p>
+              </div>
+              <div className="bg-white/60 rounded-lg p-3 text-center">
+                <p className="text-xs text-gray-600 mb-1">Income</p>
+                <p className="text-2xl font-bold text-success-600">
+                  +{periodTotals.income.toLocaleString('sv-SE', { maximumFractionDigits: 0 })}
+                </p>
+              </div>
+              <div className="bg-white/60 rounded-lg p-3 text-center">
+                <p className="text-xs text-gray-600 mb-1">Net</p>
+                <p className={`text-2xl font-bold ${periodTotals.net >= 0 ? 'text-success-600' : 'text-danger-600'}`}>
+                  {periodTotals.net >= 0 ? '+' : ''}{periodTotals.net.toLocaleString('sv-SE', { maximumFractionDigits: 0 })}
                 </p>
               </div>
             </div>
-            <button
-              onClick={() => onPeriodChange(null)}
-              className="p-1 hover:bg-primary-100 rounded transition-colors"
-            >
-              <svg
-                className="w-5 h-5 text-primary-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
           </div>
         </div>
       )}
