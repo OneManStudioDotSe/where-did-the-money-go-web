@@ -17,6 +17,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.3.0] - 2025-12-19 - Time Period Grouping
+
+### Added
+- **Time Period Selector**
+  - View transactions by Day, Week, Month, Quarter, or Year
+  - Two-step selection: choose period type, then specific period
+  - Dynamic period detection from transaction data
+  - Period counts shown on type buttons
+  - Selected period info bar with date range
+  - Clear selection functionality
+
+- **Time Period Hook** (`src/hooks/useTimePeriodFilter.ts`)
+  - Period-based transaction filtering
+  - Period-specific stats calculation
+  - Integrates with existing filter system
+
+### Technical Details
+- Time period filter applied before regular filters
+- ISO week number calculation (Monday = first day)
+- Summary stats update when period is selected
+- No new external dependencies
+
+---
+
 ## [0.2.0] - 2025-12-19 - Filtering & Search
 
 ### Added

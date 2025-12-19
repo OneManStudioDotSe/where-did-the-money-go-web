@@ -368,6 +368,63 @@ npm run dev
 
 ---
 
+## Entry #007 - 2025-12-19
+
+### Time Period Selector
+
+**What was done:**
+- Implemented time-based transaction grouping and filtering
+- Created TimePeriodSelector component with:
+  - Five period types: Day, Week, Month, Quarter, Year
+  - Clickable period type buttons with transaction counts
+  - Dynamic period list generated from actual transaction dates
+  - Click to select a specific period (e.g., "December 2025", "Week 50")
+  - Selected period info bar showing date range
+  - Clear selection functionality
+- Created useTimePeriodFilter hook for filtering logic:
+  - Filters transactions by date range
+  - Calculates period-specific stats (expenses, income, net change)
+  - Works in combination with existing filters
+- Integrated with existing filter system:
+  - Time period filter applied first, then regular filters
+  - Summary stats update to show period-specific data
+  - Transaction count shows "X of Y" when period is selected
+  - Period label displayed in header
+
+**Key Decisions:**
+
+1. **Two-step selection:**
+   - First select period type (Day/Week/Month/Quarter/Year)
+   - Then select specific period from available options
+   - Cleaner UX than a single complex dropdown
+
+2. **Filter chain order:**
+   - Time period filter applied first
+   - Regular filters (category, search, amount) applied on top
+   - Stats calculated from period-filtered data
+
+3. **Week calculation:**
+   - ISO week numbers (Monday = first day)
+   - Shows week number and year (e.g., "Week 50, 2025")
+
+4. **Period detection:**
+   - Dynamically extracts available periods from transaction data
+   - Shows count of available periods per type
+   - Sorted most recent first
+
+**Files Created:**
+- `src/components/TimePeriodSelector.tsx` - Period selection UI
+- `src/hooks/useTimePeriodFilter.ts` - Period filtering hook
+
+**Files Modified:**
+- `src/components/index.ts` - Added TimePeriodSelector export
+- `src/hooks/index.ts` - Added useTimePeriodFilter export
+- `src/App.tsx` - Integrated period selector and filtering
+
+**No New Dependencies Added**
+
+---
+
 ## Entry Template
 
 ```markdown

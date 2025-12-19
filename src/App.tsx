@@ -2,9 +2,10 @@ import { useState } from 'react'
 import './index.css'
 import { defaultCategories } from './data/categories'
 import { defaultCategoryMappings } from './data/category-mappings'
-import { FileUpload, TransactionList, FilterPanel, defaultFilters, ProjectRoadmap } from './components'
+import { FileUpload, TransactionList, FilterPanel, defaultFilters, ProjectRoadmap, TimePeriodSelector } from './components'
+import type { TimePeriod } from './components'
 import { parseTransactionsFromCSV, categorizeTransactions, getCategorizedStats } from './utils'
-import { useTransactionFilters } from './hooks'
+import { useTransactionFilters, useTimePeriodFilter } from './hooks'
 import type { Transaction, TransactionFilters } from './types/transaction'
 import type { CsvParseError } from './types/csv'
 
@@ -17,10 +18,17 @@ function App() {
   const [fileName, setFileName] = useState<string | null>(null)
   const [isDemoMode, setIsDemoMode] = useState(false)
   const [filters, setFilters] = useState<TransactionFilters>(defaultFilters)
+  const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod | null>(null)
 
-  // Apply filters to transactions
-  const { filteredTransactions, totalCount, filteredCount } = useTransactionFilters(
+  // Apply time period filter first
+  const { periodFilteredTransactions, periodStats } = useTimePeriodFilter(
     transactions,
+    selectedPeriod
+  )
+
+  // Then apply regular filters on top
+  const { filteredTransactions, totalCount, filteredCount } = useTransactionFilters(
+    periodFilteredTransactions,
     filters
   )
 
@@ -95,15 +103,16 @@ function App() {
     setFileName(null)
     setIsDemoMode(false)
     setFilters(defaultFilters)
+    setSelectedPeriod(null)
   }
 
-  const stats = getCategorizedStats(transactions)
+  const stats = getCategorizedStats(periodFilteredTransactions)
 
-  // Summary calculations
-  const totalExpenses = transactions
+  // Summary calculations - use period filtered data when period is selected
+  const totalExpenses = selectedPeriod ? periodStats.totalExpenses : transactions
     .filter((t) => t.amount < 0)
     .reduce((sum, t) => sum + Math.abs(t.amount), 0)
-  const totalIncome = transactions
+  const totalIncome = selectedPeriod ? periodStats.totalIncome : transactions
     .filter((t) => t.amount > 0)
     .reduce((sum, t) => sum + t.amount, 0)
 
@@ -267,7 +276,10 @@ function App() {
                     )}
                   </h2>
                   <p className="text-sm text-gray-500 mt-1">
-                    {fileName} • {transactions.length} transactions
+                    {fileName} • {selectedPeriod ? `${periodFilteredTransactions.length} of ${transactions.length}` : transactions.length} transactions
+                    {selectedPeriod && (
+                      <span className="ml-2 text-primary-600">({selectedPeriod.label})</span>
+                    )}
                   </p>
                 </div>
                 <button
@@ -310,6 +322,13 @@ function App() {
                 </div>
               </div>
             </div>
+
+            {/* Time Period Selector */}
+            <TimePeriodSelector
+              transactions={transactions}
+              selectedPeriod={selectedPeriod}
+              onPeriodChange={setSelectedPeriod}
+            />
 
             {/* Filter Panel */}
             <FilterPanel
