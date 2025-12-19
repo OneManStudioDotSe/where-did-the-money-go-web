@@ -2,29 +2,39 @@
 
 /* Custom theme colors for the expense tracker */
 @theme {
-  /* Primary palette - Blue/Purple tones */
-  --color-primary-50: #f0f4ff;
-  --color-primary-100: #e0e9ff;
-  --color-primary-200: #c7d7fe;
-  --color-primary-300: #a4bcfc;
-  --color-primary-400: #8098f9;
-  --color-primary-500: #6172f3;
-  --color-primary-600: #444ce7;
-  --color-primary-700: #3538cd;
-  --color-primary-800: #2d31a6;
-  --color-primary-900: #2b2f83;
+  /* Primary palette - Teal/Cyan */
+  --color-primary-50: #f0fdfa;
+  --color-primary-100: #ccfbf1;
+  --color-primary-200: #99f6e4;
+  --color-primary-300: #5eead4;
+  --color-primary-400: #2dd4bf;
+  --color-primary-500: #14b8a6;
+  --color-primary-600: #0d9488;
+  --color-primary-700: #0f766e;
+  --color-primary-800: #115e59;
+  --color-primary-900: #134e4a;
 
   /* Success - Green for income */
-  --color-success-500: #12b76a;
-  --color-success-600: #039855;
+  --color-success-50: #f0fdf4;
+  --color-success-100: #dcfce7;
+  --color-success-500: #22c55e;
+  --color-success-600: #16a34a;
+  --color-success-700: #15803d;
 
   /* Danger - Red for expenses */
-  --color-danger-500: #f04438;
-  --color-danger-600: #d92d20;
+  --color-danger-50: #fef2f2;
+  --color-danger-100: #fee2e2;
+  --color-danger-500: #ef4444;
+  --color-danger-600: #dc2626;
+  --color-danger-700: #b91c1c;
 
   /* Warning - Amber for alerts */
-  --color-warning-500: #f79009;
-  --color-warning-600: #dc6803;
+  --color-warning-50: #fffbeb;
+  --color-warning-100: #fef3c7;
+  --color-warning-300: #fcd34d;
+  --color-warning-500: #f59e0b;
+  --color-warning-600: #d97706;
+  --color-warning-700: #b45309;
 
   /* Neutral grays */
   --color-gray-50: #f9fafb;
@@ -37,6 +47,13 @@
   --color-gray-700: #374151;
   --color-gray-800: #1f2937;
   --color-gray-900: #111827;
+  --color-gray-950: #030712;
+
+  /* Dark mode surface colors */
+  --color-slate-700: #334155;
+  --color-slate-800: #1e293b;
+  --color-slate-900: #0f172a;
+  --color-slate-950: #020617;
 
   /* Category colors */
   --color-category-housing: #8b5cf6;
@@ -57,6 +74,22 @@ body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
+/* Dark mode base */
+.dark body,
+body.dark {
+  @apply bg-slate-900 text-gray-100;
+}
+
+.dark {
+  color-scheme: dark;
+}
+
 #root {
   @apply min-h-screen;
+}
+
+/* Smooth transitions for dark mode */
+body,
+body * {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }

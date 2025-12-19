@@ -126,14 +126,17 @@ const projectPhases: Phase[] = [
     id: 'phase8',
     name: 'UI Themes & Icons',
     icon: '🎨',
-    status: 'upcoming',
-    progress: 0,
+    status: 'completed',
+    progress: 100,
     description: 'Multiple icon sets and UI customization options',
     steps: [
-      { name: 'Minimal icon set (geometric shapes)', completed: false },
-      { name: 'Colorful icon set (colored circles/dots)', completed: false },
-      { name: 'Custom color themes', completed: false },
-      { name: 'Dark mode support', completed: false },
+      { name: '4 icon sets (Emoji, Icons8 3D, Phosphor, OpenMoji)', completed: true },
+      { name: 'Dark mode with system preference support', completed: true },
+      { name: 'Teal color theme', completed: true },
+      { name: 'Enhanced card styling with hover effects', completed: true },
+      { name: 'Header with navigation and responsive menu', completed: true },
+      { name: 'Footer with links', completed: true },
+      { name: 'Responsive design (mobile/tablet/desktop)', completed: true },
     ],
   },
   {
@@ -159,7 +162,7 @@ function getStatusColor(status: Phase['status']): string {
     case 'in_progress':
       return 'bg-primary-500';
     case 'upcoming':
-      return 'bg-gray-300';
+      return 'bg-gray-300 dark:bg-slate-600';
   }
 }
 
@@ -177,11 +180,11 @@ function getStatusText(status: Phase['status']): string {
 function getStatusBadgeStyle(status: Phase['status']): string {
   switch (status) {
     case 'completed':
-      return 'bg-success-100 text-success-700';
+      return 'bg-success-100 dark:bg-success-900/30 text-success-700 dark:text-success-400';
     case 'in_progress':
-      return 'bg-primary-100 text-primary-700';
+      return 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400';
     case 'upcoming':
-      return 'bg-gray-100 text-gray-600';
+      return 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400';
   }
 }
 
@@ -198,33 +201,33 @@ export function ProjectRoadmap() {
   );
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
+    <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-6 mb-8">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">Development Roadmap</h2>
-          <p className="text-sm text-gray-500 mt-1">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Development Roadmap</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             {completedPhases} of {projectPhases.length} phases completed • {totalProgress}% overall
           </p>
         </div>
         <div className="flex items-center gap-4 text-xs">
           <div className="flex items-center gap-1.5">
             <div className="w-2 h-2 rounded-full bg-success-500"></div>
-            <span className="text-gray-600">Completed</span>
+            <span className="text-gray-600 dark:text-gray-400">Completed</span>
           </div>
           <div className="flex items-center gap-1.5">
             <div className="w-2 h-2 rounded-full bg-primary-500"></div>
-            <span className="text-gray-600">In Progress</span>
+            <span className="text-gray-600 dark:text-gray-400">In Progress</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="w-2 h-2 rounded-full bg-gray-300"></div>
-            <span className="text-gray-600">Upcoming</span>
+            <div className="w-2 h-2 rounded-full bg-gray-300 dark:bg-slate-600"></div>
+            <span className="text-gray-600 dark:text-gray-400">Upcoming</span>
           </div>
         </div>
       </div>
 
       {/* Overall Progress Bar */}
       <div className="mb-6">
-        <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+        <div className="h-2 bg-gray-100 dark:bg-slate-700 rounded-full overflow-hidden">
           <div
             className="h-full bg-gradient-to-r from-success-500 to-primary-500 transition-all duration-500"
             style={{ width: `${totalProgress}%` }}
@@ -239,8 +242,8 @@ export function ProjectRoadmap() {
             key={phase.id}
             className={`border rounded-lg transition-all ${
               expandedPhase === phase.id
-                ? 'border-primary-300 shadow-sm'
-                : 'border-gray-200 hover:border-gray-300'
+                ? 'border-primary-300 dark:border-primary-600 shadow-sm'
+                : 'border-gray-200 dark:border-slate-700 hover:border-gray-300 dark:hover:border-slate-600'
             }`}
           >
             {/* Phase Header */}
@@ -257,7 +260,7 @@ export function ProjectRoadmap() {
               {/* Name & Description */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <h3 className="font-medium text-gray-900">{phase.name}</h3>
+                  <h3 className="font-medium text-gray-900 dark:text-white">{phase.name}</h3>
                   <span
                     className={`px-2 py-0.5 text-xs font-medium rounded-full ${getStatusBadgeStyle(
                       phase.status
@@ -266,12 +269,12 @@ export function ProjectRoadmap() {
                     {getStatusText(phase.status)}
                   </span>
                 </div>
-                <p className="text-sm text-gray-500 truncate">{phase.description}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{phase.description}</p>
               </div>
 
               {/* Progress */}
               <div className="flex items-center gap-3">
-                <div className="w-24 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                <div className="w-24 h-1.5 bg-gray-100 dark:bg-slate-700 rounded-full overflow-hidden">
                   <div
                     className={`h-full transition-all ${
                       phase.status === 'completed' ? 'bg-success-500' : 'bg-primary-500'
@@ -279,7 +282,7 @@ export function ProjectRoadmap() {
                     style={{ width: `${phase.progress}%` }}
                   />
                 </div>
-                <span className="text-sm text-gray-500 w-10 text-right">{phase.progress}%</span>
+                <span className="text-sm text-gray-500 dark:text-gray-400 w-10 text-right">{phase.progress}%</span>
               </div>
 
               {/* Expand Icon */}
@@ -303,8 +306,8 @@ export function ProjectRoadmap() {
             {/* Expanded Steps */}
             {expandedPhase === phase.id && (
               <div className="px-4 pb-4 pt-0">
-                <div className="border-t border-gray-100 pt-4">
-                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">
+                <div className="border-t border-gray-100 dark:border-slate-700 pt-4">
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
                     Steps ({phase.steps.filter((s) => s.completed).length}/{phase.steps.length}{' '}
                     completed)
                   </p>
@@ -324,11 +327,11 @@ export function ProjectRoadmap() {
                             />
                           </svg>
                         ) : (
-                          <div className="w-5 h-5 rounded-full border-2 border-gray-300 flex-shrink-0" />
+                          <div className="w-5 h-5 rounded-full border-2 border-gray-300 dark:border-slate-600 flex-shrink-0" />
                         )}
                         <span
                           className={`text-sm ${
-                            step.completed ? 'text-gray-600' : 'text-gray-500'
+                            step.completed ? 'text-gray-600 dark:text-gray-300' : 'text-gray-500 dark:text-gray-400'
                           }`}
                         >
                           {step.name}

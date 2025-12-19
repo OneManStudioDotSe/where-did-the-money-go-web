@@ -39,16 +39,16 @@ function SortIcon({ field, currentSort }: { field: TransactionSortField; current
   const isActive = currentSort.field === field;
 
   return (
-    <span className={`inline-flex flex-col ml-1 ${isActive ? 'text-primary-600' : 'text-gray-400'}`}>
+    <span className={`inline-flex flex-col ml-1 ${isActive ? 'text-primary-600 dark:text-primary-400' : 'text-gray-400 dark:text-gray-500'}`}>
       <svg
-        className={`w-3 h-3 -mb-1 ${isActive && currentSort.direction === 'asc' ? 'text-primary-600' : ''}`}
+        className={`w-3 h-3 -mb-1 ${isActive && currentSort.direction === 'asc' ? 'text-primary-600 dark:text-primary-400' : ''}`}
         fill="currentColor"
         viewBox="0 0 20 20"
       >
         <path d="M5 10l5-5 5 5H5z" />
       </svg>
       <svg
-        className={`w-3 h-3 ${isActive && currentSort.direction === 'desc' ? 'text-primary-600' : ''}`}
+        className={`w-3 h-3 ${isActive && currentSort.direction === 'desc' ? 'text-primary-600 dark:text-primary-400' : ''}`}
         fill="currentColor"
         viewBox="0 0 20 20"
       >
@@ -62,17 +62,17 @@ function InfoTooltip({ content }: { content: string }) {
   return (
     <div className="group/tooltip relative flex items-center justify-center">
       <button
-        className="w-5 h-5 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+        className="w-5 h-5 rounded-full flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
         onClick={(e) => e.stopPropagation()}
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       </button>
-      <div className="absolute z-50 hidden group-hover/tooltip:block bottom-full right-0 mb-2 px-3 py-2 text-xs text-white bg-gray-900 rounded-lg shadow-lg whitespace-nowrap pointer-events-none">
+      <div className="absolute z-50 hidden group-hover/tooltip:block bottom-full right-0 mb-2 px-3 py-2 text-xs text-white bg-gray-900 dark:bg-slate-700 rounded-lg shadow-lg whitespace-nowrap pointer-events-none">
         {content}
         <div className="absolute top-full right-2 -mt-1">
-          <div className="border-4 border-transparent border-t-gray-900" />
+          <div className="border-4 border-transparent border-t-gray-900 dark:border-t-slate-700" />
         </div>
       </div>
     </div>
@@ -117,9 +117,9 @@ export function TransactionList({ transactions, onTransactionClick }: Transactio
 
   if (transactions.length === 0) {
     return (
-      <div className="text-center py-12 text-gray-500">
+      <div className="text-center py-12 text-gray-500 dark:text-gray-400">
         <svg
-          className="w-16 h-16 mx-auto mb-4 text-gray-300"
+          className="w-16 h-16 mx-auto mb-4 text-gray-300 dark:text-slate-600"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -137,18 +137,18 @@ export function TransactionList({ transactions, onTransactionClick }: Transactio
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+    <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden">
       {/* Toolbar */}
-      <div className="flex items-center justify-between px-4 py-2 bg-gray-50 border-b border-gray-200">
-        <div className="text-sm text-gray-600">
+      <div className="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-slate-800/50 border-b border-gray-200 dark:border-slate-700">
+        <div className="text-sm text-gray-600 dark:text-gray-400">
           {sortedTransactions.length} transaction{sortedTransactions.length !== 1 ? 's' : ''}
         </div>
         <button
           onClick={() => setIsCondensed(!isCondensed)}
           className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg border transition-colors ${
             isCondensed
-              ? 'border-primary-300 bg-primary-50 text-primary-700'
-              : 'border-gray-200 text-gray-600 hover:bg-gray-100'
+              ? 'border-primary-300 dark:border-primary-600 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
+              : 'border-gray-200 dark:border-slate-600 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700'
           }`}
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -163,31 +163,31 @@ export function TransactionList({ transactions, onTransactionClick }: Transactio
       </div>
 
       {/* Header */}
-      <div className={`grid ${isCondensed ? 'grid-cols-12' : 'grid-cols-12'} gap-4 px-4 py-3 bg-gray-50 border-b border-gray-200 text-sm font-medium text-gray-600`}>
+      <div className={`grid ${isCondensed ? 'grid-cols-12' : 'grid-cols-12'} gap-4 px-4 py-3 bg-gray-50 dark:bg-slate-800/50 border-b border-gray-200 dark:border-slate-700 text-sm font-medium text-gray-600 dark:text-gray-400`}>
         <button
           onClick={() => handleSort('date')}
-          className={`${isCondensed ? 'col-span-2' : 'col-span-2'} flex items-center text-left hover:text-gray-900 transition-colors`}
+          className={`${isCondensed ? 'col-span-2' : 'col-span-2'} flex items-center text-left hover:text-gray-900 dark:hover:text-white transition-colors`}
         >
           <SortIcon field="date" currentSort={sort} />
           <span className="ml-1">Date</span>
         </button>
         <button
           onClick={() => handleSort('description')}
-          className={`${isCondensed ? 'col-span-5' : 'col-span-4'} flex items-center text-left hover:text-gray-900 transition-colors`}
+          className={`${isCondensed ? 'col-span-5' : 'col-span-4'} flex items-center text-left hover:text-gray-900 dark:hover:text-white transition-colors`}
         >
           <SortIcon field="description" currentSort={sort} />
           <span className="ml-1">Description</span>
         </button>
         <button
           onClick={() => handleSort('category')}
-          className={`${isCondensed ? 'col-span-3' : 'col-span-3'} flex items-center text-left hover:text-gray-900 transition-colors`}
+          className={`${isCondensed ? 'col-span-3' : 'col-span-3'} flex items-center text-left hover:text-gray-900 dark:hover:text-white transition-colors`}
         >
           <SortIcon field="category" currentSort={sort} />
           <span className="ml-1">Category</span>
         </button>
         <button
           onClick={() => handleSort('amount')}
-          className={`${isCondensed ? 'col-span-2' : 'col-span-3'} flex items-center justify-end hover:text-gray-900 transition-colors`}
+          className={`${isCondensed ? 'col-span-2' : 'col-span-3'} flex items-center justify-end hover:text-gray-900 dark:hover:text-white transition-colors`}
         >
           <span className="mr-1">Amount</span>
           <SortIcon field="amount" currentSort={sort} />
@@ -195,7 +195,7 @@ export function TransactionList({ transactions, onTransactionClick }: Transactio
       </div>
 
       {/* Transactions */}
-      <div className="divide-y divide-gray-100">
+      <div className="divide-y divide-gray-100 dark:divide-slate-700">
         {sortedTransactions.map((transaction) => {
           const categoryColor = getCategoryColor(transaction.categoryId);
           const categoryIcon = getCategoryIcon(transaction.categoryId);
@@ -212,17 +212,17 @@ export function TransactionList({ transactions, onTransactionClick }: Transactio
               <div
                 key={transaction.id}
                 onClick={() => onTransactionClick?.(transaction)}
-                className={`grid grid-cols-12 gap-2 px-4 py-1.5 items-center hover:bg-gray-50 transition-colors ${
+                className={`grid grid-cols-12 gap-2 px-4 py-1.5 items-center hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors ${
                   onTransactionClick ? 'cursor-pointer' : ''
                 }`}
               >
                 {/* Date */}
-                <div className="col-span-2 text-xs text-gray-500">
+                <div className="col-span-2 text-xs text-gray-500 dark:text-gray-400">
                   {formatDateCondensed(transaction.date)}
                 </div>
 
                 {/* Description */}
-                <div className="col-span-4 text-sm text-gray-900 truncate">
+                <div className="col-span-4 text-sm text-gray-900 dark:text-white truncate">
                   {transaction.description}
                 </div>
 
@@ -236,17 +236,17 @@ export function TransactionList({ transactions, onTransactionClick }: Transactio
                       >
                         {categoryIcon}
                       </span>
-                      <span className="text-xs text-gray-600 truncate">{categoryName}</span>
+                      <span className="text-xs text-gray-600 dark:text-gray-400 truncate">{categoryName}</span>
                     </div>
                   ) : (
-                    <span className="text-xs text-gray-400">—</span>
+                    <span className="text-xs text-gray-400 dark:text-gray-500">—</span>
                   )}
                 </div>
 
                 {/* Amount */}
                 <div
                   className={`col-span-2 text-right text-sm font-medium ${
-                    transaction.amount >= 0 ? 'text-success-600' : 'text-gray-900'
+                    transaction.amount >= 0 ? 'text-success-600 dark:text-success-400' : 'text-gray-900 dark:text-white'
                   }`}
                 >
                   {formatAmount(transaction.amount)}
@@ -264,18 +264,18 @@ export function TransactionList({ transactions, onTransactionClick }: Transactio
             <div
               key={transaction.id}
               onClick={() => onTransactionClick?.(transaction)}
-              className={`grid grid-cols-12 gap-2 px-4 py-3 items-center hover:bg-gray-50 transition-colors ${
+              className={`grid grid-cols-12 gap-2 px-4 py-3 items-center hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors ${
                 onTransactionClick ? 'cursor-pointer' : ''
               }`}
             >
               {/* Date */}
-              <div className="col-span-2 text-sm text-gray-600">
+              <div className="col-span-2 text-sm text-gray-600 dark:text-gray-400">
                 {formatDate(transaction.date)}
               </div>
 
               {/* Description */}
               <div className="col-span-4">
-                <p className="text-sm font-medium text-gray-900 truncate">
+                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
                   {transaction.description}
                 </p>
                 {/* Badges */}
@@ -286,12 +286,12 @@ export function TransactionList({ transactions, onTransactionClick }: Transactio
                         key={badge.type}
                         className={`px-1.5 py-0.5 text-xs rounded-full ${
                           badge.type === 'income'
-                            ? 'bg-success-500/10 text-success-600'
+                            ? 'bg-success-500/10 text-success-600 dark:text-success-400'
                             : badge.type === 'uncategorized'
-                            ? 'bg-warning-500/10 text-warning-600'
+                            ? 'bg-warning-500/10 text-warning-600 dark:text-warning-400'
                             : badge.type === 'high_value'
-                            ? 'bg-danger-500/10 text-danger-600'
-                            : 'bg-gray-100 text-gray-600'
+                            ? 'bg-danger-500/10 text-danger-600 dark:text-danger-400'
+                            : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400'
                         }`}
                       >
                         {badge.label}
@@ -312,23 +312,23 @@ export function TransactionList({ transactions, onTransactionClick }: Transactio
                       {categoryIcon}
                     </span>
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
                         {categoryName}
                       </p>
                       {subcategoryName && (
-                        <p className="text-xs text-gray-500 truncate">{subcategoryName}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{subcategoryName}</p>
                       )}
                     </div>
                   </div>
                 ) : (
-                  <span className="text-sm text-gray-400 italic">Uncategorized</span>
+                  <span className="text-sm text-gray-400 dark:text-gray-500 italic">Uncategorized</span>
                 )}
               </div>
 
               {/* Amount */}
               <div
                 className={`col-span-2 text-right text-sm font-medium ${
-                  transaction.amount >= 0 ? 'text-success-600' : 'text-gray-900'
+                  transaction.amount >= 0 ? 'text-success-600 dark:text-success-400' : 'text-gray-900 dark:text-white'
                 }`}
               >
                 {formatAmount(transaction.amount)}

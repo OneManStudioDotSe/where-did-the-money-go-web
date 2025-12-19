@@ -166,13 +166,13 @@ function DonutChart({ categories, size = 200 }: { categories: CategoryTotal[]; s
           {hoveredCategory ? (
             <>
               <p className="text-2xl">{hoveredCategory.icon}</p>
-              <p className="text-sm font-medium text-gray-900">{hoveredCategory.percentage.toFixed(1)}%</p>
-              <p className="text-xs text-gray-500">{formatAmount(hoveredCategory.total)} kr</p>
+              <p className="text-sm font-medium text-gray-900 dark:text-white">{hoveredCategory.percentage.toFixed(1)}%</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{formatAmount(hoveredCategory.total)} kr</p>
             </>
           ) : (
             <>
-              <p className="text-sm font-medium text-gray-900">Total</p>
-              <p className="text-lg font-bold text-gray-900">{formatAmount(total)} kr</p>
+              <p className="text-sm font-medium text-gray-900 dark:text-white">Total</p>
+              <p className="text-lg font-bold text-gray-900 dark:text-white">{formatAmount(total)} kr</p>
             </>
           )}
         </div>
@@ -194,15 +194,15 @@ function BarChart({ categories, maxBars = 10 }: { categories: CategoryTotal[]; m
           <div key={category.categoryId || 'uncategorized'} className="group">
             <div className="flex items-center gap-2 mb-1">
               <span className="text-lg">{category.icon}</span>
-              <span className="text-sm font-medium text-gray-700 flex-1 truncate">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300 flex-1 truncate">
                 {category.name}
               </span>
-              <span className="text-sm text-gray-500">{category.percentage.toFixed(1)}%</span>
-              <span className="text-sm font-semibold text-gray-900 min-w-[80px] text-right">
+              <span className="text-sm text-gray-500 dark:text-gray-400">{category.percentage.toFixed(1)}%</span>
+              <span className="text-sm font-semibold text-gray-900 dark:text-white min-w-[80px] text-right">
                 {formatAmount(category.total)} kr
               </span>
             </div>
-            <div className="h-6 bg-gray-100 rounded-lg overflow-hidden">
+            <div className="h-6 bg-gray-100 dark:bg-slate-700 rounded-lg overflow-hidden">
               <div
                 className="h-full rounded-lg transition-all duration-300 group-hover:brightness-110 flex items-center justify-end pr-2"
                 style={{
@@ -247,7 +247,7 @@ function VerticalBarChart({ categories, maxBars = 8 }: { categories: CategoryTot
             >
               {/* Tooltip on hover */}
               {isHovered && (
-                <div className="absolute -mt-16 px-2 py-1 bg-gray-900 text-white text-xs rounded shadow-lg whitespace-nowrap z-10">
+                <div className="absolute -mt-16 px-2 py-1 bg-gray-900 dark:bg-slate-700 text-white text-xs rounded shadow-lg whitespace-nowrap z-10">
                   {category.name}: {formatAmount(category.total)} kr ({category.percentage.toFixed(1)}%)
                 </div>
               )}
@@ -269,7 +269,7 @@ function VerticalBarChart({ categories, maxBars = 8 }: { categories: CategoryTot
         })}
       </div>
       {/* Y-axis labels */}
-      <div className="flex justify-between text-xs text-gray-400 mt-2 px-4">
+      <div className="flex justify-between text-xs text-gray-400 dark:text-gray-500 mt-2 px-4">
         <span>0</span>
         <span>{formatAmount(maxValue / 2)} kr</span>
         <span>{formatAmount(maxValue)} kr</span>
@@ -395,7 +395,7 @@ function TrendSection({
 
   if (!selectedPeriod || !trendData) {
     return (
-      <div className="text-center py-6 text-gray-500">
+      <div className="text-center py-6 text-gray-500 dark:text-gray-400">
         <p className="text-sm">Select a time period to see trends and averages</p>
       </div>
     );
@@ -413,55 +413,55 @@ function TrendSection({
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3">
         {/* Current Period Total */}
-        <div className="bg-gray-50 rounded-lg p-3">
-          <p className="text-xs text-gray-500 mb-1">This {selectedPeriod.type}</p>
-          <p className="text-lg font-bold text-gray-900">{formatAmount(trendData.currentTotal)} kr</p>
+        <div className="bg-gray-50 dark:bg-slate-700/50 rounded-lg p-3">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">This {selectedPeriod.type}</p>
+          <p className="text-lg font-bold text-gray-900 dark:text-white">{formatAmount(trendData.currentTotal)} kr</p>
           <div className="flex items-center gap-1 mt-1">
             {trendData.totalDiff !== 0 && (
               <span
                 className={`text-xs font-medium ${
-                  trendData.totalDiff > 0 ? 'text-danger-600' : 'text-success-600'
+                  trendData.totalDiff > 0 ? 'text-danger-600 dark:text-danger-400' : 'text-success-600 dark:text-success-400'
                 }`}
               >
                 {trendData.totalDiff > 0 ? '↑' : '↓'} {Math.abs(trendData.totalDiff).toFixed(1)}%
               </span>
             )}
-            <span className="text-xs text-gray-400">vs avg</span>
+            <span className="text-xs text-gray-400 dark:text-gray-500">vs avg</span>
           </div>
         </div>
 
         {/* Average */}
-        <div className="bg-gray-50 rounded-lg p-3">
-          <p className="text-xs text-gray-500 mb-1">{periodLabel} Average</p>
-          <p className="text-lg font-bold text-gray-900">{formatAmount(trendData.avgTotal)} kr</p>
-          <p className="text-xs text-gray-400 mt-1">
+        <div className="bg-gray-50 dark:bg-slate-700/50 rounded-lg p-3">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{periodLabel} Average</p>
+          <p className="text-lg font-bold text-gray-900 dark:text-white">{formatAmount(trendData.avgTotal)} kr</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
             Based on {trendData.periodCount} {selectedPeriod.type}s
           </p>
         </div>
 
         {/* Transaction Count */}
-        <div className="bg-gray-50 rounded-lg p-3">
-          <p className="text-xs text-gray-500 mb-1">Transactions</p>
-          <p className="text-lg font-bold text-gray-900">{trendData.currentCount}</p>
+        <div className="bg-gray-50 dark:bg-slate-700/50 rounded-lg p-3">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Transactions</p>
+          <p className="text-lg font-bold text-gray-900 dark:text-white">{trendData.currentCount}</p>
           <div className="flex items-center gap-1 mt-1">
             {trendData.countDiff !== 0 && (
               <span
                 className={`text-xs font-medium ${
-                  trendData.countDiff > 0 ? 'text-danger-600' : 'text-success-600'
+                  trendData.countDiff > 0 ? 'text-danger-600 dark:text-danger-400' : 'text-success-600 dark:text-success-400'
                 }`}
               >
                 {trendData.countDiff > 0 ? '↑' : '↓'} {Math.abs(trendData.countDiff).toFixed(1)}%
               </span>
             )}
-            <span className="text-xs text-gray-400">vs avg {trendData.avgCount.toFixed(0)}</span>
+            <span className="text-xs text-gray-400 dark:text-gray-500">vs avg {trendData.avgCount.toFixed(0)}</span>
           </div>
         </div>
 
         {/* Daily Average */}
-        <div className="bg-gray-50 rounded-lg p-3">
-          <p className="text-xs text-gray-500 mb-1">Daily Average</p>
-          <p className="text-lg font-bold text-gray-900">{formatAmount(trendData.dailyAvg)} kr</p>
-          <p className="text-xs text-gray-400 mt-1">This period</p>
+        <div className="bg-gray-50 dark:bg-slate-700/50 rounded-lg p-3">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Daily Average</p>
+          <p className="text-lg font-bold text-gray-900 dark:text-white">{formatAmount(trendData.dailyAvg)} kr</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">This period</p>
         </div>
       </div>
     </div>
@@ -495,24 +495,24 @@ function CategoryTotalsTable({
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
-        <h4 className="text-sm font-medium text-gray-700">Category Breakdown</h4>
-        <div className="flex rounded-lg border border-gray-200 overflow-hidden">
+        <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Category Breakdown</h4>
+        <div className="flex rounded-lg border border-gray-200 dark:border-slate-600 overflow-hidden">
           <button
             onClick={() => onViewModeChange('category')}
             className={`px-3 py-1 text-xs font-medium transition-colors ${
               viewMode === 'category'
-                ? 'bg-primary-50 text-primary-700'
-                : 'bg-white text-gray-600 hover:bg-gray-50'
+                ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
+                : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-700'
             }`}
           >
             Categories
           </button>
           <button
             onClick={() => onViewModeChange('subcategory')}
-            className={`px-3 py-1 text-xs font-medium transition-colors border-l border-gray-200 ${
+            className={`px-3 py-1 text-xs font-medium transition-colors border-l border-gray-200 dark:border-slate-600 ${
               viewMode === 'subcategory'
-                ? 'bg-primary-50 text-primary-700'
-                : 'bg-white text-gray-600 hover:bg-gray-50'
+                ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
+                : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-700'
             }`}
           >
             Subcategories
@@ -520,17 +520,17 @@ function CategoryTotalsTable({
         </div>
       </div>
 
-      <div className="border border-gray-200 rounded-lg overflow-hidden">
+      <div className="border border-gray-200 dark:border-slate-700 rounded-lg overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50">
+          <thead className="bg-gray-50 dark:bg-slate-700/50">
             <tr>
-              <th className="text-left px-3 py-2 font-medium text-gray-600">Category</th>
-              <th className="text-right px-3 py-2 font-medium text-gray-600">Amount</th>
-              <th className="text-right px-3 py-2 font-medium text-gray-600">%</th>
-              <th className="text-right px-3 py-2 font-medium text-gray-600">#</th>
+              <th className="text-left px-3 py-2 font-medium text-gray-600 dark:text-gray-400">Category</th>
+              <th className="text-right px-3 py-2 font-medium text-gray-600 dark:text-gray-400">Amount</th>
+              <th className="text-right px-3 py-2 font-medium text-gray-600 dark:text-gray-400">%</th>
+              <th className="text-right px-3 py-2 font-medium text-gray-600 dark:text-gray-400">#</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-gray-100 dark:divide-slate-700">
             {categories.map((category) => {
               const key = category.categoryId || 'uncategorized';
               const isExpanded = expandedCategories.has(key);
@@ -540,14 +540,14 @@ function CategoryTotalsTable({
                 <>
                   <tr
                     key={key}
-                    className={`hover:bg-gray-50 ${hasSubcategories ? 'cursor-pointer' : ''}`}
+                    className={`hover:bg-gray-50 dark:hover:bg-slate-700/50 ${hasSubcategories ? 'cursor-pointer' : ''}`}
                     onClick={() => hasSubcategories && toggleExpand(category.categoryId)}
                   >
                     <td className="px-3 py-2">
                       <div className="flex items-center gap-2">
                         {hasSubcategories && (
                           <svg
-                            className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+                            className={`w-4 h-4 text-gray-400 dark:text-gray-500 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -562,31 +562,31 @@ function CategoryTotalsTable({
                         >
                           {category.icon}
                         </span>
-                        <span className="font-medium text-gray-900">{category.name}</span>
+                        <span className="font-medium text-gray-900 dark:text-white">{category.name}</span>
                       </div>
                     </td>
-                    <td className="px-3 py-2 text-right font-medium text-gray-900">
+                    <td className="px-3 py-2 text-right font-medium text-gray-900 dark:text-white">
                       {formatAmount(category.total)} kr
                     </td>
-                    <td className="px-3 py-2 text-right text-gray-600">
+                    <td className="px-3 py-2 text-right text-gray-600 dark:text-gray-400">
                       {category.percentage.toFixed(1)}%
                     </td>
-                    <td className="px-3 py-2 text-right text-gray-500">{category.count}</td>
+                    <td className="px-3 py-2 text-right text-gray-500 dark:text-gray-400">{category.count}</td>
                   </tr>
                   {isExpanded &&
                     viewMode === 'subcategory' &&
                     category.subcategories.map((sub) => (
-                      <tr key={`${key}-${sub.subcategoryId}`} className="bg-gray-50/50">
+                      <tr key={`${key}-${sub.subcategoryId}`} className="bg-gray-50/50 dark:bg-slate-700/30">
                         <td className="px-3 py-1.5 pl-14">
-                          <span className="text-gray-600">{sub.name}</span>
+                          <span className="text-gray-600 dark:text-gray-400">{sub.name}</span>
                         </td>
-                        <td className="px-3 py-1.5 text-right text-gray-700">
+                        <td className="px-3 py-1.5 text-right text-gray-700 dark:text-gray-300">
                           {formatAmount(sub.total)} kr
                         </td>
-                        <td className="px-3 py-1.5 text-right text-gray-500 text-xs">
+                        <td className="px-3 py-1.5 text-right text-gray-500 dark:text-gray-400 text-xs">
                           {sub.percentage.toFixed(1)}%
                         </td>
-                        <td className="px-3 py-1.5 text-right text-gray-400">{sub.count}</td>
+                        <td className="px-3 py-1.5 text-right text-gray-400 dark:text-gray-500">{sub.count}</td>
                       </tr>
                     ))}
                 </>
@@ -616,10 +616,10 @@ export function SpendingVisualization({
 
   if (transactions.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="text-center py-8 text-gray-500">
+      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-6">
+        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
           <svg
-            className="w-16 h-16 mx-auto mb-4 text-gray-300"
+            className="w-16 h-16 mx-auto mb-4 text-gray-300 dark:text-slate-600"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -639,20 +639,20 @@ export function SpendingVisualization({
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+    <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
+      <div className="px-4 py-3 border-b border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/50">
         <div className="flex items-center justify-between">
-          <h3 className="font-medium text-gray-900">Spending Analysis</h3>
+          <h3 className="font-medium text-gray-900 dark:text-white">Spending Analysis</h3>
           <div className="flex items-center gap-2">
             {/* Chart Type Toggle */}
-            <div className="flex rounded-lg border border-gray-200 overflow-hidden">
+            <div className="flex rounded-lg border border-gray-200 dark:border-slate-600 overflow-hidden">
               <button
                 onClick={() => setChartType('bar')}
                 className={`p-1.5 transition-colors ${
                   chartType === 'bar'
-                    ? 'bg-primary-50 text-primary-700'
-                    : 'bg-white text-gray-600 hover:bg-gray-50'
+                    ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
+                    : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-700'
                 }`}
                 title="Horizontal Bar Chart"
               >
@@ -667,10 +667,10 @@ export function SpendingVisualization({
               </button>
               <button
                 onClick={() => setChartType('bar-vertical')}
-                className={`p-1.5 transition-colors border-l border-gray-200 ${
+                className={`p-1.5 transition-colors border-l border-gray-200 dark:border-slate-600 ${
                   chartType === 'bar-vertical'
-                    ? 'bg-primary-50 text-primary-700'
-                    : 'bg-white text-gray-600 hover:bg-gray-50'
+                    ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
+                    : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-700'
                 }`}
                 title="Vertical Bar Chart"
               >
@@ -685,10 +685,10 @@ export function SpendingVisualization({
               </button>
               <button
                 onClick={() => setChartType('donut')}
-                className={`p-1.5 transition-colors border-l border-gray-200 ${
+                className={`p-1.5 transition-colors border-l border-gray-200 dark:border-slate-600 ${
                   chartType === 'donut'
-                    ? 'bg-primary-50 text-primary-700'
-                    : 'bg-white text-gray-600 hover:bg-gray-50'
+                    ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
+                    : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-700'
                 }`}
                 title="Donut Chart"
               >
@@ -715,19 +715,19 @@ export function SpendingVisualization({
       <div className="p-4">
         {/* Quick Stats */}
         <div className="grid grid-cols-3 gap-3 mb-6">
-          <div className="text-center p-3 bg-danger-50 rounded-lg">
-            <p className="text-xs text-danger-600 mb-1">Expenses</p>
-            <p className="text-lg font-bold text-danger-700">-{formatAmount(totalExpenses)} kr</p>
+          <div className="text-center p-3 bg-danger-50 dark:bg-danger-900/20 rounded-lg">
+            <p className="text-xs text-danger-600 dark:text-danger-400 mb-1">Expenses</p>
+            <p className="text-lg font-bold text-danger-700 dark:text-danger-400">-{formatAmount(totalExpenses)} kr</p>
           </div>
-          <div className="text-center p-3 bg-success-50 rounded-lg">
-            <p className="text-xs text-success-600 mb-1">Income</p>
-            <p className="text-lg font-bold text-success-700">+{formatAmount(totalIncome)} kr</p>
+          <div className="text-center p-3 bg-success-50 dark:bg-success-900/20 rounded-lg">
+            <p className="text-xs text-success-600 dark:text-success-400 mb-1">Income</p>
+            <p className="text-lg font-bold text-success-700 dark:text-success-400">+{formatAmount(totalIncome)} kr</p>
           </div>
-          <div className={`text-center p-3 rounded-lg ${totalIncome - totalExpenses >= 0 ? 'bg-success-50' : 'bg-danger-50'}`}>
-            <p className={`text-xs mb-1 ${totalIncome - totalExpenses >= 0 ? 'text-success-600' : 'text-danger-600'}`}>
+          <div className={`text-center p-3 rounded-lg ${totalIncome - totalExpenses >= 0 ? 'bg-success-50 dark:bg-success-900/20' : 'bg-danger-50 dark:bg-danger-900/20'}`}>
+            <p className={`text-xs mb-1 ${totalIncome - totalExpenses >= 0 ? 'text-success-600 dark:text-success-400' : 'text-danger-600 dark:text-danger-400'}`}>
               Net
             </p>
-            <p className={`text-lg font-bold ${totalIncome - totalExpenses >= 0 ? 'text-success-700' : 'text-danger-700'}`}>
+            <p className={`text-lg font-bold ${totalIncome - totalExpenses >= 0 ? 'text-success-700 dark:text-success-400' : 'text-danger-700 dark:text-danger-400'}`}>
               {totalIncome - totalExpenses >= 0 ? '+' : ''}{formatAmount(totalIncome - totalExpenses)} kr
             </p>
           </div>
@@ -736,9 +736,9 @@ export function SpendingVisualization({
         {/* Chart */}
         {categoryTotals.length > 0 && (
           <div className="mb-6">
-            <h4 className="text-sm font-medium text-gray-700 mb-3">
+            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
               Expenses by Category
-              <span className="text-gray-400 font-normal ml-2">({categoryTotals.length} categories)</span>
+              <span className="text-gray-400 dark:text-gray-500 font-normal ml-2">({categoryTotals.length} categories)</span>
             </h4>
             {chartType === 'bar' && <BarChart categories={categoryTotals} />}
             {chartType === 'bar-vertical' && <VerticalBarChart categories={categoryTotals} />}
@@ -759,15 +759,15 @@ export function SpendingVisualization({
                   className="w-3 h-3 rounded-sm"
                   style={{ backgroundColor: category.color }}
                 />
-                <span className="text-xs text-gray-600">{category.name}</span>
+                <span className="text-xs text-gray-600 dark:text-gray-400">{category.name}</span>
               </div>
             ))}
           </div>
         )}
 
         {/* Trends & Averages Section */}
-        <div className="border-t border-gray-200 pt-4 mb-4">
-          <h4 className="text-sm font-medium text-gray-700 mb-3">
+        <div className="border-t border-gray-200 dark:border-slate-700 pt-4 mb-4">
+          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
             Trends & Averages
           </h4>
           <TrendSection
@@ -778,7 +778,7 @@ export function SpendingVisualization({
         </div>
 
         {/* Category Totals Table */}
-        <div className="border-t border-gray-200 pt-4">
+        <div className="border-t border-gray-200 dark:border-slate-700 pt-4">
           <CategoryTotalsTable
             categories={categoryTotals}
             viewMode={viewMode}

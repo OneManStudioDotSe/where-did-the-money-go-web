@@ -8,5 +8,15 @@ export { SettingsPanel, loadSettings, saveSettings, defaultSettings as defaultAp
 export { CategorySelector } from './CategorySelector';
 export { TransactionEditModal } from './TransactionEditModal';
 export { UncategorizedCarousel } from './UncategorizedCarousel';
+export { DarkModeToggle } from './DarkModeToggle';
 export type { TimePeriod } from './TimePeriodSelector';
 export type { AppSettings } from './SettingsPanel';
+
+// Layout components
+export { Header } from './layout/Header';
+export { Footer } from './layout/Footer';
+export { MobileMenu } from './layout/MobileMenu';
+
+// UI components
+export { Card, CardHeader, CardContent, CardFooter } from './ui/Card';
+export { CategoryIcon } from './ui/CategoryIcon';

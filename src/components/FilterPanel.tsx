@@ -79,14 +79,14 @@ export function FilterPanel({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+    <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 mb-6">
       {/* Search Bar + Toggle */}
       <div className="p-4">
         <div className="flex items-center gap-4">
           {/* Search Input */}
           <div className="flex-1 relative">
             <svg
-              className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -103,12 +103,12 @@ export function FilterPanel({
               placeholder="Search transactions..."
               value={filters.searchQuery}
               onChange={(e) => handleSearchChange(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors"
             />
             {filters.searchQuery && (
               <button
                 onClick={() => handleSearchChange('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -122,8 +122,8 @@ export function FilterPanel({
             onClick={() => setIsExpanded(!isExpanded)}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
               isExpanded || hasActiveFilters
-                ? 'border-primary-300 bg-primary-50 text-primary-700'
-                : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                ? 'border-primary-300 dark:border-primary-600 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
+                : 'border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700'
             }`}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -149,12 +149,12 @@ export function FilterPanel({
           </button>
 
           {/* Results Count */}
-          <div className="text-sm text-gray-500">
+          <div className="text-sm text-gray-500 dark:text-gray-400">
             {filteredCount === totalCount ? (
               <span>{totalCount} transactions</span>
             ) : (
               <span>
-                <span className="font-medium text-gray-900">{filteredCount}</span> of{' '}
+                <span className="font-medium text-gray-900 dark:text-white">{filteredCount}</span> of{' '}
                 {totalCount} transactions
               </span>
             )}
@@ -164,24 +164,24 @@ export function FilterPanel({
 
       {/* Expanded Filters */}
       {isExpanded && (
-        <div className="border-t border-gray-200 p-4">
+        <div className="border-t border-gray-200 dark:border-slate-700 p-4">
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* Category Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Categories
               </label>
-              <div className="max-h-48 overflow-y-auto space-y-1 border border-gray-200 rounded-lg p-2">
+              <div className="max-h-48 overflow-y-auto space-y-1 border border-gray-200 dark:border-slate-600 rounded-lg p-2">
                 {defaultCategories.map((category) => (
                   <label
                     key={category.id}
-                    className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-gray-50 cursor-pointer"
+                    className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-gray-50 dark:hover:bg-slate-700 cursor-pointer"
                   >
                     <input
                       type="checkbox"
                       checked={filters.categoryIds.includes(category.id)}
                       onChange={() => handleCategoryToggle(category.id)}
-                      className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                      className="w-4 h-4 text-primary-600 border-gray-300 dark:border-slate-500 rounded focus:ring-primary-500 bg-white dark:bg-slate-700"
                     />
                     <span
                       className="w-5 h-5 rounded flex items-center justify-center text-xs"
@@ -189,7 +189,7 @@ export function FilterPanel({
                     >
                       {category.icon}
                     </span>
-                    <span className="text-sm text-gray-700">{category.name}</span>
+                    <span className="text-sm text-gray-700 dark:text-gray-300">{category.name}</span>
                   </label>
                 ))}
               </div>
@@ -197,26 +197,26 @@ export function FilterPanel({
 
             {/* Date Range Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Date Range
               </label>
               <div className="space-y-2">
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">From</label>
+                  <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">From</label>
                   <input
                     type="date"
                     value={formatDateForInput(filters.dateRange.start)}
                     onChange={(e) => handleDateChange('start', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none text-sm"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none text-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">To</label>
+                  <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">To</label>
                   <input
                     type="date"
                     value={formatDateForInput(filters.dateRange.end)}
                     onChange={(e) => handleDateChange('end', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none text-sm"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none text-sm"
                   />
                 </div>
               </div>
@@ -224,28 +224,28 @@ export function FilterPanel({
 
             {/* Amount Range Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Amount Range (kr)
               </label>
               <div className="space-y-2">
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">Min</label>
+                  <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Min</label>
                   <input
                     type="number"
                     placeholder="0"
                     value={filters.amountRange.min ?? ''}
                     onChange={(e) => handleAmountChange('min', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none text-sm"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none text-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">Max</label>
+                  <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Max</label>
                   <input
                     type="number"
                     placeholder="No limit"
                     value={filters.amountRange.max ?? ''}
                     onChange={(e) => handleAmountChange('max', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none text-sm"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none text-sm"
                   />
                 </div>
               </div>
@@ -253,32 +253,32 @@ export function FilterPanel({
 
             {/* Quick Filters */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Quick Filters
               </label>
               <div className="space-y-2">
-                <label className="flex items-center gap-3 px-3 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                <label className="flex items-center gap-3 px-3 py-2 border border-gray-200 dark:border-slate-600 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={filters.showOnlyUncategorized}
                     onChange={() => handleToggleChange('showOnlyUncategorized')}
-                    className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                    className="w-4 h-4 text-primary-600 border-gray-300 dark:border-slate-500 rounded focus:ring-primary-500 bg-white dark:bg-slate-700"
                   />
                   <div>
-                    <span className="text-sm text-gray-700">Uncategorized only</span>
-                    <p className="text-xs text-gray-500">Show transactions needing review</p>
+                    <span className="text-sm text-gray-700 dark:text-gray-300">Uncategorized only</span>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Show transactions needing review</p>
                   </div>
                 </label>
-                <label className="flex items-center gap-3 px-3 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                <label className="flex items-center gap-3 px-3 py-2 border border-gray-200 dark:border-slate-600 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={filters.showOnlySubscriptions}
                     onChange={() => handleToggleChange('showOnlySubscriptions')}
-                    className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                    className="w-4 h-4 text-primary-600 border-gray-300 dark:border-slate-500 rounded focus:ring-primary-500 bg-white dark:bg-slate-700"
                   />
                   <div>
-                    <span className="text-sm text-gray-700">Subscriptions only</span>
-                    <p className="text-xs text-gray-500">Show recurring payments</p>
+                    <span className="text-sm text-gray-700 dark:text-gray-300">Subscriptions only</span>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Show recurring payments</p>
                   </div>
                 </label>
               </div>
@@ -287,37 +287,37 @@ export function FilterPanel({
 
           {/* Active Filters Summary & Clear */}
           {hasActiveFilters && (
-            <div className="mt-4 pt-4 border-t border-gray-200 flex items-center justify-between">
+            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-slate-700 flex items-center justify-between">
               <div className="flex flex-wrap gap-2">
                 {filters.categoryIds.length > 0 && (
-                  <span className="px-2 py-1 bg-primary-100 text-primary-700 text-xs rounded-full">
+                  <span className="px-2 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 text-xs rounded-full">
                     {filters.categoryIds.length} categor{filters.categoryIds.length === 1 ? 'y' : 'ies'}
                   </span>
                 )}
                 {(filters.dateRange.start || filters.dateRange.end) && (
-                  <span className="px-2 py-1 bg-primary-100 text-primary-700 text-xs rounded-full">
+                  <span className="px-2 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 text-xs rounded-full">
                     Date range
                   </span>
                 )}
                 {(filters.amountRange.min !== null || filters.amountRange.max !== null) && (
-                  <span className="px-2 py-1 bg-primary-100 text-primary-700 text-xs rounded-full">
+                  <span className="px-2 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 text-xs rounded-full">
                     Amount range
                   </span>
                 )}
                 {filters.showOnlyUncategorized && (
-                  <span className="px-2 py-1 bg-warning-100 text-warning-700 text-xs rounded-full">
+                  <span className="px-2 py-1 bg-warning-100 dark:bg-warning-900/30 text-warning-700 dark:text-warning-400 text-xs rounded-full">
                     Uncategorized
                   </span>
                 )}
                 {filters.showOnlySubscriptions && (
-                  <span className="px-2 py-1 bg-primary-100 text-primary-700 text-xs rounded-full">
+                  <span className="px-2 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 text-xs rounded-full">
                     Subscriptions
                   </span>
                 )}
               </div>
               <button
                 onClick={handleClearFilters}
-                className="text-sm text-gray-600 hover:text-gray-900 font-medium"
+                className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-medium"
               >
                 Clear all filters
               </button>
