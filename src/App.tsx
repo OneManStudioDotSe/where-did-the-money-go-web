@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import './index.css'
 import { defaultCategories } from './data/categories'
 import { defaultCategoryMappings } from './data/category-mappings'
-import { FileUpload, TransactionList, FilterPanel, defaultFilters, ProjectRoadmap, TimePeriodSelector, SpendingVisualization, SettingsPanel, loadSettings, TransactionEditModal, UncategorizedCarousel } from './components'
+import { FileUpload, TransactionList, FilterPanel, defaultFilters, ProjectRoadmap, TimePeriodSelector, SpendingVisualization, SettingsPanel, loadSettings, TransactionEditModal, UncategorizedCarousel, CsvConfirmationDialog } from './components'
 import type { TimePeriod, AppSettings } from './components'
 import { parseTransactionsFromCSV, categorizeTransactions, getCategorizedStats } from './utils'
 import { useTransactionFilters, useTimePeriodFilter } from './hooks'
@@ -20,6 +20,9 @@ function App() {
   const [showCsvInfoModal, setShowCsvInfoModal] = useState(false)
   const [showSettingsPanel, setShowSettingsPanel] = useState(false)
   const [showUncategorizedCarousel, setShowUncategorizedCarousel] = useState(false)
+  const [showCsvConfirmation, setShowCsvConfirmation] = useState(false)
+  const [pendingFileContent, setPendingFileContent] = useState<string | null>(null)
+  const [pendingFileName, setPendingFileName] = useState<string | null>(null)
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null)
   const [appSettings, setAppSettings] = useState<AppSettings>(() => loadSettings())
   const [transactions, setTransactions] = useState<Transaction[]>([])
@@ -64,10 +67,18 @@ function App() {
   )
 
   const handleFileLoaded = (content: string, name: string) => {
-    setIsLoading(true)
+    // Show confirmation dialog instead of immediately processing
+    setPendingFileContent(content)
+    setPendingFileName(name)
+    setShowCsvConfirmation(true)
     setError(null)
-    setFileName(name)
     setIsDemoMode(false)
+  }
+
+  const handleCsvConfirm = (content: string) => {
+    setShowCsvConfirmation(false)
+    setIsLoading(true)
+    setFileName(pendingFileName)
 
     setTimeout(() => {
       const result = parseTransactionsFromCSV(content)
@@ -80,7 +91,15 @@ function App() {
         setTransactions(categorized)
       }
       setIsLoading(false)
+      setPendingFileContent(null)
+      setPendingFileName(null)
     }, 300)
+  }
+
+  const handleCsvCancel = () => {
+    setShowCsvConfirmation(false)
+    setPendingFileContent(null)
+    setPendingFileName(null)
   }
 
   const handleLoadDemo = async () => {
@@ -626,6 +645,17 @@ function App() {
         onClose={() => setShowUncategorizedCarousel(false)}
         onCategorize={handleCategoryChange}
       />
+
+      {/* CSV Confirmation Dialog */}
+      {pendingFileContent && pendingFileName && (
+        <CsvConfirmationDialog
+          isOpen={showCsvConfirmation}
+          onClose={handleCsvCancel}
+          onConfirm={handleCsvConfirm}
+          fileContent={pendingFileContent}
+          fileName={pendingFileName}
+        />
+      )}
     </div>
   )
 }

@@ -248,57 +248,18 @@ export function TimePeriodSelector({
       <div className="p-4">
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-medium text-gray-900 dark:text-white">View by Time Period</h3>
-          <div className="flex items-center gap-2">
-            {selectedPeriod && (
-              <button
-                onClick={handleClearPeriod}
-                className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
-              >
-                Clear selection
-              </button>
-            )}
+          {selectedPeriod && (
             <button
-              onClick={() => setShowSettings(!showSettings)}
-              className={`p-1.5 rounded-lg transition-colors ${
-                showSettings ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400' : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700'
-              }`}
-              title="Period settings"
+              onClick={handleClearPeriod}
+              className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
+              Clear selection
             </button>
-          </div>
+          )}
         </div>
 
-        {/* Settings Panel */}
-        {showSettings && (
-          <div className="mb-4 p-3 bg-gray-50 dark:bg-slate-700/50 rounded-lg border border-gray-200 dark:border-slate-600">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Month Start Day</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Swedish salary is typically paid on the 25th. Set when your month "begins".
-                </p>
-              </div>
-              <select
-                value={monthStartDay}
-                onChange={(e) => handleMonthStartDayChange(parseInt(e.target.value, 10))}
-                className="px-3 py-1.5 text-sm border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
-              >
-                {Array.from({ length: 28 }, (_, i) => i + 1).map((day) => (
-                  <option key={day} value={day}>
-                    {day === 1 ? '1st (default)' : day === 25 ? '25th (Swedish salary)' : `${day}${day === 2 ? 'nd' : day === 3 ? 'rd' : 'th'}`}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        )}
-
-        {/* Period Type Buttons */}
-        <div className="flex flex-wrap gap-2">
+        {/* Period Type Buttons + Settings Button (inline) */}
+        <div className="flex flex-wrap items-center gap-2">
           {(Object.keys(periodTypeConfig) as TransactionGrouping[]).map((type) => {
             const config = periodTypeConfig[type];
             const isActive = activePeriodType === type;
@@ -331,7 +292,49 @@ export function TimePeriodSelector({
               </button>
             );
           })}
+
+          {/* Settings Button (inline with period buttons) */}
+          <button
+            onClick={() => setShowSettings(!showSettings)}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border transition-all ${
+              showSettings
+                ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
+                : 'border-gray-200 dark:border-slate-600 hover:border-gray-300 dark:hover:border-slate-500 hover:bg-gray-50 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300'
+            }`}
+            title="Period settings"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <span className="font-medium">Settings</span>
+          </button>
         </div>
+
+        {/* Settings Panel (collapsible) */}
+        {showSettings && (
+          <div className="mt-4 p-3 bg-gray-50 dark:bg-slate-700/50 rounded-lg border border-gray-200 dark:border-slate-600">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Month Start Day</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Swedish salary is typically paid on the 25th. Set when your month "begins".
+                </p>
+              </div>
+              <select
+                value={monthStartDay}
+                onChange={(e) => handleMonthStartDayChange(parseInt(e.target.value, 10))}
+                className="px-3 py-1.5 text-sm border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+              >
+                {Array.from({ length: 28 }, (_, i) => i + 1).map((day) => (
+                  <option key={day} value={day}>
+                    {day === 1 ? '1st (default)' : day === 25 ? '25th (Swedish salary)' : `${day}${day === 2 ? 'nd' : day === 3 ? 'rd' : 'th'}`}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Period Selection Dropdown */}
