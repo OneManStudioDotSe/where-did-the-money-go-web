@@ -592,6 +592,87 @@ npm run dev
 
 ---
 
+## Entry #011 - 2025-12-19
+
+### Manual Category Re-assignment
+
+**What was done:**
+- Implemented manual category re-assignment for transactions
+- Created CategorySelector component for choosing categories
+- Created TransactionEditModal for editing individual transactions
+- Created UncategorizedCarousel for batch categorization
+- Updated stats panel with clickable uncategorized count
+- Wired up transaction click handler in TransactionList
+
+**Key Features:**
+
+1. **CategorySelector Component:**
+   - Searchable input filters categories and subcategories
+   - Categories display as expandable accordion sections
+   - Subcategories shown in 2-column grid layout
+   - Selected subcategory highlighted with primary color
+   - Reusable across edit modal and carousel
+
+2. **TransactionEditModal:**
+   - Shows transaction details (description, date, amount)
+   - Displays current category with icon and color
+   - Preview of new category selection before saving
+   - Save button disabled until valid selection made
+   - Click outside modal to close
+
+3. **UncategorizedCarousel:**
+   - Split-view design: transaction list (left) + category selector (right)
+   - Pagination with 10 transactions per page
+   - Page navigation with prev/next buttons
+   - Progress indicator showing remaining count
+   - Skip button to move to next transaction
+   - Apply Category button to confirm selection
+   - Auto-advances to next transaction after categorization
+   - Success state when all transactions categorized
+
+4. **Stats Panel Updates:**
+   - Replaced single "Categorized" stat with split display
+   - Green box shows categorized count
+   - Warning-colored box shows uncategorized count
+   - Uncategorized box is clickable when count > 0
+   - "Fix now →" label prompts user to take action
+
+5. **Transaction Click Handler:**
+   - Any transaction row is now clickable
+   - Opens TransactionEditModal with that transaction
+   - Updates transaction in state after save
+
+**Design Decisions:**
+
+1. **Split View for Carousel:**
+   - Easier to scan transactions while selecting category
+   - Don't lose context when making selections
+   - Similar to email/inbox patterns users are familiar with
+
+2. **Pagination over Infinite Scroll:**
+   - Grouped by 10 to avoid overwhelming users
+   - Clear progress indication (page X of Y)
+   - Predictable navigation
+
+3. **Real-time Updates:**
+   - Changes reflected immediately in UI
+   - No separate "save all" step needed
+   - Uncategorized count updates live
+
+**Files Created:**
+- `src/components/CategorySelector.tsx` - Reusable category picker
+- `src/components/TransactionEditModal.tsx` - Individual transaction editing
+- `src/components/UncategorizedCarousel.tsx` - Batch categorization workflow
+
+**Files Modified:**
+- `src/components/index.ts` - Export new components
+- `src/components/ProjectRoadmap.tsx` - Mark manual assignment as complete
+- `src/App.tsx` - State for modals, handlers, integration
+
+**No New Dependencies Added**
+
+---
+
 ## Entry Template
 
 ```markdown

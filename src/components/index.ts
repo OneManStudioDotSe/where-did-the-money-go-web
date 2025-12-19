@@ -5,5 +5,8 @@ export { ProjectRoadmap } from './ProjectRoadmap';
 export { TimePeriodSelector } from './TimePeriodSelector';
 export { SpendingVisualization } from './SpendingVisualization';
 export { SettingsPanel, loadSettings, saveSettings, defaultSettings as defaultAppSettings } from './SettingsPanel';
+export { CategorySelector } from './CategorySelector';
+export { TransactionEditModal } from './TransactionEditModal';
+export { UncategorizedCarousel } from './UncategorizedCarousel';
 export type { TimePeriod } from './TimePeriodSelector';
 export type { AppSettings } from './SettingsPanel';

@@ -11,10 +11,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Planned
 - Subscription detection
-- Manual category re-assignment UI
+- Custom category creation
 - AI-powered insights
 - Multiple icon sets (minimal, colorful)
 - Dark mode support
+
+---
+
+## [0.5.0] - 2025-12-19 - Manual Category Re-assignment
+
+### Added
+- **Manual Category Re-assignment**
+  - Click any transaction to edit its category
+  - Transaction edit modal with current/new category preview
+  - Real-time UI updates after category changes
+
+- **Category Selector Component** (`src/components/CategorySelector.tsx`)
+  - Searchable category picker
+  - Expandable category sections showing subcategories
+  - Grid layout for subcategory selection
+  - Visual indicators for selected category/subcategory
+
+- **Uncategorized Transactions Carousel** (`src/components/UncategorizedCarousel.tsx`)
+  - Paginated view of uncategorized transactions (10 per page)
+  - Split view: transaction list on left, category selector on right
+  - Skip/Apply workflow for efficient batch categorization
+  - Progress tracking showing remaining uncategorized count
+  - Auto-advance to next transaction after categorization
+
+- **Improved Stats Panel**
+  - Categorization section split into Categorized/Uncategorized counts
+  - Clickable uncategorized badge opens carousel
+  - Visual styling (green for categorized, warning for uncategorized)
+
+### Technical Details
+- Transaction state updates preserve all other transaction data
+- Uncategorized badge removed from transaction after categorization
+- No external dependencies added
+- All modals use consistent design language
 
 ---
 

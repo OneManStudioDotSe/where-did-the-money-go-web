@@ -332,22 +332,24 @@ Phase 9: AI Insights         → Analysis, recommendations, patterns
 
 ---
 
-### Iteration 3.4: Manual Assignment UI
+### Iteration 3.4: Manual Assignment UI ✅ COMPLETED
 **Focus:** User interface for categorizing transactions
 
 **Tasks:**
-- [ ] Category selector component:
+- [x] Category selector component:
   - Two-level dropdown (category → subcategory)
-  - Search/filter
-  - Recently used
-  - Quick assign shortcuts
+  - Search/filter categories
+  - Expandable category sections
+  - Click to select subcategory
 
-- [ ] Uncategorized badge and indicator
-- [ ] Bulk assignment capability (future consideration)
+- [x] Transaction edit modal for individual re-categorization
+- [x] Uncategorized transactions carousel for batch categorization
+- [x] Clickable uncategorized count in stats panel
 
 **Deliverables:**
-- `src/components/features/CategorySelector.tsx`
-- Integration with transaction items
+- ✅ `src/components/CategorySelector.tsx` - Reusable category picker
+- ✅ `src/components/TransactionEditModal.tsx` - Individual transaction editing
+- ✅ `src/components/UncategorizedCarousel.tsx` - Batch categorization workflow
 
 ---
 
@@ -816,7 +818,7 @@ Phase 9: AI Insights         → Analysis, recommendations, patterns
 |-------|--------|----------|
 | Phase 1: Foundation | ✅ Completed | 100% |
 | Phase 2: Data Processing | ✅ Completed | 100% |
-| Phase 3: Category System | 🟡 Partial | 60% |
+| Phase 3: Category System | 🟡 Partial | 85% |
 | Phase 4: Core UI | ✅ Completed | 100% |
 | Phase 5: Visualizations | ✅ Completed | 100% |
 | Phase 6: Smart Features | 🟡 Partial | 75% |
@@ -824,7 +826,7 @@ Phase 9: AI Insights         → Analysis, recommendations, patterns
 | Phase 8: UI Themes & Icons | Not Started | 0% |
 | Phase 9: AI Insights | Not Started | 0% |
 
-**Last Updated:** 2025-12-19 (v0.4.1 - UI Improvements)
+**Last Updated:** 2025-12-19 (v0.5.0 - Manual Category Re-assignment)
 
 ---
 

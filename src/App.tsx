@@ -2,7 +2,7 @@ import { useState } from 'react'
 import './index.css'
 import { defaultCategories } from './data/categories'
 import { defaultCategoryMappings } from './data/category-mappings'
-import { FileUpload, TransactionList, FilterPanel, defaultFilters, ProjectRoadmap, TimePeriodSelector, SpendingVisualization, SettingsPanel, loadSettings } from './components'
+import { FileUpload, TransactionList, FilterPanel, defaultFilters, ProjectRoadmap, TimePeriodSelector, SpendingVisualization, SettingsPanel, loadSettings, TransactionEditModal, UncategorizedCarousel } from './components'
 import type { TimePeriod, AppSettings } from './components'
 import { parseTransactionsFromCSV, categorizeTransactions, getCategorizedStats } from './utils'
 import { useTransactionFilters, useTimePeriodFilter } from './hooks'
@@ -13,6 +13,8 @@ function App() {
   const [showCategoriesModal, setShowCategoriesModal] = useState(false)
   const [showCsvInfoModal, setShowCsvInfoModal] = useState(false)
   const [showSettingsPanel, setShowSettingsPanel] = useState(false)
+  const [showUncategorizedCarousel, setShowUncategorizedCarousel] = useState(false)
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null)
   const [appSettings, setAppSettings] = useState<AppSettings>(() => loadSettings())
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -106,6 +108,30 @@ function App() {
     setIsDemoMode(false)
     setFilters(defaultFilters)
     setSelectedPeriod(null)
+  }
+
+  // Handle category change for a transaction
+  const handleCategoryChange = (transactionId: string, categoryId: string, subcategoryId: string) => {
+    setTransactions(prevTransactions =>
+      prevTransactions.map(t => {
+        if (t.id === transactionId) {
+          // Remove uncategorized badge if it exists
+          const badges = t.badges.filter(b => b.type !== 'uncategorized')
+          return {
+            ...t,
+            categoryId,
+            subcategoryId,
+            badges,
+          }
+        }
+        return t
+      })
+    )
+  }
+
+  // Handle transaction click for editing
+  const handleTransactionClick = (transaction: Transaction) => {
+    setEditingTransaction(transaction)
   }
 
   const stats = getCategorizedStats(periodFilteredTransactions)
@@ -319,20 +345,39 @@ function App() {
                   </p>
                 </div>
                 <div className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-sm text-gray-500">Categorized</p>
-                  <p className="text-xl font-semibold text-gray-900">
-                    {stats.percentage}%
-                    <span className="text-sm font-normal text-gray-500 ml-1">
-                      ({stats.categorized}/{transactions.length})
-                    </span>
-                  </p>
-                </div>
-                <div className="bg-gray-50 rounded-lg p-4">
                   <p className="text-sm text-gray-500">Net Change</p>
                   <p className={`text-xl font-semibold ${totalIncome - totalExpenses >= 0 ? 'text-success-600' : 'text-danger-600'}`}>
                     {(totalIncome - totalExpenses) >= 0 ? '+' : ''}
                     {(totalIncome - totalExpenses).toLocaleString('sv-SE', { minimumFractionDigits: 2 })} kr
                   </p>
+                </div>
+                {/* Categorized / Uncategorized Stats */}
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <p className="text-sm text-gray-500 mb-2">Categorization</p>
+                  <div className="flex gap-2">
+                    {/* Categorized */}
+                    <div className="flex-1 bg-success-50 border border-success-200 rounded-lg p-2 text-center">
+                      <p className="text-lg font-semibold text-success-700">{stats.categorized}</p>
+                      <p className="text-xs text-success-600">Categorized</p>
+                    </div>
+                    {/* Uncategorized - Clickable */}
+                    <button
+                      onClick={() => setShowUncategorizedCarousel(true)}
+                      disabled={stats.uncategorized === 0}
+                      className={`flex-1 rounded-lg p-2 text-center transition-all ${
+                        stats.uncategorized > 0
+                          ? 'bg-warning-50 border border-warning-300 hover:border-warning-400 hover:shadow-sm cursor-pointer'
+                          : 'bg-gray-100 border border-gray-200 cursor-default'
+                      }`}
+                    >
+                      <p className={`text-lg font-semibold ${stats.uncategorized > 0 ? 'text-warning-700' : 'text-gray-400'}`}>
+                        {stats.uncategorized}
+                      </p>
+                      <p className={`text-xs ${stats.uncategorized > 0 ? 'text-warning-600' : 'text-gray-400'}`}>
+                        {stats.uncategorized > 0 ? 'Fix now →' : 'None'}
+                      </p>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -365,7 +410,10 @@ function App() {
 
               {/* Transaction List - 3/5 width */}
               <div className="lg:col-span-3">
-                <TransactionList transactions={filteredTransactions} />
+                <TransactionList
+                  transactions={filteredTransactions}
+                  onTransactionClick={handleTransactionClick}
+                />
               </div>
             </div>
           </>
@@ -567,6 +615,24 @@ function App() {
         onClose={() => setShowSettingsPanel(false)}
         settings={appSettings}
         onSettingsChange={setAppSettings}
+      />
+
+      {/* Transaction Edit Modal */}
+      {editingTransaction && (
+        <TransactionEditModal
+          transaction={editingTransaction}
+          isOpen={true}
+          onClose={() => setEditingTransaction(null)}
+          onSave={handleCategoryChange}
+        />
+      )}
+
+      {/* Uncategorized Carousel */}
+      <UncategorizedCarousel
+        transactions={transactions}
+        isOpen={showUncategorizedCarousel}
+        onClose={() => setShowUncategorizedCarousel(false)}
+        onCategorize={handleCategoryChange}
       />
     </div>
   )
