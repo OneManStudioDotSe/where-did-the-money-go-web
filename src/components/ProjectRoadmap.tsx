@@ -114,14 +114,14 @@ const projectPhases: Phase[] = [
     name: 'User Customization',
     icon: '⚙️',
     status: 'in_progress',
-    progress: 70,
+    progress: 75,
     description: 'Personalization and export options',
     steps: [
       { name: 'File upload flow with confirmation', completed: true },
       { name: 'Custom month start day setting', completed: true },
       { name: 'Settings panel (date format, icon set)', completed: true },
+      { name: 'Export to CSV/JSON with options', completed: true },
       { name: 'Custom category creation UI', completed: false },
-      { name: 'Export to CSV/JSON', completed: false },
     ],
   },
   {

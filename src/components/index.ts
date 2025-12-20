@@ -10,6 +10,7 @@ export { TransactionEditModal } from './TransactionEditModal';
 export { UncategorizedCarousel } from './UncategorizedCarousel';
 export { DarkModeToggle } from './DarkModeToggle';
 export { CsvConfirmationDialog } from './CsvConfirmationDialog';
+export { ExportDialog } from './ExportDialog';
 export type { TimePeriod } from './TimePeriodSelector';
 export type { AppSettings } from './SettingsPanel';
 

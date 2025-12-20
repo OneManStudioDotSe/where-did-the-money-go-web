@@ -10,6 +10,7 @@ interface HeaderProps {
   onNavigate: (route: string) => void;
   hasData?: boolean;
   onReset?: () => void;
+  onExport?: () => void;
 }
 
 const navItems = [
@@ -19,7 +20,7 @@ const navItems = [
   { label: 'About', href: '#/about' },
 ];
 
-export function Header({ isDark, onToggleDark, onOpenSettings, currentRoute, onNavigate, hasData, onReset }: HeaderProps) {
+export function Header({ isDark, onToggleDark, onOpenSettings, currentRoute, onNavigate, hasData, onReset, onExport }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const isActive = (href: string) => {
@@ -97,6 +98,20 @@ export function Header({ isDark, onToggleDark, onOpenSettings, currentRoute, onN
 
             {/* Right Side Actions */}
             <div className="flex items-center gap-2">
+              {/* Export Button - Only show when data is loaded */}
+              {hasData && onExport && (
+                <button
+                  onClick={onExport}
+                  className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-colors"
+                  aria-label="Export data"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  <span>Export</span>
+                </button>
+              )}
+
               {/* Start Over Button - Only show when data is loaded */}
               {hasData && onReset && (
                 <button

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import './index.css'
 import { defaultCategories } from './data/categories'
 import { defaultCategoryMappings } from './data/category-mappings'
-import { FileUpload, TransactionList, FilterPanel, defaultFilters, ProjectRoadmap, TimePeriodSelector, SpendingVisualization, SettingsPanel, loadSettings, TransactionEditModal, UncategorizedCarousel, CsvConfirmationDialog } from './components'
+import { FileUpload, TransactionList, FilterPanel, defaultFilters, ProjectRoadmap, TimePeriodSelector, SpendingVisualization, SettingsPanel, loadSettings, TransactionEditModal, UncategorizedCarousel, CsvConfirmationDialog, ExportDialog } from './components'
 import type { TimePeriod, AppSettings } from './components'
 import { parseTransactionsFromCSV, categorizeTransactions, getCategorizedStats } from './utils'
 import { useTransactionFilters, useTimePeriodFilter } from './hooks'
@@ -21,6 +21,7 @@ function App() {
   const [showSettingsPanel, setShowSettingsPanel] = useState(false)
   const [showUncategorizedCarousel, setShowUncategorizedCarousel] = useState(false)
   const [showCsvConfirmation, setShowCsvConfirmation] = useState(false)
+  const [showExportDialog, setShowExportDialog] = useState(false)
   const [pendingFileContent, setPendingFileContent] = useState<string | null>(null)
   const [pendingFileName, setPendingFileName] = useState<string | null>(null)
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null)
@@ -451,6 +452,7 @@ function App() {
         onNavigate={navigate}
         hasData={transactions.length > 0}
         onReset={handleClearData}
+        onExport={() => setShowExportDialog(true)}
       />
 
       {/* Main Content */}
@@ -658,6 +660,14 @@ function App() {
           fileName={pendingFileName}
         />
       )}
+
+      {/* Export Dialog */}
+      <ExportDialog
+        isOpen={showExportDialog}
+        onClose={() => setShowExportDialog(false)}
+        transactions={transactions}
+        filteredTransactions={filteredTransactions}
+      />
     </div>
   )
 }

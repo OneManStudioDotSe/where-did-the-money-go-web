@@ -56,57 +56,10 @@ Phase 9: AI Insights         → Analysis, recommendations, patterns
 **Focus:** TypeScript interfaces for all core entities
 
 **Tasks:**
-- [x] Define `Transaction` interface:
-  ```typescript
-  interface Transaction {
-    id: string;
-    date: Date;
-    amount: number;
-    description: string;
-    categoryId: string | null;
-    subcategoryId: string | null;
-    isSubscription: boolean;
-    badges: Badge[];
-    rawData: Record<string, string>;
-  }
-  ```
-
-- [x] Define `Category` and `Subcategory` interfaces:
-  ```typescript
-  interface Category {
-    id: string;
-    name: string;
-    icon: string;
-    color: string;
-    subcategories: Subcategory[];
-  }
-
-  interface Subcategory {
-    id: string;
-    name: string;
-    parentCategoryId: string;
-  }
-  ```
-
-- [x] Define `ColumnMapping` interface:
-  ```typescript
-  interface ColumnMapping {
-    dateColumn: string | null;
-    amountColumn: string | null;
-    descriptionColumn: string | null;
-    categoryColumn: string | null;
-  }
-  ```
-
-- [x] Define `CategoryMapping` interface:
-  ```typescript
-  interface CategoryMapping {
-    pattern: string;        // Text pattern to match
-    categoryId: string;
-    subcategoryId: string;
-    isRegex: boolean;
-  }
-  ```
+- [x] Define `Transaction` interface
+- [x] Define `Category` and `Subcategory` interfaces
+- [x] Define `ColumnMapping` interface
+- [x] Define `CategoryMapping` interface
 
 **Deliverables:**
 - ✅ Complete type definitions in `src/types/`
@@ -142,22 +95,13 @@ Phase 9: AI Insights         → Analysis, recommendations, patterns
   - Common merchant names → categories
   - Pattern-based rules (e.g., "NETFLIX" → Entertainment/Streaming)
 
-- [x] **BONUS: Implemented CSV Parser & File Upload early:**
+- [x] Implemented CSV Parser & File Upload early:
   - Full CSV parsing utility with BOM handling
   - Auto-column detection for Swedish bank formats
   - File upload component with drag & drop
   - Category mapping service with pattern matching
   - Transaction list component with category badges
   - Summary statistics display
-
-**Deliverables:**
-- ✅ `sample-data/transactions.csv`
-- ✅ `src/data/categories.ts` (13 categories, 51 subcategories)
-- ✅ `src/data/category-mappings.ts` (183 merchant mappings)
-- ✅ `src/utils/csv-parser.ts`
-- ✅ `src/utils/category-service.ts`
-- ✅ `src/components/FileUpload.tsx`
-- ✅ `src/components/TransactionList.tsx`
 
 ---
 
@@ -173,16 +117,7 @@ Phase 9: AI Insights         → Analysis, recommendations, patterns
   - Parse headers
   - Handle quoted fields
   - Handle different line endings
-
-- [x] Create file reader hook:
-  ```typescript
-  function useFileReader(): {
-    readFile: (file: File) => Promise<string>;
-    content: string | null;
-    error: Error | null;
-    isLoading: boolean;
-  }
-  ```
+- [x] Create ```useFileReader()``` file reader hook
 
 **Deliverables:**
 - ✅ `src/utils/csv-parser.ts`
@@ -199,15 +134,7 @@ Phase 9: AI Insights         → Analysis, recommendations, patterns
   - Amount detection: numeric, currency symbols
   - Description detection: longest text, non-numeric
 
-- [x] Detection heuristics:
-  ```typescript
-  interface ColumnAnalysis {
-    columnName: string;
-    sampleValues: string[];
-    detectedType: 'date' | 'amount' | 'description' | 'unknown';
-    confidence: number;
-  }
-  ```
+- [x] Detection heuristics with ``` ColumnAnalysis ```
 
 - [x] Handle ambiguous cases:
   - Multiple date columns
@@ -596,18 +523,18 @@ Phase 9: AI Insights         → Analysis, recommendations, patterns
 
 **Goal:** Enable user file uploads and customization options.
 
-### Iteration 7.1: File Upload
+### Iteration 7.1: File Upload ✅
 **Focus:** Replace static CSV with user uploads
 
 **Tasks:**
-- [ ] File drop zone component
-- [ ] File validation
-- [ ] Progress indicator
-- [ ] Error handling UI
+- [x] File drop zone component (drag & drop with visual feedback)
+- [x] File validation (CSV extension check)
+- [x] Progress indicator (loading spinner)
+- [x] Error handling UI (error callbacks for invalid format, encoding errors)
 
 **Deliverables:**
-- `src/components/features/FileUpload.tsx`
-- Upload flow integration
+- ✅ `src/components/FileUpload.tsx` - Drag & drop file upload
+- ✅ Upload flow integration in App.tsx with CSV confirmation dialog
 
 ---
 
@@ -642,28 +569,29 @@ Phase 9: AI Insights         → Analysis, recommendations, patterns
 
 ---
 
-### Iteration 7.4: Export Functionality
+### Iteration 7.4: Export Functionality ✅
 **Focus:** Export analyzed data
 
 **Tasks:**
-- [ ] Export formats:
+- [x] Export formats:
   - CSV (with categories)
   - JSON
-  - PDF report (future consideration)
 
-- [ ] Export options:
+- [x] Export options:
   - All transactions
   - Filtered view
   - Summary only
 
+- [x] Export UI with format selection, scope options, and preview
+
 **Deliverables:**
-- `src/services/export-service.ts`
-- Export UI
+- ✅ `src/services/export-service.ts` - Export service with CSV/JSON support
+- ✅ `src/components/ExportDialog.tsx` - Export dialog with options and preview
+- ✅ Export button in Header when data is loaded
 
 ---
 
 ## Phase 8: UI Themes & Icons ✅
-
 **Goal:** Provide multiple icon sets and UI customization options.
 
 ### Iteration 8.1: Multiple Icon Sets ✅
@@ -698,7 +626,7 @@ Phase 9: AI Insights         → Analysis, recommendations, patterns
 **Focus:** Full dark theme support
 
 **Tasks:**
-- [x] Dark mode color palette (slate backgrounds, adjusted text colors)
+- [x] Dark mode color palette
 - [x] System preference detection via prefers-color-scheme
 - [x] Manual toggle in settings (light/dark/system)
 - [x] Smooth transition between modes
@@ -816,21 +744,6 @@ Phase 9: AI Insights         → Analysis, recommendations, patterns
 
 ---
 
-## Future Considerations
-
-### Potential Enhancements (Post-MVP)
-- Dark mode theme
-- Multiple account support
-- Budget setting and tracking
-- Goals and savings targets
-- Receipt image attachment
-- Bank API integrations (if privacy-compliant)
-- PWA support for offline use
-- Data encryption for extra privacy
-- Collaborative features (shared household budgets)
-
----
-
 ## Progress Tracking
 
 ### Completion Status
@@ -843,21 +756,8 @@ Phase 9: AI Insights         → Analysis, recommendations, patterns
 | Phase 4: Core UI | ✅ Completed | 100% |
 | Phase 5: Visualizations | ✅ Completed | 100% |
 | Phase 6: Smart Features | 🟡 Partial | 75% |
-| Phase 7: User Customization | 🟡 Partial | 70% |
+| Phase 7: User Customization | 🟡 Partial | 75% |
 | Phase 8: UI Themes & Icons | ✅ Completed | 100% |
 | Phase 9: AI Insights | Not Started | 0% |
 
-**Last Updated:** 2025-12-19 (v0.6.1 - CSV Confirmation & Reset Flow)
-
----
-
-## Getting Started
-
-To begin development, start with **Phase 1, Iteration 1.1: Project Setup**.
-
-The recommended approach:
-1. Complete each iteration fully before moving to the next
-2. Test thoroughly at each step
-3. Document decisions in DEVLOG.md
-4. Update CHANGELOG.md with each version milestone
-5. Commit frequently with meaningful messages
+**Last Updated:** 2025-12-20 (v0.7.0 - Export Functionality)
