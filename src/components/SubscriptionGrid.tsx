@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import type { Subscription, Transaction } from '../types/transaction';
 import { getCategoryName, getSubcategoryName, getCategoryIcon, getCategoryColor } from '../utils/category-service';
 import { calculateMonthlySubscriptionCost } from '../utils/subscription-detection';
+import { toTitleCase } from '../utils/text-utils';
 
 interface SubscriptionGridProps {
   subscriptions: Subscription[];
@@ -168,7 +169,7 @@ export function SubscriptionGrid({
                 </div>
                 <div className="min-w-0 flex-1">
                   <h3 className="font-medium text-gray-900 dark:text-white text-sm truncate">
-                    {sub.name}
+                    {toTitleCase(sub.name)}
                   </h3>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                     Day {sub.billingDay}
@@ -208,7 +209,7 @@ export function SubscriptionGrid({
                 </span>
                 <div className="flex-1 min-w-0">
                   <h2 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
-                    {selectedDetails.sub.name}
+                    {toTitleCase(selectedDetails.sub.name)}
                   </h2>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
                     {selectedDetails.categoryName}
@@ -228,9 +229,10 @@ export function SubscriptionGrid({
 
             {/* Modal Content */}
             <div className="px-6 py-4 space-y-4">
-              {/* Amount Section */}
-              <div className="bg-primary-50 dark:bg-primary-900/20 rounded-lg p-4">
-                <div className="grid grid-cols-2 gap-4">
+              {/* Two Column Layout: Left = Cost Info, Right = Details */}
+              <div className="grid grid-cols-2 gap-4">
+                {/* Left Column - Cost Information */}
+                <div className="bg-primary-50 dark:bg-primary-900/20 rounded-lg p-4 space-y-3">
                   <div>
                     <div className="text-xs text-primary-600 dark:text-primary-400 uppercase tracking-wide">
                       Monthly
@@ -239,7 +241,7 @@ export function SubscriptionGrid({
                       {formatAmount(selectedDetails.sub.amount)}
                     </div>
                   </div>
-                  <div>
+                  <div className="pt-2 border-t border-primary-200 dark:border-primary-800">
                     <div className="text-xs text-primary-600 dark:text-primary-400 uppercase tracking-wide">
                       Yearly
                     </div>
@@ -248,40 +250,40 @@ export function SubscriptionGrid({
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Details */}
-              <div className="space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500 dark:text-gray-400">Type</span>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${
-                    selectedDetails.sub.recurringType === 'subscription'
-                      ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400'
-                      : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
-                  }`}>
-                    {selectedDetails.sub.recurringType === 'subscription' ? 'Subscription' : 'Recurring expense'}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500 dark:text-gray-400">Billing day</span>
-                  <span className="font-medium text-gray-900 dark:text-white">
-                    {selectedDetails.sub.billingDay}{getOrdinalSuffix(selectedDetails.sub.billingDay)} of month
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500 dark:text-gray-400">Total payments</span>
-                  <span className="font-medium text-gray-900 dark:text-white">
-                    {selectedDetails.sub.transactionIds.length}
-                  </span>
-                </div>
-                {selectedDetails.transactions[0] && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-500 dark:text-gray-400">Last payment</span>
-                    <span className="font-medium text-gray-900 dark:text-white">
-                      {selectedDetails.transactions[0].date.toLocaleDateString('sv-SE')}
+                {/* Right Column - Details */}
+                <div className="bg-gray-50 dark:bg-slate-700/50 rounded-lg p-4 space-y-3">
+                  <div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Type</div>
+                    <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full ${
+                      selectedDetails.sub.recurringType === 'subscription'
+                        ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400'
+                        : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
+                    }`}>
+                      {selectedDetails.sub.recurringType === 'subscription' ? 'Subscription' : 'Recurring'}
                     </span>
                   </div>
-                )}
+                  <div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Billing Day</div>
+                    <div className="font-medium text-gray-900 dark:text-white">
+                      {selectedDetails.sub.billingDay}{getOrdinalSuffix(selectedDetails.sub.billingDay)}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Payments</div>
+                    <div className="font-medium text-gray-900 dark:text-white">
+                      {selectedDetails.sub.transactionIds.length}
+                    </div>
+                  </div>
+                  {selectedDetails.transactions[0] && (
+                    <div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Last Paid</div>
+                      <div className="font-medium text-gray-900 dark:text-white">
+                        {selectedDetails.transactions[0].date.toLocaleDateString('sv-SE')}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Recent Transactions */}

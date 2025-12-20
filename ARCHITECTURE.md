@@ -436,7 +436,11 @@ src/
 │   ├── date-utils.ts
 │   ├── format-utils.ts
 │   ├── grouping-utils.ts
-│   └── validation-utils.ts
+│   ├── text-utils.ts          # Title case and text formatting
+│   ├── subscription-detection.ts
+│   ├── category-service.ts
+│   ├── csv-parser.ts
+│   └── index.ts               # Re-exports all utilities
 │
 ├── data/
 │   ├── sample-transactions.csv

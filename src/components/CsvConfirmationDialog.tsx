@@ -193,6 +193,24 @@ export function CsvConfirmationDialog({
                     <p className="text-lg font-bold text-blue-900 dark:text-blue-200">{analysis.columns.length}</p>
                   </div>
                 </div>
+                {/* Large file warning inside File Info */}
+                {exceedsLimit && (
+                  <div className="mt-3 pt-3 border-t border-amber-300 dark:border-amber-700">
+                    <div className="flex items-start gap-2">
+                      <svg className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                      <div>
+                        <p className="text-xs font-medium text-amber-700 dark:text-amber-300">
+                          Large file - only first {maxTransactionLimit.toLocaleString()} rows will be imported
+                        </p>
+                        <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">
+                          Change limit in Settings
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Parsing Settings Card */}
@@ -204,9 +222,9 @@ export function CsvConfirmationDialog({
                   </svg>
                   Parsing Settings
                 </h3>
-                <div className="space-y-3">
+                <div className="flex gap-4">
                   {/* Delimiter */}
-                  <div>
+                  <div className="flex-1">
                     <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Delimiter</label>
                     <div className="flex gap-1.5">
                       {[
@@ -217,7 +235,7 @@ export function CsvConfirmationDialog({
                         <button
                           key={option.value}
                           onClick={() => handleDelimiterChange(option.value)}
-                          className={`px-3 py-1 text-sm rounded-md border transition-all ${
+                          className={`px-3 py-1.5 text-sm rounded-md border transition-all ${
                             config.delimiter === option.value
                               ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
                               : 'border-gray-200 dark:border-slate-500 hover:border-gray-300 dark:hover:border-slate-400 text-gray-700 dark:text-gray-300'
@@ -229,12 +247,12 @@ export function CsvConfirmationDialog({
                     </div>
                   </div>
                   {/* Bank */}
-                  <div>
+                  <div className="flex-1">
                     <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Bank</label>
                     <select
                       value={selectedBank || ''}
                       onChange={(e) => setSelectedBank((e.target.value || null) as BankId | null)}
-                      className="w-full px-2 py-1 text-sm border border-gray-200 dark:border-slate-500 rounded-md bg-white dark:bg-slate-600 text-gray-900 dark:text-white"
+                      className="w-full px-2 py-1.5 text-sm border border-gray-200 dark:border-slate-500 rounded-md bg-white dark:bg-slate-600 text-gray-900 dark:text-white"
                     >
                       <option value="">Auto-detect</option>
                       {Object.values(BANK_CONFIGS).map((bank) => (
@@ -245,26 +263,6 @@ export function CsvConfirmationDialog({
                 </div>
               </div>
             </div>
-
-            {/* Transaction Limit Warning */}
-            {exceedsLimit && (
-              <div className="bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-700 rounded-lg p-4">
-                <div className="flex items-start gap-3">
-                  <svg className="w-5 h-5 text-warning-600 dark:text-warning-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                  </svg>
-                  <div>
-                    <p className="text-sm font-medium text-warning-700 dark:text-warning-300">
-                      Large file detected
-                    </p>
-                    <p className="text-xs text-warning-600 dark:text-warning-400 mt-0.5">
-                      This file has {analysis.rowCount.toLocaleString()} transactions. Only the first {maxTransactionLimit.toLocaleString()} will be imported.
-                      You can change this limit in Settings.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
 
             {/* Error Message */}
             {analysis.error && (

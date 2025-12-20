@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import type { Subscription, Transaction } from '../types/transaction';
 import { getCategoryName, getSubcategoryName, getCategoryIcon, getCategoryColor } from '../utils/category-service';
 import { calculateMonthlySubscriptionCost } from '../utils/subscription-detection';
+import { toTitleCase } from '../utils/text-utils';
 
 interface SubscriptionListProps {
   subscriptions: Subscription[];
@@ -237,7 +238,7 @@ export function SubscriptionList({
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <span className="font-medium text-gray-900 dark:text-white">
-                              {sub.name}
+                              {toTitleCase(sub.name)}
                             </span>
                             <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
                               sub.recurringType === 'subscription'

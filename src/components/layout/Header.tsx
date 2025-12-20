@@ -34,7 +34,7 @@ export function Header({ isDark, onToggleDark, onOpenSettings, currentRoute, onN
     <>
       <header className="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-gray-200 dark:border-slate-800">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
+          <div className="flex items-center justify-between h-20">
             {/* Logo */}
             <a
               href="#/"
@@ -42,13 +42,13 @@ export function Header({ isDark, onToggleDark, onOpenSettings, currentRoute, onN
                 e.preventDefault();
                 onNavigate('#/');
               }}
-              className="flex items-center gap-3 group"
+              className="flex items-center gap-4 group"
             >
               {/* Logo Icon */}
               <div className="relative">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-lg shadow-primary-500/25 group-hover:shadow-primary-500/40 transition-shadow">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-lg shadow-primary-500/25 group-hover:shadow-primary-500/40 transition-all group-hover:scale-105">
                   <svg
-                    className="w-6 h-6 text-white"
+                    className="w-7 h-7 text-white"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -62,14 +62,14 @@ export function Header({ isDark, onToggleDark, onOpenSettings, currentRoute, onN
                   </svg>
                 </div>
                 {/* Accent dot */}
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary-400 rounded-full border-2 border-white dark:border-slate-900" />
+                <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-primary-400 rounded-full border-2 border-white dark:border-slate-900 shadow-sm" />
               </div>
               {/* Logo Text */}
               <div className="hidden sm:block">
-                <h1 className="text-lg font-bold text-gray-900 dark:text-white leading-tight">
+                <h1 className="text-xl font-bold text-gray-900 dark:text-white leading-tight">
                   Where Did The Money Go?
                 </h1>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   Privacy-first expense tracking
                 </p>
               </div>

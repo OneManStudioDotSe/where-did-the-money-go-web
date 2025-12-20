@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { Transaction } from '../types/transaction';
 import { getCategoryName, getSubcategoryName, getCategoryColor, getCategoryIcon } from '../utils/category-service';
 import { CategorySelector } from './CategorySelector';
+import { toTitleCase } from '../utils/text-utils';
 
 interface TransactionEditModalProps {
   transaction: Transaction;
@@ -114,7 +115,7 @@ export function TransactionEditModal({
           <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
             <div className="flex items-start gap-4">
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-gray-900 truncate">{transaction.description}</p>
+                <p className="font-medium text-gray-900 truncate">{toTitleCase(transaction.description)}</p>
                 <p className="text-sm text-gray-500 mt-1">{formatDate(transaction.date)}</p>
               </div>
               <div

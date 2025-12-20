@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import type { Transaction, TransactionSortField, SortDirection } from '../types/transaction';
 import { getCategoryName, getSubcategoryName, getCategoryColor, getCategoryIcon } from '../utils/category-service';
 import { TransactionBadges } from './ui/Badge';
+import { toTitleCase } from '../utils/text-utils';
 
 interface TransactionListProps {
   transactions: Transaction[];
@@ -262,7 +263,7 @@ export function TransactionList({ transactions, onTransactionClick }: Transactio
                 {/* Description */}
                 <div className="col-span-4 flex items-center gap-2">
                   <span className="text-sm text-gray-900 dark:text-white truncate">
-                    {transaction.description}
+                    {toTitleCase(transaction.description)}
                   </span>
                   <TransactionBadges
                     transaction={transaction}
@@ -320,7 +321,7 @@ export function TransactionList({ transactions, onTransactionClick }: Transactio
               {/* Description */}
               <div className="col-span-4">
                 <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                  {transaction.description}
+                  {toTitleCase(transaction.description)}
                 </p>
                 {/* Badges */}
                 <TransactionBadges

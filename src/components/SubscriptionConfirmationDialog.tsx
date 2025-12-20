@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { DetectedSubscription, RecurringType } from '../types/transaction';
 import { getCategoryName, getSubcategoryName, getCategoryIcon, getCategoryColor } from '../utils/category-service';
+import { toTitleCase } from '../utils/text-utils';
 
 interface SubscriptionConfirmationDialogProps {
   isOpen: boolean;
@@ -181,9 +182,9 @@ export function SubscriptionConfirmationDialog({
                   key={subscription.id}
                   className={`p-4 rounded-lg border-2 transition-all ${
                     decision === 'subscription'
-                      ? 'border-primary-500 dark:border-primary-600 bg-primary-50 dark:bg-primary-900/20'
+                      ? 'border-primary-500 dark:border-primary-400 bg-primary-50 dark:bg-primary-900/30'
                       : decision === 'recurring_expense'
-                      ? 'border-amber-500 dark:border-amber-600 bg-amber-50 dark:bg-amber-900/20'
+                      ? 'border-amber-500 dark:border-amber-400 bg-amber-50 dark:bg-amber-900/30'
                       : decision === 'skip'
                       ? 'border-gray-300 dark:border-slate-600 bg-gray-50 dark:bg-slate-800/50 opacity-50'
                       : 'border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800'
@@ -202,8 +203,14 @@ export function SubscriptionConfirmationDialog({
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <div>
-                          <h3 className="font-medium text-gray-900 dark:text-white truncate">
-                            {subscription.recipientName}
+                          <h3 className={`font-medium truncate ${
+                            decision === 'subscription'
+                              ? 'text-primary-900 dark:text-white'
+                              : decision === 'recurring_expense'
+                              ? 'text-amber-900 dark:text-white'
+                              : 'text-gray-900 dark:text-white'
+                          }`}>
+                            {toTitleCase(subscription.recipientName)}
                           </h3>
                           <div className="flex items-center gap-2 mt-1 text-sm text-gray-500 dark:text-gray-400">
                             {categoryName && (

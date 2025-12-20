@@ -182,42 +182,99 @@ function DonutChart({ categories, size = 200 }: { categories: CategoryTotal[]; s
 }
 
 function BarChart({ categories, maxBars = 10 }: { categories: CategoryTotal[]; maxBars?: number }) {
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const displayCategories = categories.slice(0, maxBars);
   const maxValue = Math.max(...displayCategories.map((c) => c.total));
+
+  const handleCategoryClick = (categoryId: string | null) => {
+    const key = categoryId || 'uncategorized';
+    setExpandedCategory(expandedCategory === key ? null : key);
+  };
 
   return (
     <div className="space-y-2">
       {displayCategories.map((category) => {
         const barWidth = maxValue > 0 ? (category.total / maxValue) * 100 : 0;
+        const categoryKey = category.categoryId || 'uncategorized';
+        const isExpanded = expandedCategory === categoryKey;
+        const hasSubcategories = category.subcategories.length > 1;
 
         return (
-          <div key={category.categoryId || 'uncategorized'} className="group">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-lg">{category.icon}</span>
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300 flex-1 truncate">
-                {category.name}
-              </span>
-              <span className="text-sm text-gray-500 dark:text-gray-400">{category.percentage.toFixed(1)}%</span>
-              <span className="text-sm font-semibold text-gray-900 dark:text-white min-w-[80px] text-right">
-                {formatAmount(category.total)} kr
-              </span>
-            </div>
-            <div className="h-6 bg-gray-100 dark:bg-slate-700 rounded-lg overflow-hidden">
-              <div
-                className="h-full rounded-lg transition-all duration-300 group-hover:brightness-110 flex items-center justify-end pr-2"
-                style={{
-                  width: `${barWidth}%`,
-                  backgroundColor: category.color,
-                  minWidth: barWidth > 0 ? '20px' : '0',
-                }}
-              >
-                {barWidth > 15 && (
-                  <span className="text-xs font-medium text-white">
-                    {category.count} txn
-                  </span>
+          <div key={categoryKey}>
+            <div
+              className={`group ${hasSubcategories ? 'cursor-pointer' : ''}`}
+              onClick={() => hasSubcategories && handleCategoryClick(category.categoryId)}
+            >
+              <div className="flex items-center gap-2 mb-1">
+                {hasSubcategories && (
+                  <svg
+                    className={`w-4 h-4 text-gray-400 dark:text-gray-500 transition-transform flex-shrink-0 ${isExpanded ? 'rotate-90' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
                 )}
+                {!hasSubcategories && <span className="w-4 flex-shrink-0" />}
+                <span className="text-lg">{category.icon}</span>
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300 flex-1 truncate">
+                  {category.name}
+                </span>
+                <span className="text-sm text-gray-500 dark:text-gray-400">{category.percentage.toFixed(1)}%</span>
+                <span className="text-sm font-semibold text-gray-900 dark:text-white min-w-[80px] text-right">
+                  {formatAmount(category.total)} kr
+                </span>
+              </div>
+              <div className="h-6 bg-gray-100 dark:bg-slate-700 rounded-lg overflow-hidden ml-5">
+                <div
+                  className="h-full rounded-lg transition-all duration-500 ease-out group-hover:brightness-110 flex items-center justify-end pr-2 animate-bar-grow"
+                  style={{
+                    width: `${barWidth}%`,
+                    backgroundColor: category.color,
+                    minWidth: barWidth > 0 ? '20px' : '0',
+                  }}
+                >
+                  {barWidth > 15 && (
+                    <span className="text-xs font-medium text-white">
+                      {category.count} txn
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
+            {/* Subcategory drill-down */}
+            {isExpanded && (
+              <div className="ml-9 mt-2 space-y-1.5 pb-2 border-l-2 border-gray-200 dark:border-slate-600 pl-3">
+                {category.subcategories.map((sub) => {
+                  const subBarWidth = category.total > 0 ? (sub.total / category.total) * 100 : 0;
+                  return (
+                    <div key={sub.subcategoryId || 'other'}>
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="text-xs text-gray-600 dark:text-gray-400 flex-1 truncate">
+                          {sub.name}
+                        </span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">{sub.percentage.toFixed(1)}%</span>
+                        <span className="text-xs font-medium text-gray-700 dark:text-gray-300 min-w-[70px] text-right">
+                          {formatAmount(sub.total)} kr
+                        </span>
+                      </div>
+                      <div className="h-4 bg-gray-100 dark:bg-slate-700 rounded overflow-hidden">
+                        <div
+                          className="h-full rounded transition-all duration-500 ease-out"
+                          style={{
+                            width: `${subBarWidth}%`,
+                            backgroundColor: category.color,
+                            opacity: 0.7,
+                            minWidth: subBarWidth > 0 ? '10px' : '0',
+                          }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         );
       })}
@@ -596,7 +653,6 @@ function CategoryTotalsTable({
                     <td className="px-3 py-2 text-right text-gray-500 dark:text-gray-400">{category.count}</td>
                   </tr>
                   {isExpanded &&
-                    viewMode === 'subcategory' &&
                     category.subcategories.map((sub) => (
                       <tr key={`${key}-${sub.subcategoryId}`} className="bg-gray-50/50 dark:bg-slate-700/30">
                         <td className="px-3 py-1.5 pl-14">

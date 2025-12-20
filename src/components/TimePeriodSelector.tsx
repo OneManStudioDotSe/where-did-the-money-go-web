@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import type { Transaction, TransactionGrouping } from '../types/transaction';
 
 interface TimePeriod {
@@ -150,13 +150,23 @@ export function TimePeriodSelector({
   onPeriodChange,
   selectedPeriod,
 }: TimePeriodSelectorProps) {
-  const [activePeriodType, setActivePeriodType] = useState<TransactionGrouping | null>(null);
+  // Initialize activePeriodType from selectedPeriod to persist across tab switches
+  const [activePeriodType, setActivePeriodType] = useState<TransactionGrouping | null>(
+    selectedPeriod?.type ?? null
+  );
   const [monthStartDay, setMonthStartDay] = useState<number>(() => {
     // Load from localStorage if available
     const saved = localStorage.getItem('period-month-start-day');
     return saved ? parseInt(saved, 10) : 1;
   });
   const [showSettings, setShowSettings] = useState(false);
+
+  // Sync activePeriodType when selectedPeriod changes (e.g., when switching tabs)
+  useEffect(() => {
+    if (selectedPeriod) {
+      setActivePeriodType(selectedPeriod.type);
+    }
+  }, [selectedPeriod]);
 
   const availablePeriods = useMemo(() => {
     if (!activePeriodType) return [];
@@ -411,19 +421,19 @@ export function TimePeriodSelector({
               <div className="bg-white/60 dark:bg-slate-800/60 rounded-lg p-3 text-center">
                 <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Expenses</p>
                 <p className="text-2xl font-bold text-danger-600 dark:text-danger-400">
-                  -{periodTotals.expenses.toLocaleString('sv-SE', { maximumFractionDigits: 0 })}
+                  -{periodTotals.expenses.toLocaleString('sv-SE', { maximumFractionDigits: 0 })} kr
                 </p>
               </div>
               <div className="bg-white/60 dark:bg-slate-800/60 rounded-lg p-3 text-center">
                 <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Income</p>
                 <p className="text-2xl font-bold text-success-600 dark:text-success-400">
-                  +{periodTotals.income.toLocaleString('sv-SE', { maximumFractionDigits: 0 })}
+                  +{periodTotals.income.toLocaleString('sv-SE', { maximumFractionDigits: 0 })} kr
                 </p>
               </div>
               <div className="bg-white/60 dark:bg-slate-800/60 rounded-lg p-3 text-center">
                 <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Net</p>
                 <p className={`text-2xl font-bold ${periodTotals.net >= 0 ? 'text-success-600 dark:text-success-400' : 'text-danger-600 dark:text-danger-400'}`}>
-                  {periodTotals.net >= 0 ? '+' : ''}{periodTotals.net.toLocaleString('sv-SE', { maximumFractionDigits: 0 })}
+                  {periodTotals.net >= 0 ? '+' : ''}{periodTotals.net.toLocaleString('sv-SE', { maximumFractionDigits: 0 })} kr
                 </p>
               </div>
             </div>
