@@ -5,6 +5,12 @@ import type { ThemeMode } from '../hooks/useDarkMode';
 import type { BankId } from '../types/csv';
 import { BANK_CONFIGS } from '../types/csv';
 
+/** Subscription view variation */
+export type SubscriptionViewVariation = 'list' | 'grid';
+
+/** Subscription placement options */
+export type SubscriptionPlacement = 'tab' | 'overview' | 'both';
+
 export interface AppSettings {
   dateFormat: 'YYYY-MM-DD' | 'DD/MM/YYYY' | 'MM/DD/YYYY' | 'DD.MM.YYYY';
   monthStartDay: number;
@@ -14,6 +20,10 @@ export interface AppSettings {
   maxTransactionLimit: number;
   /** Preferred bank for CSV parsing optimizations */
   preferredBank: BankId | null;
+  /** Subscription view variation: list (accordion) or grid (cards) */
+  subscriptionViewVariation: SubscriptionViewVariation;
+  /** Where to show subscriptions: tab, overview card, or both */
+  subscriptionPlacement: SubscriptionPlacement;
 }
 
 const defaultSettings: AppSettings = {
@@ -23,6 +33,8 @@ const defaultSettings: AppSettings = {
   theme: 'system',
   maxTransactionLimit: 2000,
   preferredBank: null,
+  subscriptionViewVariation: 'list',
+  subscriptionPlacement: 'both',
 };
 
 const STORAGE_KEY = 'app_settings';
@@ -48,6 +60,10 @@ interface SettingsPanelProps {
   onClose: () => void;
   settings: AppSettings;
   onSettingsChange: (settings: AppSettings) => void;
+  /** Number of subscriptions for display */
+  subscriptionCount?: number;
+  /** Callback to clear all subscriptions */
+  onClearSubscriptions?: () => void;
 }
 
 function IconPreview({ iconSet, categoryId }: { iconSet: IconSetId; categoryId: string }) {
@@ -79,8 +95,9 @@ function IconPreview({ iconSet, categoryId }: { iconSet: IconSetId; categoryId: 
   );
 }
 
-export function SettingsPanel({ isOpen, onClose, settings, onSettingsChange }: SettingsPanelProps) {
+export function SettingsPanel({ isOpen, onClose, settings, onSettingsChange, subscriptionCount = 0, onClearSubscriptions }: SettingsPanelProps) {
   const [localSettings, setLocalSettings] = useState<AppSettings>(settings);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   useEffect(() => {
     setLocalSettings(settings);
@@ -253,6 +270,179 @@ export function SettingsPanel({ isOpen, onClose, settings, onSettingsChange }: S
                   Select your bank to apply bank-specific parsing optimizations (e.g., SEB description trimming).
                 </p>
               </div>
+            </div>
+
+            {/* Subscription Settings Section */}
+            <div className="border-t border-gray-200 dark:border-slate-700 pt-6">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Subscription Display
+              </h3>
+
+              {/* View Variation */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  View Style
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setLocalSettings({ ...localSettings, subscriptionViewVariation: 'list' })}
+                    className={`p-3 rounded-lg border-2 transition-all ${
+                      localSettings.subscriptionViewVariation === 'list'
+                        ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30'
+                        : 'border-gray-200 dark:border-slate-600 hover:border-gray-300 dark:hover:border-slate-500'
+                    }`}
+                  >
+                    <div className="flex flex-col items-center gap-2">
+                      <svg className="w-6 h-6 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                      </svg>
+                      <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Accordion List</span>
+                      <span className="text-xs text-gray-400 dark:text-gray-500 text-center">Grouped by category</span>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLocalSettings({ ...localSettings, subscriptionViewVariation: 'grid' })}
+                    className={`p-3 rounded-lg border-2 transition-all ${
+                      localSettings.subscriptionViewVariation === 'grid'
+                        ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30'
+                        : 'border-gray-200 dark:border-slate-600 hover:border-gray-300 dark:hover:border-slate-500'
+                    }`}
+                  >
+                    <div className="flex flex-col items-center gap-2">
+                      <svg className="w-6 h-6 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                      </svg>
+                      <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Card Grid</span>
+                      <span className="text-xs text-gray-400 dark:text-gray-500 text-center">Compact cards</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Placement */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Placement
+                </label>
+                <div className="space-y-2">
+                  <button
+                    type="button"
+                    onClick={() => setLocalSettings({ ...localSettings, subscriptionPlacement: 'both' })}
+                    className={`w-full p-3 rounded-lg border-2 text-left transition-all ${
+                      localSettings.subscriptionPlacement === 'both'
+                        ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30'
+                        : 'border-gray-200 dark:border-slate-600 hover:border-gray-300 dark:hover:border-slate-500'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-lg">📍</span>
+                      <div>
+                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Both (Recommended)</p>
+                        <p className="text-xs text-gray-400 dark:text-gray-500">Show in Overview card + dedicated tab</p>
+                      </div>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLocalSettings({ ...localSettings, subscriptionPlacement: 'tab' })}
+                    className={`w-full p-3 rounded-lg border-2 text-left transition-all ${
+                      localSettings.subscriptionPlacement === 'tab'
+                        ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30'
+                        : 'border-gray-200 dark:border-slate-600 hover:border-gray-300 dark:hover:border-slate-500'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-lg">📑</span>
+                      <div>
+                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Tab Only</p>
+                        <p className="text-xs text-gray-400 dark:text-gray-500">Dedicated Subscriptions tab only</p>
+                      </div>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLocalSettings({ ...localSettings, subscriptionPlacement: 'overview' })}
+                    className={`w-full p-3 rounded-lg border-2 text-left transition-all ${
+                      localSettings.subscriptionPlacement === 'overview'
+                        ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30'
+                        : 'border-gray-200 dark:border-slate-600 hover:border-gray-300 dark:hover:border-slate-500'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-lg">🏠</span>
+                      <div>
+                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Overview Only</p>
+                        <p className="text-xs text-gray-400 dark:text-gray-500">Compact card in Overview tab only</p>
+                      </div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Clear Subscriptions */}
+              {onClearSubscriptions && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Data Management
+                  </label>
+                  {!showClearConfirm ? (
+                    <button
+                      type="button"
+                      onClick={() => setShowClearConfirm(true)}
+                      disabled={subscriptionCount === 0}
+                      className={`w-full p-3 rounded-lg border-2 text-left transition-all ${
+                        subscriptionCount === 0
+                          ? 'border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 opacity-50 cursor-not-allowed'
+                          : 'border-danger-200 dark:border-danger-800 hover:border-danger-300 dark:hover:border-danger-700 hover:bg-danger-50 dark:hover:bg-danger-900/20'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-lg">🗑️</span>
+                        <div>
+                          <p className="text-sm font-medium text-danger-600 dark:text-danger-400">
+                            Clear All Subscriptions
+                          </p>
+                          <p className="text-xs text-gray-400 dark:text-gray-500">
+                            {subscriptionCount === 0
+                              ? 'No subscriptions to clear'
+                              : `Remove all ${subscriptionCount} saved subscription${subscriptionCount !== 1 ? 's' : ''}`}
+                          </p>
+                        </div>
+                      </div>
+                    </button>
+                  ) : (
+                    <div className="p-3 rounded-lg border-2 border-danger-300 dark:border-danger-700 bg-danger-50 dark:bg-danger-900/20">
+                      <p className="text-sm font-medium text-danger-700 dark:text-danger-400 mb-3">
+                        Are you sure? This will remove all {subscriptionCount} subscription{subscriptionCount !== 1 ? 's' : ''}.
+                      </p>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            onClearSubscriptions();
+                            setShowClearConfirm(false);
+                          }}
+                          className="flex-1 px-3 py-2 bg-danger-600 text-white text-sm font-medium rounded-lg hover:bg-danger-700 transition-colors"
+                        >
+                          Yes, Clear All
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setShowClearConfirm(false)}
+                          className="flex-1 px-3 py-2 bg-gray-200 dark:bg-slate-600 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-slate-500 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Date Format */}

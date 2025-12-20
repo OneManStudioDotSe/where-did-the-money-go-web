@@ -29,14 +29,22 @@ export interface Transaction {
 }
 
 /**
+ * Type of recurring payment
+ */
+export type RecurringType =
+  | 'subscription'      // Cancellable services (Netflix, Spotify, gym)
+  | 'recurring_expense'; // Fixed expenses (loan, rent, insurance)
+
+/**
  * Badge types for visual indicators on transactions
  */
 export type TransactionBadgeType =
-  | 'uncategorized'  // Needs manual categorization
-  | 'subscription'   // Recurring payment
-  | 'high_value'     // Above threshold amount
-  | 'refund'         // Money returned
-  | 'income';        // Positive amount
+  | 'uncategorized'      // Needs manual categorization
+  | 'subscription'       // Cancellable recurring service
+  | 'recurring_expense'  // Fixed recurring expense (loan, rent)
+  | 'high_value'         // Above threshold amount
+  | 'refund'             // Money returned
+  | 'income';            // Positive amount
 
 export interface TransactionBadge {
   type: TransactionBadgeType;
@@ -100,4 +108,60 @@ export interface TransactionSummary {
   averageExpense: number;
   largestExpense: Transaction | null;
   uncategorizedCount: number;
+}
+
+/**
+ * Detected subscription pattern from transaction analysis
+ */
+export interface DetectedSubscription {
+  /** Unique identifier for this subscription */
+  id: string;
+  /** Normalized recipient name (from description) */
+  recipientName: string;
+  /** Average amount charged */
+  averageAmount: number;
+  /** Most common day of month the payment occurs */
+  commonDayOfMonth: number;
+  /** Transaction IDs that belong to this subscription */
+  transactionIds: string[];
+  /** Number of occurrences found */
+  occurrenceCount: number;
+  /** Whether the user confirmed this as a recurring payment */
+  isConfirmed: boolean | null;
+  /** Type of recurring payment (subscription or recurring expense) */
+  recurringType: RecurringType | null;
+  /** Category ID if all transactions share the same category */
+  categoryId: string | null;
+  /** Subcategory ID if all transactions share the same subcategory */
+  subcategoryId: string | null;
+  /** First occurrence date */
+  firstSeen: Date;
+  /** Last occurrence date */
+  lastSeen: Date;
+}
+
+/**
+ * Confirmed recurring payment stored in app state
+ */
+export interface Subscription {
+  /** Unique identifier */
+  id: string;
+  /** Display name (recipient) */
+  name: string;
+  /** Monthly amount */
+  amount: number;
+  /** Common billing day of month */
+  billingDay: number;
+  /** Type of recurring payment */
+  recurringType: RecurringType;
+  /** Category ID */
+  categoryId: string | null;
+  /** Subcategory ID */
+  subcategoryId: string | null;
+  /** Transaction IDs belonging to this subscription */
+  transactionIds: string[];
+  /** When subscription was first detected */
+  createdAt: Date;
+  /** Whether subscription is currently active */
+  isActive: boolean;
 }

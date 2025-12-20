@@ -441,30 +441,57 @@ Phase 9: AI Insights         → Analysis, recommendations, patterns
 
 ---
 
-## Phase 6: Smart Features
+## Phase 6: Smart Features ✅
 
 **Goal:** Implement intelligent transaction analysis.
 
-### Iteration 6.1: Subscription Detection
+### Iteration 6.1: Subscription Detection ✅
 **Focus:** Identify recurring transactions
 
 **Tasks:**
-- [ ] Detection algorithm:
-  ```typescript
-  function detectSubscriptions(transactions: Transaction[]): SubscriptionGroup[] {
-    // Group by similar description
-    // Check monthly recurrence
-    // Verify amount consistency (±5% variance)
-    // Require minimum 2-3 occurrences
-  }
-  ```
+- [x] Detection algorithm:
+  - Group transactions by normalized recipient name
+  - Check monthly recurrence (±3 days tolerance)
+  - Verify amount consistency (±5% variance)
+  - Require minimum 2 occurrences
+  - Calculate most common billing day
 
-- [ ] Subscription grouping UI
-- [ ] Total subscription cost display
+- [x] Subscription confirmation dialog:
+  - Shows detected subscriptions after CSV import
+  - User confirms/rejects each detected subscription
+  - Displays monthly total for selected subscriptions
+
+- [x] Subscription UI components:
+  - Dashboard tab for dedicated subscription view
+  - Compact subscription card in Overview tab
+  - Two visual variations: Accordion List (grouped by subcategory) and Card Grid
+  - Toggle between List and Grid views
+  - Subscription details modal with payment history
+
+- [x] Subscription persistence:
+  - Save confirmed subscriptions to localStorage
+  - Mark transactions with subscription badge
+
+- [x] Subscription management:
+  - Edit subscription (name, amount, active/paused status)
+  - Delete individual subscriptions
+  - Clear all subscriptions from settings
+  - Subscription badge on transaction list
+
+- [x] Upcoming payments predictions:
+  - Shows payments due in next 14 days
+  - Color-coded urgency (Today, Tomorrow, This week)
+  - Toggle between "Top subscriptions" and "Upcoming" views
+  - Badge showing count of upcoming payments
 
 **Deliverables:**
-- `src/services/subscription-detector.ts`
-- Subscription summary component
+- ✅ `src/utils/subscription-detection.ts` - Detection algorithm and utilities
+- ✅ `src/components/SubscriptionConfirmationDialog.tsx` - Post-import confirmation
+- ✅ `src/components/SubscriptionList.tsx` - Variation A: Grouped accordion with edit button
+- ✅ `src/components/SubscriptionGrid.tsx` - Variation B: Card grid with edit button
+- ✅ `src/components/SubscriptionPanel.tsx` - Wrapper with view toggle + SubscriptionCard with upcoming payments
+- ✅ `src/components/SubscriptionEditModal.tsx` - Edit/delete subscription modal
+- ✅ `src/types/transaction.ts` - DetectedSubscription, Subscription types
 
 ---
 
@@ -755,9 +782,17 @@ Phase 9: AI Insights         → Analysis, recommendations, patterns
 | Phase 3: Category System | ✅ Completed | 100% |
 | Phase 4: Core UI | ✅ Completed | 100% |
 | Phase 5: Visualizations | ✅ Completed | 100% |
-| Phase 6: Smart Features | 🟡 Partial | 75% |
+| Phase 6: Smart Features | ✅ Completed | 100% |
 | Phase 7: User Customization | 🟡 Partial | 75% |
 | Phase 8: UI Themes & Icons | ✅ Completed | 100% |
 | Phase 9: AI Insights | Not Started | 0% |
 
-**Last Updated:** 2025-12-20 (v0.7.0 - Export Functionality)
+**Last Updated:** 2025-12-20 (v0.8.1 - Subscription Management & Predictions)
+
+### Recent Changes (v0.8.1)
+- Added subscription edit modal (edit name, amount, active/paused status)
+- Added delete subscription functionality with confirmation
+- Added clear all subscriptions option in settings
+- Added upcoming payments predictions (next 14 days) in SubscriptionCard
+- Added toggle between "Top" and "Upcoming" views
+- Color-coded urgency for due payments (Today, Tomorrow, This week)

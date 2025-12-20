@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-export type BadgeType = 'uncategorized' | 'subscription' | 'high-value';
+export type BadgeType = 'uncategorized' | 'subscription' | 'recurring_expense' | 'high-value';
 
 interface BadgeConfig {
   label: string;
@@ -26,12 +26,23 @@ const badgeConfigs: Record<BadgeType, BadgeConfig> = {
     label: 'Subscription',
     icon: (
       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
       </svg>
     ),
     bgColor: 'bg-purple-100 dark:bg-purple-900/30',
     textColor: 'text-purple-700 dark:text-purple-400',
-    tooltip: 'Recurring subscription payment',
+    tooltip: 'Cancellable subscription (Netflix, Spotify, gym)',
+  },
+  recurring_expense: {
+    label: 'Recurring',
+    icon: (
+      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+      </svg>
+    ),
+    bgColor: 'bg-amber-100 dark:bg-amber-900/30',
+    textColor: 'text-amber-700 dark:text-amber-400',
+    tooltip: 'Fixed recurring expense (loan, rent, insurance)',
   },
   'high-value': {
     label: 'High Value',
@@ -78,9 +89,19 @@ export function Badge({ type, showLabel = true, className = '' }: BadgeProps) {
   );
 }
 
+// Type for transaction badge from the transaction type
+interface TransactionBadgeInput {
+  type: string;
+  label: string;
+}
+
 // Utility function to determine which badges a transaction should have
 export function getTransactionBadges(
-  transaction: { categoryId: string | null; isSubscription?: boolean; amount: number },
+  transaction: {
+    categoryId: string | null;
+    amount: number;
+    badges?: TransactionBadgeInput[];
+  },
   highValueThreshold: number = 5000
 ): BadgeType[] {
   const badges: BadgeType[] = [];
@@ -90,9 +111,15 @@ export function getTransactionBadges(
     badges.push('uncategorized');
   }
 
-  // Check for subscription
-  if (transaction.isSubscription) {
-    badges.push('subscription');
+  // Check for subscription or recurring expense from transaction badges
+  if (transaction.badges) {
+    for (const badge of transaction.badges) {
+      if (badge.type === 'subscription' && !badges.includes('subscription')) {
+        badges.push('subscription');
+      } else if (badge.type === 'recurring_expense' && !badges.includes('recurring_expense')) {
+        badges.push('recurring_expense');
+      }
+    }
   }
 
   // Check for high value (absolute amount above threshold)
@@ -105,7 +132,11 @@ export function getTransactionBadges(
 
 // Component to render multiple badges for a transaction
 interface TransactionBadgesProps {
-  transaction: { categoryId: string | null; isSubscription?: boolean; amount: number };
+  transaction: {
+    categoryId: string | null;
+    amount: number;
+    badges?: TransactionBadgeInput[];
+  };
   highValueThreshold?: number;
   showLabels?: boolean;
   className?: string;

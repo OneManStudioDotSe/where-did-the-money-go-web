@@ -11,8 +11,13 @@ export { UncategorizedCarousel } from './UncategorizedCarousel';
 export { DarkModeToggle } from './DarkModeToggle';
 export { CsvConfirmationDialog } from './CsvConfirmationDialog';
 export { ExportDialog } from './ExportDialog';
+export { SubscriptionConfirmationDialog } from './SubscriptionConfirmationDialog';
+export { SubscriptionList } from './SubscriptionList';
+export { SubscriptionGrid } from './SubscriptionGrid';
+export { SubscriptionPanel, SubscriptionCard } from './SubscriptionPanel';
+export { SubscriptionEditModal } from './SubscriptionEditModal';
 export type { TimePeriod } from './TimePeriodSelector';
-export type { AppSettings } from './SettingsPanel';
+export type { AppSettings, SubscriptionViewVariation, SubscriptionPlacement } from './SettingsPanel';
 
 // Layout components
 export { Header } from './layout/Header';

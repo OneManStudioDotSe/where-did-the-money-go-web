@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import type { Transaction } from '../types/transaction';
 import type { TimePeriod } from './TimePeriodSelector';
 import { getCategoryName, getCategoryColor, getCategoryIcon, getSubcategoryName } from '../utils/category-service';
@@ -560,9 +560,8 @@ function CategoryTotalsTable({
               const hasSubcategories = category.subcategories.length > 1;
 
               return (
-                <>
+                <React.Fragment key={key}>
                   <tr
-                    key={key}
                     className={`hover:bg-gray-50 dark:hover:bg-slate-700/50 ${hasSubcategories ? 'cursor-pointer' : ''}`}
                     onClick={() => hasSubcategories && toggleExpand(category.categoryId)}
                   >
@@ -612,7 +611,7 @@ function CategoryTotalsTable({
                         <td className="px-3 py-1.5 text-right text-gray-400 dark:text-gray-500">{sub.count}</td>
                       </tr>
                     ))}
-                </>
+                </React.Fragment>
               );
             })}
           </tbody>

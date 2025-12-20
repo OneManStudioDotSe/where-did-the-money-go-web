@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import type { DragEvent } from 'react';
 import type { CsvConfig, ColumnMapping, BankId } from '../types/csv';
 import { DEFAULT_CSV_CONFIG, BANK_CONFIGS } from '../types/csv';
-import { parseCSV, analyzeColumns, autoDetectMappings } from '../utils/csv-parser';
+import { parseCSV, analyzeColumns } from '../utils/csv-parser';
 
 interface CsvConfirmationDialogProps {
   isOpen: boolean;
@@ -14,14 +14,11 @@ interface CsvConfirmationDialogProps {
   preferredBank?: BankId | null;
 }
 
-// Field definitions for drag-and-drop mapping
+// Only the 3 required fields - user must assign all of them manually
 const MAPPING_FIELDS = [
-  { key: 'dateColumn' as const, label: 'Date', icon: '📅', required: true, color: 'bg-blue-500' },
-  { key: 'descriptionColumn' as const, label: 'Description', icon: '📝', required: true, color: 'bg-orange-500' },
-  { key: 'amountColumn' as const, label: 'Amount', icon: '💰', required: true, color: 'bg-green-500' },
-  { key: 'valueDateColumn' as const, label: 'Value Date', icon: '📆', required: false, color: 'bg-cyan-500' },
-  { key: 'balanceColumn' as const, label: 'Balance', icon: '⚖️', required: false, color: 'bg-purple-500' },
-  { key: 'verificationColumn' as const, label: 'Verification #', icon: '🔢', required: false, color: 'bg-gray-500' },
+  { key: 'dateColumn' as const, label: 'Date', icon: '📅', color: 'bg-blue-500' },
+  { key: 'descriptionColumn' as const, label: 'Description', icon: '📝', color: 'bg-orange-500' },
+  { key: 'amountColumn' as const, label: 'Amount', icon: '💰', color: 'bg-green-500' },
 ];
 
 type MappingKey = typeof MAPPING_FIELDS[number]['key'];
@@ -46,34 +43,32 @@ export function CsvConfirmationDialog({
     const result = parseCSV(fileContent, config);
 
     if ('type' in result) {
-      return { error: result.message, columns: [], mapping: null, preview: [], rowCount: 0, headers: [] as string[] };
+      return { error: result.message, columns: [], preview: [], rowCount: 0, headers: [] as string[] };
     }
 
     const columns = analyzeColumns(result);
-    const mapping = autoDetectMappings(columns);
     const preview = result.rows.slice(0, 5);
 
     return {
       error: null,
       columns,
-      mapping,
       preview,
       rowCount: result.rowCount,
       headers: result.headers,
     };
   }, [fileContent, config]);
 
-  // Combine auto-detected and manual mappings
+  // User must manually assign all columns - no auto-detection
   const effectiveMapping: ColumnMapping = useMemo(() => {
     return {
-      dateColumn: manualMappings.dateColumn ?? analysis.mapping?.dateColumn ?? null,
-      valueDateColumn: manualMappings.valueDateColumn ?? analysis.mapping?.valueDateColumn ?? null,
-      amountColumn: manualMappings.amountColumn ?? analysis.mapping?.amountColumn ?? null,
-      descriptionColumn: manualMappings.descriptionColumn ?? analysis.mapping?.descriptionColumn ?? null,
-      balanceColumn: manualMappings.balanceColumn ?? analysis.mapping?.balanceColumn ?? null,
-      verificationColumn: manualMappings.verificationColumn ?? analysis.mapping?.verificationColumn ?? null,
+      dateColumn: manualMappings.dateColumn ?? null,
+      valueDateColumn: null,
+      amountColumn: manualMappings.amountColumn ?? null,
+      descriptionColumn: manualMappings.descriptionColumn ?? null,
+      balanceColumn: null,
+      verificationColumn: null,
     };
-  }, [analysis.mapping, manualMappings]);
+  }, [manualMappings]);
 
   const handleDelimiterChange = (delimiter: string) => {
     setConfig({ ...config, delimiter });
@@ -126,13 +121,7 @@ export function CsvConfirmationDialog({
 
   const clearMapping = (fieldKey: MappingKey) => {
     const newMappings = { ...manualMappings };
-    // If it was manually set, remove it
-    if (newMappings[fieldKey]) {
-      delete newMappings[fieldKey];
-    } else {
-      // Otherwise, explicitly set it to null to override auto-detection
-      newMappings[fieldKey] = null;
-    }
+    delete newMappings[fieldKey];
     setManualMappings(newMappings);
   };
 
@@ -290,7 +279,7 @@ export function CsvConfirmationDialog({
                 <div className="bg-gray-50 dark:bg-slate-700/50 px-4 py-3 border-b border-gray-200 dark:border-slate-700">
                   <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">Column Mapping</h3>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    Drag field labels to assign columns, or drop on the preview table headers below
+                    Drag all 3 fields to their corresponding columns in the preview table below
                   </p>
                 </div>
 
@@ -299,7 +288,6 @@ export function CsvConfirmationDialog({
                   <div className="flex flex-wrap gap-2">
                     {MAPPING_FIELDS.map((field) => {
                       const isMapped = effectiveMapping[field.key] !== null;
-                      const isManuallyCleared = manualMappings[field.key] === null;
 
                       return (
                         <div key={field.key} className="flex items-center gap-1">
@@ -310,18 +298,18 @@ export function CsvConfirmationDialog({
                             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium cursor-grab active:cursor-grabbing transition-all ${
                               draggedField === field.key
                                 ? 'opacity-50 scale-95'
-                                : isMapped && !isManuallyCleared
+                                : isMapped
                                   ? 'bg-gray-100 dark:bg-slate-600 text-gray-600 dark:text-gray-300'
                                   : `${field.color} text-white shadow-sm`
                             }`}
                           >
                             <span>{field.icon}</span>
                             <span>{field.label}</span>
-                            {field.required && !isMapped && (
+                            {!isMapped && (
                               <span className="text-xs opacity-75">*</span>
                             )}
                           </div>
-                          {isMapped && !isManuallyCleared && (
+                          {isMapped && (
                             <button
                               onClick={() => clearMapping(field.key)}
                               className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
@@ -332,7 +320,7 @@ export function CsvConfirmationDialog({
                               </svg>
                             </button>
                           )}
-                          {isMapped && !isManuallyCleared && (
+                          {isMapped && (
                             <span className="text-xs text-gray-400 dark:text-gray-500">
                               → {effectiveMapping[field.key]}
                             </span>

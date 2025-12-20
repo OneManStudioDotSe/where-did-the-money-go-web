@@ -1,20 +1,32 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useTransition } from 'react'
 import './index.css'
 import { defaultCategories } from './data/categories'
 import { defaultCategoryMappings } from './data/category-mappings'
-import { FileUpload, TransactionList, FilterPanel, defaultFilters, ProjectRoadmap, TimePeriodSelector, SpendingVisualization, SettingsPanel, loadSettings, TransactionEditModal, UncategorizedCarousel, CsvConfirmationDialog, ExportDialog } from './components'
+import { FileUpload, TransactionList, FilterPanel, defaultFilters, ProjectRoadmap, TimePeriodSelector, SpendingVisualization, SettingsPanel, loadSettings, TransactionEditModal, UncategorizedCarousel, CsvConfirmationDialog, ExportDialog, SubscriptionConfirmationDialog, SubscriptionPanel, SubscriptionCard, SubscriptionEditModal } from './components'
 import type { TimePeriod, AppSettings } from './components'
 import { parseTransactionsFromCSV, categorizeTransactions, getCategorizedStats } from './utils'
 import { useTransactionFilters, useTimePeriodFilter } from './hooks'
 import { useDarkMode } from './hooks/useDarkMode'
 import { useHashRouter } from './hooks/useHashRouter'
-import type { Transaction, TransactionFilters } from './types/transaction'
+import type { Transaction, TransactionFilters, DetectedSubscription, Subscription } from './types/transaction'
 import type { CsvParseError, CsvConfig, ColumnMapping, BankId } from './types/csv'
 import { parseCSV, convertToTransactions } from './utils/csv-parser'
 import { Header } from './components/layout/Header'
 import { Footer } from './components/layout/Footer'
 import { FeaturesPage, HowItWorksPage, AboutPage, PrivacyPage, DisclaimerPage } from './pages'
 import { preloadIconSet } from './config/icon-sets'
+import { detectSubscriptions, createSubscription, markTransactionsAsRecurring, loadSubscriptions, saveSubscriptions, debugSubscriptionDetection } from './utils/subscription-detection'
+import type { RecurringType } from './types/transaction'
+
+// Expose debug function globally for browser console access
+declare global {
+  interface Window {
+    debugSubscription: (searchTerm: string) => void;
+    getTransactions: () => Transaction[];
+  }
+}
+
+type DashboardTab = 'overview' | 'transactions' | 'subscriptions'
 
 function App() {
   const [showCategoriesModal, setShowCategoriesModal] = useState(false)
@@ -23,11 +35,17 @@ function App() {
   const [showUncategorizedCarousel, setShowUncategorizedCarousel] = useState(false)
   const [showCsvConfirmation, setShowCsvConfirmation] = useState(false)
   const [showExportDialog, setShowExportDialog] = useState(false)
+  const [showSubscriptionConfirmation, setShowSubscriptionConfirmation] = useState(false)
   const [pendingFileContent, setPendingFileContent] = useState<string | null>(null)
   const [pendingFileName, setPendingFileName] = useState<string | null>(null)
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null)
   const [appSettings, setAppSettings] = useState<AppSettings>(() => loadSettings())
   const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>(() => loadSubscriptions())
+  const [detectedSubscriptions, setDetectedSubscriptions] = useState<DetectedSubscription[]>([])
+  const [editingSubscription, setEditingSubscription] = useState<Subscription | null>(null)
+  const [activeTab, setActiveTab] = useState<DashboardTab>('overview')
+  const [isPending, startTransition] = useTransition()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<CsvParseError | null>(null)
   const [fileName, setFileName] = useState<string | null>(null)
@@ -50,6 +68,21 @@ function App() {
       preloadIconSet(appSettings.iconSet)
     }
   }, [appSettings.iconSet])
+
+  // Switch away from subscriptions tab if placement is set to 'overview' only
+  useEffect(() => {
+    if (activeTab === 'subscriptions' && appSettings.subscriptionPlacement === 'overview') {
+      setActiveTab('overview')
+    }
+  }, [activeTab, appSettings.subscriptionPlacement])
+
+  // Expose debug functions globally for browser console access
+  useEffect(() => {
+    window.debugSubscription = (searchTerm: string) => {
+      debugSubscriptionDetection(transactions, searchTerm)
+    }
+    window.getTransactions = () => transactions
+  }, [transactions])
 
   // Apply time period filter first
   const { periodFilteredTransactions, periodStats } = useTimePeriodFilter(
@@ -97,12 +130,114 @@ function App() {
         }
         const parsedTransactions = convertToTransactions(limitedResult, mapping, bank)
         const categorized = categorizeTransactions(parsedTransactions)
-        setTransactions(categorized)
+
+        // Detect subscriptions
+        const detected = detectSubscriptions(categorized)
+        if (detected.length > 0) {
+          setDetectedSubscriptions(detected)
+          setTransactions(categorized)
+          setShowSubscriptionConfirmation(true)
+        } else {
+          setTransactions(categorized)
+        }
       }
       setIsLoading(false)
       setPendingFileContent(null)
       setPendingFileName(null)
     }, 300)
+  }
+
+  const handleSubscriptionConfirm = (
+    confirmedWithTypes: Array<{ id: string; type: RecurringType }>,
+    _rejectedIds: string[]
+  ) => {
+    setShowSubscriptionConfirmation(false)
+
+    // Build a map of detected subscription ID to its type
+    const typeMap = new Map(confirmedWithTypes.map(c => [c.id, c.type]))
+
+    // Create subscription objects from confirmed detections with their types
+    const newSubscriptions: Subscription[] = detectedSubscriptions
+      .filter(d => typeMap.has(d.id))
+      .map(d => {
+        // Set the recurringType on the detected subscription before creating
+        const detectedWithType = { ...d, recurringType: typeMap.get(d.id)! }
+        return createSubscription(detectedWithType)
+      })
+
+    // Build a map of transaction IDs to their recurring type
+    const recurringTransactionIds = new Map<string, RecurringType>()
+    newSubscriptions.forEach(sub => {
+      sub.transactionIds.forEach(txId => {
+        recurringTransactionIds.set(txId, sub.recurringType)
+      })
+    })
+
+    // Mark transactions with appropriate badges
+    const updatedTransactions = markTransactionsAsRecurring(transactions, recurringTransactionIds)
+
+    // Update state
+    setTransactions(updatedTransactions)
+    setSubscriptions(prev => {
+      const updated = [...prev, ...newSubscriptions]
+      saveSubscriptions(updated)
+      return updated
+    })
+    setDetectedSubscriptions([])
+  }
+
+  const handleSubscriptionCancel = () => {
+    setShowSubscriptionConfirmation(false)
+    setDetectedSubscriptions([])
+  }
+
+  const handleClearSubscriptions = () => {
+    // Clear subscriptions from state
+    setSubscriptions([])
+    // Clear from localStorage
+    saveSubscriptions([])
+    // Also clear isSubscription flag and recurring badges from transactions
+    setTransactions(prev => prev.map(t => ({
+      ...t,
+      isSubscription: false,
+      badges: t.badges.filter(b => b.type !== 'subscription' && b.type !== 'recurring_expense')
+    })))
+  }
+
+  const handleEditSubscription = (subscription: Subscription) => {
+    setEditingSubscription(subscription)
+  }
+
+  const handleSaveSubscription = (updated: Subscription) => {
+    setSubscriptions(prev => {
+      const newSubscriptions = prev.map(s => s.id === updated.id ? updated : s)
+      saveSubscriptions(newSubscriptions)
+      return newSubscriptions
+    })
+  }
+
+  const handleDeleteSubscription = (subscriptionId: string) => {
+    setSubscriptions(prev => {
+      // Find the subscription to get its transaction IDs
+      const toDelete = prev.find(s => s.id === subscriptionId)
+      if (toDelete) {
+        // Clear isSubscription flag from related transactions
+        const transactionIdsToUpdate = new Set(toDelete.transactionIds)
+        setTransactions(transactions => transactions.map(t => {
+          if (transactionIdsToUpdate.has(t.id)) {
+            return {
+              ...t,
+              isSubscription: false,
+              badges: t.badges.filter(b => b.type !== 'subscription')
+            }
+          }
+          return t
+        }))
+      }
+      const newSubscriptions = prev.filter(s => s.id !== subscriptionId)
+      saveSubscriptions(newSubscriptions)
+      return newSubscriptions
+    })
   }
 
   const handleCsvCancel = () => {
@@ -157,6 +292,8 @@ function App() {
     setIsDemoMode(false)
     setFilters(defaultFilters)
     setSelectedPeriod(null)
+    setActiveTab('overview')
+    // Note: We keep subscriptions in localStorage for future imports
   }
 
   const handleCategoryChange = (transactionId: string, categoryId: string, subcategoryId: string) => {
@@ -410,39 +547,138 @@ function App() {
             </div>
           </div>
 
-          {/* Time Period Selector */}
-          <TimePeriodSelector
-            transactions={transactions}
-            selectedPeriod={selectedPeriod}
-            onPeriodChange={setSelectedPeriod}
-          />
+          {/* Tab Navigation */}
+          <div className="flex items-center gap-1 mb-6 p-1 bg-gray-100 dark:bg-slate-800 rounded-lg w-fit">
+            <button
+              onClick={() => startTransition(() => setActiveTab('overview'))}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                activeTab === 'overview'
+                  ? 'bg-white dark:bg-slate-700 text-gray-900 dark:text-white shadow-sm'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+              }`}
+            >
+              Overview
+            </button>
+            <button
+              onClick={() => startTransition(() => setActiveTab('transactions'))}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                activeTab === 'transactions'
+                  ? 'bg-white dark:bg-slate-700 text-gray-900 dark:text-white shadow-sm'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+              }`}
+            >
+              Transactions
+            </button>
+            {(appSettings.subscriptionPlacement === 'tab' || appSettings.subscriptionPlacement === 'both') && (
+              <button
+                onClick={() => startTransition(() => setActiveTab('subscriptions'))}
+                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${
+                  activeTab === 'subscriptions'
+                    ? 'bg-white dark:bg-slate-700 text-gray-900 dark:text-white shadow-sm'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                }`}
+              >
+                Subscriptions
+                {subscriptions.length > 0 && (
+                  <span className="px-1.5 py-0.5 text-xs bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-300 rounded-full">
+                    {subscriptions.length}
+                  </span>
+                )}
+              </button>
+            )}
+            {/* Loading indicator for tab transitions */}
+            {isPending && (
+              <div className="ml-2 flex items-center">
+                <div className="w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
+          </div>
 
-          {/* Filter Panel */}
-          <FilterPanel
-            filters={filters}
-            onFiltersChange={setFilters}
-            totalCount={totalCount}
-            filteredCount={filteredCount}
-          />
-
-          {/* Main Content: Visualization + Transaction List */}
-          <div className="grid lg:grid-cols-5 gap-6">
-            {/* Visualization Panel - 2/5 width */}
-            <div className="lg:col-span-2">
-              <SpendingVisualization
-                transactions={filteredTransactions}
+          {/* Tab Content */}
+          <div className={`relative ${isPending ? 'opacity-70 pointer-events-none' : ''}`}>
+          {activeTab === 'overview' && (
+            <>
+              {/* Time Period Selector */}
+              <TimePeriodSelector
+                transactions={transactions}
                 selectedPeriod={selectedPeriod}
-                allTransactions={transactions}
+                onPeriodChange={setSelectedPeriod}
               />
-            </div>
 
-            {/* Transaction List - 3/5 width */}
-            <div className="lg:col-span-3">
+              {/* Filter Panel */}
+              <FilterPanel
+                filters={filters}
+                onFiltersChange={setFilters}
+                totalCount={totalCount}
+                filteredCount={filteredCount}
+              />
+
+              {/* Main Content: Visualization + Subscription Card */}
+              <div className={`grid gap-6 ${
+                (appSettings.subscriptionPlacement === 'overview' || appSettings.subscriptionPlacement === 'both')
+                  ? 'lg:grid-cols-5'
+                  : ''
+              }`}>
+                {/* Visualization Panel - 3/5 width when subscription card is shown, full width otherwise */}
+                <div className={
+                  (appSettings.subscriptionPlacement === 'overview' || appSettings.subscriptionPlacement === 'both')
+                    ? 'lg:col-span-3'
+                    : ''
+                }>
+                  <SpendingVisualization
+                    transactions={filteredTransactions}
+                    selectedPeriod={selectedPeriod}
+                    allTransactions={transactions}
+                  />
+                </div>
+
+                {/* Subscription Card (Option 3) - 2/5 width, shown based on placement setting */}
+                {(appSettings.subscriptionPlacement === 'overview' || appSettings.subscriptionPlacement === 'both') && (
+                  <div className="lg:col-span-2">
+                    <SubscriptionCard
+                      subscriptions={subscriptions}
+                      transactions={transactions}
+                      onViewAll={() => setActiveTab('subscriptions')}
+                    />
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+
+          {activeTab === 'transactions' && (
+            <>
+              {/* Time Period Selector */}
+              <TimePeriodSelector
+                transactions={transactions}
+                selectedPeriod={selectedPeriod}
+                onPeriodChange={setSelectedPeriod}
+              />
+
+              {/* Filter Panel */}
+              <FilterPanel
+                filters={filters}
+                onFiltersChange={setFilters}
+                totalCount={totalCount}
+                filteredCount={filteredCount}
+              />
+
+              {/* Transaction List - Full width */}
               <TransactionList
                 transactions={filteredTransactions}
                 onTransactionClick={handleTransactionClick}
               />
-            </div>
+            </>
+          )}
+
+          {activeTab === 'subscriptions' && (appSettings.subscriptionPlacement === 'tab' || appSettings.subscriptionPlacement === 'both') && (
+            <SubscriptionPanel
+              subscriptions={subscriptions}
+              transactions={transactions}
+              viewMode={appSettings.subscriptionViewVariation}
+              onEditSubscription={handleEditSubscription}
+            />
+          )}
           </div>
         </>
       )}
@@ -638,6 +874,8 @@ function App() {
         onClose={() => setShowSettingsPanel(false)}
         settings={appSettings}
         onSettingsChange={setAppSettings}
+        subscriptionCount={subscriptions.length}
+        onClearSubscriptions={handleClearSubscriptions}
       />
 
       {/* Transaction Edit Modal */}
@@ -649,6 +887,15 @@ function App() {
           onSave={handleCategoryChange}
         />
       )}
+
+      {/* Subscription Edit Modal */}
+      <SubscriptionEditModal
+        subscription={editingSubscription}
+        isOpen={editingSubscription !== null}
+        onClose={() => setEditingSubscription(null)}
+        onSave={handleSaveSubscription}
+        onDelete={handleDeleteSubscription}
+      />
 
       {/* Uncategorized Carousel */}
       <UncategorizedCarousel
@@ -670,6 +917,14 @@ function App() {
           preferredBank={appSettings.preferredBank}
         />
       )}
+
+      {/* Subscription Confirmation Dialog */}
+      <SubscriptionConfirmationDialog
+        isOpen={showSubscriptionConfirmation}
+        onClose={handleSubscriptionCancel}
+        onConfirm={handleSubscriptionConfirm}
+        detectedSubscriptions={detectedSubscriptions}
+      />
 
       {/* Export Dialog */}
       <ExportDialog
