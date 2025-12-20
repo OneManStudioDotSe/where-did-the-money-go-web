@@ -19,7 +19,11 @@ export function getCustomMappings(): CategoryMapping[] {
  * Save custom mappings to localStorage
  */
 export function saveCustomMappings(mappings: CategoryMapping[]): void {
-  localStorage.setItem('custom_category_mappings', JSON.stringify(mappings));
+  try {
+    localStorage.setItem('custom_category_mappings', JSON.stringify(mappings));
+  } catch (error) {
+    console.error('Failed to save custom mappings to localStorage:', error);
+  }
 }
 
 /**

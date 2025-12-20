@@ -16,6 +16,7 @@ export { SubscriptionList } from './SubscriptionList';
 export { SubscriptionGrid } from './SubscriptionGrid';
 export { SubscriptionPanel, SubscriptionCard } from './SubscriptionPanel';
 export { SubscriptionEditModal } from './SubscriptionEditModal';
+export { ErrorBoundary } from './ErrorBoundary';
 export type { TimePeriod } from './TimePeriodSelector';
 export type { AppSettings, SubscriptionViewVariation, SubscriptionPlacement } from './SettingsPanel';
 

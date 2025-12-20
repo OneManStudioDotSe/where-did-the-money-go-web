@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useId } from 'react';
 import type { Subscription } from '../types/transaction';
 import { getCategoryName, getSubcategoryName, getCategoryIcon, getCategoryColor } from '../utils/category-service';
+import { useFocusTrap } from '../hooks';
 
 interface SubscriptionEditModalProps {
   subscription: Subscription | null;
@@ -28,6 +29,10 @@ export function SubscriptionEditModal({
   const [amount, setAmount] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  // Accessibility: focus trap and escape key handling
+  const modalRef = useFocusTrap<HTMLDivElement>(isOpen, onClose);
+  const titleId = useId();
 
   // Sync form state when subscription changes
   useEffect(() => {
@@ -79,13 +84,22 @@ export function SubscriptionEditModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+      className="fixed inset-0 z-50 overflow-y-auto"
       onClick={handleBackdropClick}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={titleId}
     >
-      <div
-        className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl max-w-md w-full overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
+      {/* Backdrop */}
+      <div className="fixed inset-0 bg-black/50 animate-fade-in" aria-hidden="true" />
+
+      {/* Modal */}
+      <div className="flex min-h-full items-center justify-center p-4">
+        <div
+          ref={modalRef}
+          className="relative bg-white dark:bg-slate-800 rounded-xl shadow-2xl max-w-md w-full overflow-hidden animate-slide-up"
+          onClick={(e) => e.stopPropagation()}
+        >
         {/* Header */}
         <div className="px-6 py-4 border-b border-gray-200 dark:border-slate-700">
           <div className="flex items-center gap-3">
@@ -96,7 +110,7 @@ export function SubscriptionEditModal({
               {categoryIcon}
             </span>
             <div className="flex-1 min-w-0">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <h2 id={titleId} className="text-lg font-semibold text-gray-900 dark:text-white">
                 Edit Subscription
               </h2>
               <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -242,6 +256,7 @@ export function SubscriptionEditModal({
               </button>
             </div>
           )}
+        </div>
         </div>
       </div>
     </div>

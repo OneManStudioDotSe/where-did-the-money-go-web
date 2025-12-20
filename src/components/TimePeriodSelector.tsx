@@ -101,9 +101,17 @@ function getPeriodsFromTransactions(
         start.setHours(0, 0, 0, 0);
 
         // End date: day before monthStartDay of the next month
+        // Note: When monthStartDay is 1, we want the last day of the current month
+        // Using day 0 of next month gives us the last day of current month
         const nextMonth = adjusted.month === 11 ? 0 : adjusted.month + 1;
         const nextYear = adjusted.month === 11 ? adjusted.year + 1 : adjusted.year;
-        end = new Date(nextYear, nextMonth, monthStartDay - 1);
+        if (monthStartDay === 1) {
+          // Standard month: end on last day of the month
+          end = new Date(nextYear, nextMonth, 0);
+        } else {
+          // Custom start day: end on the day before the next period starts
+          end = new Date(nextYear, nextMonth, monthStartDay - 1);
+        }
         end.setHours(23, 59, 59, 999);
 
         // Label shows the month name
@@ -156,8 +164,12 @@ export function TimePeriodSelector({
   );
   const [monthStartDay, setMonthStartDay] = useState<number>(() => {
     // Load from localStorage if available
-    const saved = localStorage.getItem('period-month-start-day');
-    return saved ? parseInt(saved, 10) : 1;
+    try {
+      const saved = localStorage.getItem('period-month-start-day');
+      return saved ? parseInt(saved, 10) : 1;
+    } catch {
+      return 1;
+    }
   });
   const [showSettings, setShowSettings] = useState(false);
 
@@ -204,7 +216,11 @@ export function TimePeriodSelector({
 
   const handleMonthStartDayChange = (day: number) => {
     setMonthStartDay(day);
-    localStorage.setItem('period-month-start-day', day.toString());
+    try {
+      localStorage.setItem('period-month-start-day', day.toString());
+    } catch {
+      // localStorage may be unavailable
+    }
     // Clear selection when changing the start day
     if (selectedPeriod?.type === 'month') {
       onPeriodChange(null);

@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useId } from 'react';
 import type { Transaction } from '../types/transaction';
 import { getCategoryName, getSubcategoryName, getCategoryColor, getCategoryIcon } from '../utils/category-service';
 import { CategorySelector } from './CategorySelector';
 import { toTitleCase } from '../utils/text-utils';
+import { useFocusTrap } from '../hooks';
 
 interface TransactionEditModalProps {
   transaction: Transaction;
@@ -82,23 +83,33 @@ export function TransactionEditModal({
     }
   };
 
+  // Accessibility: focus trap and escape key handling
+  const modalRef = useFocusTrap<HTMLDivElement>(isOpen, onClose);
+  const titleId = useId();
+
   return (
     <div
       className="fixed inset-0 z-50 overflow-y-auto"
       onClick={handleBackdropClick}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={titleId}
     >
       {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/50 transition-opacity" />
+      <div className="fixed inset-0 bg-black/50 animate-fade-in" aria-hidden="true" />
 
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-hidden">
+        <div
+          ref={modalRef}
+          className="relative bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-hidden animate-slide-up"
+        >
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">Edit Category</h2>
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-slate-700">
+            <h2 id={titleId} className="text-lg font-semibold text-gray-900 dark:text-white">Edit Category</h2>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -112,15 +123,15 @@ export function TransactionEditModal({
           </div>
 
           {/* Transaction Info */}
-          <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+          <div className="px-6 py-4 bg-gray-50 dark:bg-slate-700/50 border-b border-gray-200 dark:border-slate-700">
             <div className="flex items-start gap-4">
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-gray-900 truncate">{toTitleCase(transaction.description)}</p>
-                <p className="text-sm text-gray-500 mt-1">{formatDate(transaction.date)}</p>
+                <p className="font-medium text-gray-900 dark:text-white truncate">{toTitleCase(transaction.description)}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{formatDate(transaction.date)}</p>
               </div>
               <div
                 className={`text-lg font-semibold ${
-                  transaction.amount >= 0 ? 'text-success-600' : 'text-gray-900'
+                  transaction.amount >= 0 ? 'text-success-600 dark:text-success-400' : 'text-gray-900 dark:text-white'
                 }`}
               >
                 {formatAmount(transaction.amount)}
@@ -129,7 +140,7 @@ export function TransactionEditModal({
 
             {/* Current Category */}
             <div className="mt-4 flex items-center gap-2">
-              <span className="text-sm text-gray-500">Current:</span>
+              <span className="text-sm text-gray-500 dark:text-gray-400">Current:</span>
               {transaction.categoryId ? (
                 <div className="flex items-center gap-2">
                   <span
@@ -138,22 +149,22 @@ export function TransactionEditModal({
                   >
                     {currentIcon}
                   </span>
-                  <span className="text-sm font-medium text-gray-900">
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">
                     {currentCategoryName}
                     {currentSubcategoryName && (
-                      <span className="text-gray-500"> › {currentSubcategoryName}</span>
+                      <span className="text-gray-500 dark:text-gray-400"> › {currentSubcategoryName}</span>
                     )}
                   </span>
                 </div>
               ) : (
-                <span className="text-sm text-warning-600 italic">Uncategorized</span>
+                <span className="text-sm text-warning-600 dark:text-warning-400 italic">Uncategorized</span>
               )}
             </div>
 
             {/* New Category Preview */}
             {hasChanges && selectedCategoryId && (
               <div className="mt-2 flex items-center gap-2">
-                <span className="text-sm text-gray-500">New:</span>
+                <span className="text-sm text-gray-500 dark:text-gray-400">New:</span>
                 <div className="flex items-center gap-2">
                   <span
                     className="w-6 h-6 rounded flex items-center justify-center text-sm"
@@ -161,10 +172,10 @@ export function TransactionEditModal({
                   >
                     {newIcon}
                   </span>
-                  <span className="text-sm font-medium text-primary-700">
+                  <span className="text-sm font-medium text-primary-700 dark:text-primary-400">
                     {newCategoryName}
                     {newSubcategoryName && (
-                      <span className="text-primary-500"> › {newSubcategoryName}</span>
+                      <span className="text-primary-500 dark:text-primary-300"> › {newSubcategoryName}</span>
                     )}
                   </span>
                 </div>
@@ -182,10 +193,10 @@ export function TransactionEditModal({
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
+          <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/50">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
+              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
             >
               Cancel
             </button>

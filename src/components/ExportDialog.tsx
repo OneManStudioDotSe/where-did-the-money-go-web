@@ -1,6 +1,7 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useId } from 'react';
 import type { Transaction } from '../types/transaction';
 import { exportTransactions, getExportPreview, type ExportFormat, type ExportScope } from '../services/export-service';
+import { useFocusTrap } from '../hooks';
 
 interface ExportDialogProps {
   isOpen: boolean;
@@ -19,6 +20,10 @@ export function ExportDialog({
   const [scope, setScope] = useState<ExportScope>('all');
   const [includeRawData, setIncludeRawData] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+
+  // Accessibility: focus trap and escape key handling
+  const modalRef = useFocusTrap<HTMLDivElement>(isOpen, onClose);
+  const titleId = useId();
 
   const targetTransactions = scope === 'filtered' ? filteredTransactions : transactions;
 
@@ -39,13 +44,18 @@ export function ExportDialog({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
+    <div
+      className="fixed inset-0 z-50 overflow-y-auto"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={titleId}
+    >
       {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/50 transition-opacity" onClick={onClose} />
+      <div className="fixed inset-0 bg-black/50 animate-fade-in" onClick={onClose} aria-hidden="true" />
 
       {/* Panel */}
       <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-lg w-full overflow-hidden">
+        <div ref={modalRef} className="relative bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-lg w-full overflow-hidden animate-slide-up">
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-slate-700">
             <div className="flex items-center gap-3">
@@ -55,7 +65,7 @@ export function ExportDialog({
                 </svg>
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Export Transactions</h2>
+                <h2 id={titleId} className="text-lg font-semibold text-gray-900 dark:text-white">Export Transactions</h2>
                 <p className="text-sm text-gray-500 dark:text-gray-400">Download your data</p>
               </div>
             </div>

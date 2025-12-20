@@ -1,8 +1,8 @@
-import { useState, useEffect, useTransition } from 'react'
+import { useState, useEffect, useTransition, useMemo } from 'react'
 import './index.css'
 import { defaultCategories } from './data/categories'
 import { defaultCategoryMappings } from './data/category-mappings'
-import { FileUpload, TransactionList, FilterPanel, defaultFilters, ProjectRoadmap, TimePeriodSelector, SpendingVisualization, SettingsPanel, loadSettings, TransactionEditModal, UncategorizedCarousel, CsvConfirmationDialog, ExportDialog, SubscriptionConfirmationDialog, SubscriptionPanel, SubscriptionCard, SubscriptionEditModal } from './components'
+import { FileUpload, TransactionList, FilterPanel, defaultFilters, ProjectRoadmap, TimePeriodSelector, SpendingVisualization, SettingsPanel, loadSettings, TransactionEditModal, UncategorizedCarousel, CsvConfirmationDialog, ExportDialog, SubscriptionConfirmationDialog, SubscriptionPanel, SubscriptionCard, SubscriptionEditModal, ErrorBoundary } from './components'
 import type { TimePeriod, AppSettings } from './components'
 import { parseTransactionsFromCSV, categorizeTransactions, getCategorizedStats } from './utils'
 import { useTransactionFilters, useTimePeriodFilter } from './hooks'
@@ -21,8 +21,8 @@ import type { RecurringType } from './types/transaction'
 // Expose debug function globally for browser console access
 declare global {
   interface Window {
-    debugSubscription: (searchTerm: string) => void;
-    getTransactions: () => Transaction[];
+    debugSubscription?: (searchTerm: string) => void;
+    getTransactions?: () => Transaction[];
   }
 }
 
@@ -83,6 +83,12 @@ function App() {
       debugSubscriptionDetection(transactions, searchTerm)
     }
     window.getTransactions = () => transactions
+
+    // Cleanup to prevent memory leaks from stale closures
+    return () => {
+      delete window.debugSubscription
+      delete window.getTransactions
+    }
   }, [transactions])
 
   // Apply time period filter first
@@ -97,9 +103,10 @@ function App() {
     filters
   )
 
-  const totalSubcategories = defaultCategories.reduce(
-    (sum, cat) => sum + cat.subcategories.length,
-    0
+  // Memoize static calculation - only needs to run once
+  const totalSubcategories = useMemo(() =>
+    defaultCategories.reduce((sum, cat) => sum + cat.subcategories.length, 0),
+    []
   )
 
   const handleFileLoaded = (content: string, name: string) => {
@@ -122,6 +129,9 @@ function App() {
       if ('type' in result) {
         setError(result)
         setTransactions([])
+        setIsLoading(false)
+        setPendingFileContent(null)
+        setPendingFileName(null)
       } else {
         // Limit transactions based on settings
         const limitedResult = {
@@ -132,19 +142,21 @@ function App() {
         const parsedTransactions = convertToTransactions(limitedResult, mapping, bank)
         const categorized = categorizeTransactions(parsedTransactions)
 
-        // Detect subscriptions
-        const detected = detectSubscriptions(categorized)
-        if (detected.length > 0) {
-          setDetectedSubscriptions(detected)
-          setTransactions(categorized)
-          setShowSubscriptionConfirmation(true)
-        } else {
-          setTransactions(categorized)
-        }
+        // Set transactions first, then detect subscriptions
+        setTransactions(categorized)
+        setPendingFileContent(null)
+        setPendingFileName(null)
+
+        // Detect subscriptions (with a small delay for UI to update)
+        setTimeout(() => {
+          const detected = detectSubscriptions(categorized)
+          setIsLoading(false)
+          if (detected.length > 0) {
+            setDetectedSubscriptions(detected)
+            setShowSubscriptionConfirmation(true)
+          }
+        }, 100)
       }
-      setIsLoading(false)
-      setPendingFileContent(null)
-      setPendingFileName(null)
     }, 300)
   }
 
@@ -335,12 +347,22 @@ function App() {
 
   const stats = getCategorizedStats(periodFilteredTransactions)
 
-  const totalExpenses = selectedPeriod ? periodStats.totalExpenses : transactions
-    .filter((t) => t.amount < 0)
-    .reduce((sum, t) => sum + Math.abs(t.amount), 0)
-  const totalIncome = selectedPeriod ? periodStats.totalIncome : transactions
-    .filter((t) => t.amount > 0)
-    .reduce((sum, t) => sum + t.amount, 0)
+  // Memoize expensive expense/income calculations
+  const { totalExpenses, totalIncome } = useMemo(() => {
+    if (selectedPeriod) {
+      return {
+        totalExpenses: periodStats.totalExpenses,
+        totalIncome: periodStats.totalIncome,
+      }
+    }
+    const expenses = transactions
+      .filter((t) => t.amount < 0)
+      .reduce((sum, t) => sum + Math.abs(t.amount), 0)
+    const income = transactions
+      .filter((t) => t.amount > 0)
+      .reduce((sum, t) => sum + t.amount, 0)
+    return { totalExpenses: expenses, totalIncome: income }
+  }, [transactions, selectedPeriod, periodStats.totalExpenses, periodStats.totalIncome])
 
   // Route rendering
   const renderPage = () => {
@@ -683,6 +705,7 @@ function App() {
               <TransactionList
                 transactions={filteredTransactions}
                 onTransactionClick={handleTransactionClick}
+                pageSize={appSettings.transactionPageSize}
               />
             </>
           )}
@@ -717,7 +740,9 @@ function App() {
 
       {/* Main Content */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-8">
-        {renderPage()}
+        <ErrorBoundary>
+          {renderPage()}
+        </ErrorBoundary>
       </main>
 
       {/* Footer */}

@@ -252,19 +252,42 @@ export function autoDetectMappings(analyses: ColumnAnalysis[]): ColumnMapping {
 
 /**
  * Parse amount string to number
+ * Handles various formats:
+ * - Swedish: "1 234,56" or "1234,56" (space/nothing for thousands, comma for decimal)
+ * - US/ISO: "1,234.56" or "1234.56" (comma for thousands, period for decimal)
+ * - German: "1.234,56" (period for thousands, comma for decimal)
  */
 function parseAmount(value: string, decimalSeparator: string = '.'): number {
   if (!value || !value.trim()) return 0;
 
   let cleaned = value.trim();
 
-  // Handle Swedish decimal separator (could be comma or period)
-  if (decimalSeparator === ',') {
-    cleaned = cleaned.replace(',', '.');
-  }
+  // Remove currency symbols and whitespace
+  cleaned = cleaned.replace(/[^\d.,-]/g, '');
 
-  // Remove thousand separators
-  cleaned = cleaned.replace(/\s/g, '');
+  if (!cleaned) return 0;
+
+  // Detect format based on last separator position
+  const lastComma = cleaned.lastIndexOf(',');
+  const lastPeriod = cleaned.lastIndexOf('.');
+
+  if (decimalSeparator === ',') {
+    // European format: comma is decimal, period is thousands
+    // "1.234,56" -> "1234.56"
+    cleaned = cleaned.replace(/\./g, ''); // Remove thousands separators
+    cleaned = cleaned.replace(',', '.'); // Convert decimal separator
+  } else {
+    // US/ISO format: period is decimal, comma is thousands
+    // "1,234.56" -> "1234.56"
+    if (lastComma > lastPeriod) {
+      // Format like "1.234,56" - comma is decimal (European in US context)
+      cleaned = cleaned.replace(/\./g, '');
+      cleaned = cleaned.replace(',', '.');
+    } else {
+      // Standard US format or no thousands separator
+      cleaned = cleaned.replace(/,/g, ''); // Remove thousands separators
+    }
+  }
 
   const num = parseFloat(cleaned);
   return isNaN(num) ? 0 : num;
@@ -272,19 +295,63 @@ function parseAmount(value: string, decimalSeparator: string = '.'): number {
 
 /**
  * Parse date string to Date object
+ * Returns null for invalid dates instead of silently using current date
  */
-function parseDate(value: string): Date {
-  if (!value || !value.trim()) return new Date();
+function parseDate(value: string): Date | null {
+  if (!value || !value.trim()) return null;
 
-  // Try YYYY-MM-DD format
-  const match = value.trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (match) {
-    return new Date(parseInt(match[1]), parseInt(match[2]) - 1, parseInt(match[3]));
+  const trimmed = value.trim();
+
+  // Try YYYY-MM-DD format (ISO)
+  const isoMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (isoMatch) {
+    const year = parseInt(isoMatch[1]);
+    const month = parseInt(isoMatch[2]) - 1;
+    const day = parseInt(isoMatch[3]);
+    // Validate the date components
+    if (month >= 0 && month <= 11 && day >= 1 && day <= 31) {
+      const date = new Date(year, month, day);
+      // Check if date is valid (handles cases like Feb 30)
+      if (date.getFullYear() === year && date.getMonth() === month && date.getDate() === day) {
+        return date;
+      }
+    }
+    return null;
+  }
+
+  // Try DD/MM/YYYY or DD.MM.YYYY format (European)
+  const euroMatch = trimmed.match(/^(\d{2})[./](\d{2})[./](\d{4})$/);
+  if (euroMatch) {
+    const day = parseInt(euroMatch[1]);
+    const month = parseInt(euroMatch[2]) - 1;
+    const year = parseInt(euroMatch[3]);
+    if (month >= 0 && month <= 11 && day >= 1 && day <= 31) {
+      const date = new Date(year, month, day);
+      if (date.getFullYear() === year && date.getMonth() === month && date.getDate() === day) {
+        return date;
+      }
+    }
+    return null;
+  }
+
+  // Try MM/DD/YYYY format (US)
+  const usMatch = trimmed.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (usMatch) {
+    const month = parseInt(usMatch[1]) - 1;
+    const day = parseInt(usMatch[2]);
+    const year = parseInt(usMatch[3]);
+    if (month >= 0 && month <= 11 && day >= 1 && day <= 31) {
+      const date = new Date(year, month, day);
+      if (date.getFullYear() === year && date.getMonth() === month && date.getDate() === day) {
+        return date;
+      }
+    }
+    return null;
   }
 
   // Fallback to Date parsing
-  const date = new Date(value);
-  return isNaN(date.getTime()) ? new Date() : date;
+  const date = new Date(trimmed);
+  return isNaN(date.getTime()) ? null : date;
 }
 
 /**
@@ -372,36 +439,45 @@ export function convertToTransactions(
     return [];
   }
 
-  return rows.map((row, index) => {
-    const rawData: Record<string, string> = {};
-    headers.forEach((header, i) => {
-      rawData[header] = row[i] || '';
-    });
+  return rows
+    .map((row, index) => {
+      const rawData: Record<string, string> = {};
+      headers.forEach((header, i) => {
+        rawData[header] = row[i] || '';
+      });
 
-    const amount = parseAmount(row[amountIdx] || '', config.decimalSeparator);
-    const date = parseDate(row[dateIdx] || '');
-    const valueDate =
-      valueDateIdx !== -1 ? parseDate(row[valueDateIdx] || '') : date;
+      const amount = parseAmount(row[amountIdx] || '', config.decimalSeparator);
+      const date = parseDate(row[dateIdx] || '');
 
-    // Apply bank-specific transformations to description
-    const rawDescription = row[descIdx] || '';
-    const description = applyBankTransformations(rawDescription, bank);
+      // Skip rows with invalid dates
+      if (!date) {
+        return null;
+      }
 
-    return {
-      id: generateTransactionId(rawData, index),
-      date,
-      valueDate,
-      amount,
-      description,
-      categoryId: null,
-      subcategoryId: null,
-      isSubscription: false,
-      balance: balanceIdx !== -1 ? parseAmount(row[balanceIdx] || '', config.decimalSeparator) : 0,
-      verificationNumber: verificationIdx !== -1 ? row[verificationIdx] || '' : '',
-      badges: getBadges(amount, null),
-      rawData,
-    };
-  });
+      const valueDate =
+        valueDateIdx !== -1 ? parseDate(row[valueDateIdx] || '') : date;
+
+      // Apply bank-specific transformations to description
+      const rawDescription = row[descIdx] || '';
+      const description = applyBankTransformations(rawDescription, bank);
+
+      const transaction: Transaction = {
+        id: generateTransactionId(rawData, index),
+        date,
+        valueDate: valueDate || date, // Fallback to main date if value date is invalid
+        amount,
+        description,
+        categoryId: null,
+        subcategoryId: null,
+        isSubscription: false,
+        balance: balanceIdx !== -1 ? parseAmount(row[balanceIdx] || '', config.decimalSeparator) : 0,
+        verificationNumber: verificationIdx !== -1 ? row[verificationIdx] || '' : '',
+        badges: getBadges(amount, null),
+        rawData,
+      };
+      return transaction;
+    })
+    .filter((t): t is Transaction => t !== null);
 }
 
 /**

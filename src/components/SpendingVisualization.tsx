@@ -184,7 +184,7 @@ function DonutChart({ categories, size = 200 }: { categories: CategoryTotal[]; s
 function BarChart({ categories, maxBars = 10 }: { categories: CategoryTotal[]; maxBars?: number }) {
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const displayCategories = categories.slice(0, maxBars);
-  const maxValue = Math.max(...displayCategories.map((c) => c.total));
+  const maxValue = displayCategories.length > 0 ? Math.max(...displayCategories.map((c) => c.total)) : 0;
 
   const handleCategoryClick = (categoryId: string | null) => {
     const key = categoryId || 'uncategorized';
@@ -285,7 +285,7 @@ function BarChart({ categories, maxBars = 10 }: { categories: CategoryTotal[]; m
 function VerticalBarChart({ categories, maxBars = 8 }: { categories: CategoryTotal[]; maxBars?: number }) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const displayCategories = categories.slice(0, maxBars);
-  const maxValue = Math.max(...displayCategories.map((c) => c.total));
+  const maxValue = displayCategories.length > 0 ? Math.max(...displayCategories.map((c) => c.total)) : 0;
   const chartHeight = 150;
   const barAreaHeight = chartHeight - 20; // Leave room for icons
 
@@ -687,10 +687,15 @@ export function SpendingVisualization({
 
   const categoryTotals = useMemo(() => calculateCategoryTotals(transactions), [transactions]);
 
-  const expenses = transactions.filter((t) => t.amount < 0);
-  const income = transactions.filter((t) => t.amount > 0);
-  const totalExpenses = expenses.reduce((sum, t) => sum + Math.abs(t.amount), 0);
-  const totalIncome = income.reduce((sum, t) => sum + t.amount, 0);
+  // Memoize expensive expense/income calculations
+  const { totalExpenses, totalIncome } = useMemo(() => {
+    const exp = transactions.filter((t) => t.amount < 0);
+    const inc = transactions.filter((t) => t.amount > 0);
+    return {
+      totalExpenses: exp.reduce((sum, t) => sum + Math.abs(t.amount), 0),
+      totalIncome: inc.reduce((sum, t) => sum + t.amount, 0),
+    };
+  }, [transactions]);
 
   if (transactions.length === 0) {
     return (

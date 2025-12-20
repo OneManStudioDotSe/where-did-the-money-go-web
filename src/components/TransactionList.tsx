@@ -7,6 +7,8 @@ import { toTitleCase } from '../utils/text-utils';
 interface TransactionListProps {
   transactions: Transaction[];
   onTransactionClick?: (transaction: Transaction) => void;
+  /** Number of transactions per page (default: 100) */
+  pageSize?: number;
 }
 
 interface SortState {
@@ -81,10 +83,13 @@ function InfoTooltip({ content }: { content: string }) {
   );
 }
 
-export function TransactionList({ transactions, onTransactionClick }: TransactionListProps) {
+const DEFAULT_PAGE_SIZE = 100;
+
+export function TransactionList({ transactions, onTransactionClick, pageSize = DEFAULT_PAGE_SIZE }: TransactionListProps) {
   const [sort, setSort] = useState<SortState>({ field: 'date', direction: 'desc' });
   const [isCondensed, setIsCondensed] = useState(false);
   const [isSorting, setIsSorting] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
 
   // Pre-compute category names cache to avoid repeated lookups during sort
   const categoryNameCache = useMemo(() => {
@@ -123,7 +128,23 @@ export function TransactionList({ transactions, onTransactionClick }: Transactio
     });
   }, [transactions, sort, categoryNameCache]);
 
+  // Pagination calculations
+  const totalPages = Math.ceil(sortedTransactions.length / pageSize);
+  const paginatedTransactions = useMemo(() => {
+    const start = currentPage * pageSize;
+    return sortedTransactions.slice(start, start + pageSize);
+  }, [sortedTransactions, currentPage, pageSize]);
+
+  // Reset to first page when transactions change (e.g., filter applied)
+  useMemo(() => {
+    if (currentPage >= totalPages && totalPages > 0) {
+      setCurrentPage(Math.max(0, totalPages - 1));
+    }
+  }, [currentPage, totalPages]);
+
   const handleSort = (field: TransactionSortField) => {
+    // Reset to first page when sorting changes
+    setCurrentPage(0);
     // Show loading state for large datasets
     if (transactions.length > 500) {
       setIsSorting(true);
@@ -142,6 +163,12 @@ export function TransactionList({ transactions, onTransactionClick }: Transactio
         direction: prev.field === field && prev.direction === 'desc' ? 'asc' : 'desc',
       }));
     }
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    // Scroll to top of list
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   if (transactions.length === 0) {
@@ -180,7 +207,15 @@ export function TransactionList({ transactions, onTransactionClick }: Transactio
       {/* Toolbar */}
       <div className="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-slate-800/50 border-b border-gray-200 dark:border-slate-700">
         <div className="text-sm text-gray-600 dark:text-gray-400">
-          {sortedTransactions.length} transaction{sortedTransactions.length !== 1 ? 's' : ''}
+          {totalPages > 1 ? (
+            <>
+              Showing {currentPage * pageSize + 1}-{Math.min((currentPage + 1) * pageSize, sortedTransactions.length)} of {sortedTransactions.length} transaction{sortedTransactions.length !== 1 ? 's' : ''}
+            </>
+          ) : (
+            <>
+              {sortedTransactions.length} transaction{sortedTransactions.length !== 1 ? 's' : ''}
+            </>
+          )}
         </div>
         <button
           onClick={() => setIsCondensed(!isCondensed)}
@@ -235,7 +270,7 @@ export function TransactionList({ transactions, onTransactionClick }: Transactio
 
       {/* Transactions */}
       <div className="divide-y divide-gray-100 dark:divide-slate-700">
-        {sortedTransactions.map((transaction) => {
+        {paginatedTransactions.map((transaction) => {
           const categoryColor = getCategoryColor(transaction.categoryId);
           const categoryIcon = getCategoryIcon(transaction.categoryId);
           const categoryName = getCategoryName(transaction.categoryId);
@@ -372,6 +407,125 @@ export function TransactionList({ transactions, onTransactionClick }: Transactio
           );
         })}
       </div>
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-slate-800/50 border-t border-gray-200 dark:border-slate-700">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => handlePageChange(0)}
+              disabled={currentPage === 0}
+              className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title="First page"
+            >
+              <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+              </svg>
+            </button>
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 0}
+              className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Previous page"
+            >
+              <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Page Numbers */}
+          <div className="flex items-center gap-1">
+            {(() => {
+              const pages: (number | 'ellipsis')[] = [];
+              const maxVisible = 5;
+
+              if (totalPages <= maxVisible + 2) {
+                // Show all pages if few enough
+                for (let i = 0; i < totalPages; i++) pages.push(i);
+              } else {
+                // Always show first page
+                pages.push(0);
+
+                // Calculate range around current page
+                let start = Math.max(1, currentPage - 1);
+                let end = Math.min(totalPages - 2, currentPage + 1);
+
+                // Adjust range to show at least 3 pages in the middle
+                if (currentPage < 3) {
+                  end = Math.min(totalPages - 2, 3);
+                } else if (currentPage > totalPages - 4) {
+                  start = Math.max(1, totalPages - 4);
+                }
+
+                // Add ellipsis or page after first
+                if (start > 1) {
+                  pages.push('ellipsis');
+                }
+
+                // Add middle pages
+                for (let i = start; i <= end; i++) {
+                  pages.push(i);
+                }
+
+                // Add ellipsis or page before last
+                if (end < totalPages - 2) {
+                  pages.push('ellipsis');
+                }
+
+                // Always show last page
+                pages.push(totalPages - 1);
+              }
+
+              return pages.map((page, idx) => {
+                if (page === 'ellipsis') {
+                  return (
+                    <span key={`ellipsis-${idx}`} className="px-2 text-gray-400 dark:text-gray-500">
+                      ...
+                    </span>
+                  );
+                }
+                return (
+                  <button
+                    key={page}
+                    onClick={() => handlePageChange(page)}
+                    className={`min-w-[32px] h-8 px-2 rounded-lg text-sm font-medium transition-colors ${
+                      currentPage === page
+                        ? 'bg-primary-600 text-white'
+                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-600'
+                    }`}
+                  >
+                    {page + 1}
+                  </button>
+                );
+              });
+            })()}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages - 1}
+              className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Next page"
+            >
+              <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+            <button
+              onClick={() => handlePageChange(totalPages - 1)}
+              disabled={currentPage === totalPages - 1}
+              className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Last page"
+            >
+              <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

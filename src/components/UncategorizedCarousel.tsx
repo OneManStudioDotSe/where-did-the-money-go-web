@@ -1,8 +1,9 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useId } from 'react';
 import type { Transaction } from '../types/transaction';
 import { CategorySelector } from './CategorySelector';
 import { getCategoryName, getSubcategoryName, getCategoryColor, getCategoryIcon } from '../utils/category-service';
 import { toTitleCase } from '../utils/text-utils';
+import { useFocusTrap } from '../hooks';
 
 interface UncategorizedCarouselProps {
   transactions: Transaction[];
@@ -40,6 +41,10 @@ export function UncategorizedCarousel({
     categoryId: string;
     subcategoryId: string;
   } | null>(null);
+
+  // Accessibility: focus trap and escape key handling
+  const modalRef = useFocusTrap<HTMLDivElement>(isOpen, onClose);
+  const titleId = useId();
 
   const uncategorizedTransactions = useMemo(
     () => transactions.filter((t) => !t.categoryId),
@@ -135,17 +140,20 @@ export function UncategorizedCarousel({
     <div
       className="fixed inset-0 z-50 overflow-y-auto"
       onClick={handleBackdropClick}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={titleId}
     >
       {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/50 transition-opacity" />
+      <div className="fixed inset-0 bg-black/50 animate-fade-in" aria-hidden="true" />
 
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+        <div ref={modalRef} className="relative bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden animate-slide-up">
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-slate-700 bg-warning-50 dark:bg-warning-900/20">
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+              <h2 id={titleId} className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                 <span className="w-8 h-8 rounded-lg bg-warning-100 dark:bg-warning-900/50 flex items-center justify-center text-warning-600 dark:text-warning-400">
                   📦
                 </span>
@@ -187,9 +195,9 @@ export function UncategorizedCarousel({
               </button>
             </div>
           ) : (
-            <div className="flex h-[70vh]">
-              {/* Transaction List - Left Side */}
-              <div className="w-1/2 border-r border-gray-200 dark:border-slate-700 flex flex-col">
+            <div className="flex flex-col md:flex-row h-[80vh] md:h-[70vh]">
+              {/* Transaction List - Top on mobile, Left Side on desktop */}
+              <div className="w-full md:w-1/2 h-1/3 md:h-full border-b md:border-b-0 md:border-r border-gray-200 dark:border-slate-700 flex flex-col">
                 {/* Pagination Header */}
                 <div className="px-4 py-3 bg-gray-50 dark:bg-slate-700/50 border-b border-gray-200 dark:border-slate-700 flex items-center justify-between">
                   <button
@@ -201,9 +209,9 @@ export function UncategorizedCarousel({
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
                   </button>
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    Page {currentPage + 1} of {totalPages}
-                    <span className="text-gray-400 dark:text-gray-500 ml-2">
+                  <span className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                    <span className="hidden sm:inline">Page </span>{currentPage + 1}/{totalPages}
+                    <span className="hidden md:inline text-gray-400 dark:text-gray-500 ml-2">
                       ({currentPage * ITEMS_PER_PAGE + 1}-{Math.min((currentPage + 1) * ITEMS_PER_PAGE, uncategorizedTransactions.length)} of {uncategorizedTransactions.length})
                     </span>
                   </span>
@@ -255,8 +263,8 @@ export function UncategorizedCarousel({
                 </div>
               </div>
 
-              {/* Category Selector - Right Side */}
-              <div className="w-1/2 flex flex-col">
+              {/* Category Selector - Bottom on mobile, Right Side on desktop */}
+              <div className="w-full md:w-1/2 flex-1 md:h-full flex flex-col">
                 {selectedTransaction ? (
                   <>
                     {/* Selected Transaction Info */}

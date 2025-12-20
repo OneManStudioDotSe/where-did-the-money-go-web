@@ -158,8 +158,8 @@ function groupByRecipient(transactions: Transaction[]): Map<string, Transaction[
     if (!recipientName) continue;
 
     const existing = groups.get(recipientName) || [];
-    existing.push(transaction);
-    groups.set(recipientName, existing);
+    // Use spread to avoid direct mutation
+    groups.set(recipientName, [...existing, transaction]);
   }
 
   return groups;

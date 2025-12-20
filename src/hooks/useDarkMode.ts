@@ -11,9 +11,13 @@ function getSystemTheme(): 'light' | 'dark' {
 
 function getStoredTheme(): ThemeMode {
   if (typeof window === 'undefined') return 'system';
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (stored === 'light' || stored === 'dark' || stored === 'system') {
-    return stored;
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored === 'light' || stored === 'dark' || stored === 'system') {
+      return stored;
+    }
+  } catch {
+    // localStorage may be unavailable (e.g., private browsing)
   }
   return 'system';
 }
@@ -59,7 +63,11 @@ export function useDarkMode() {
 
   const setMode = useCallback((newMode: ThemeMode) => {
     setModeState(newMode);
-    localStorage.setItem(STORAGE_KEY, newMode);
+    try {
+      localStorage.setItem(STORAGE_KEY, newMode);
+    } catch {
+      // localStorage may be unavailable
+    }
   }, []);
 
   const toggleDark = useCallback(() => {

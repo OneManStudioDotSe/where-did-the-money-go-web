@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useId } from 'react';
 import type { IconSetId } from '../config/icon-sets';
 import { iconSetConfigs, getIconUrl, getCategoryEmoji } from '../config/icon-sets';
 import type { ThemeMode } from '../hooks/useDarkMode';
 import type { BankId } from '../types/csv';
 import { BANK_CONFIGS } from '../types/csv';
+import { useFocusTrap } from '../hooks';
 
 /** Subscription view variation */
 export type SubscriptionViewVariation = 'list' | 'grid';
@@ -24,6 +25,8 @@ export interface AppSettings {
   subscriptionViewVariation: SubscriptionViewVariation;
   /** Where to show subscriptions: tab, overview card, or both */
   subscriptionPlacement: SubscriptionPlacement;
+  /** Number of transactions to show per page (default: 100) */
+  transactionPageSize: number;
 }
 
 const defaultSettings: AppSettings = {
@@ -35,6 +38,7 @@ const defaultSettings: AppSettings = {
   preferredBank: null,
   subscriptionViewVariation: 'list',
   subscriptionPlacement: 'both',
+  transactionPageSize: 100,
 };
 
 const STORAGE_KEY = 'app_settings';
@@ -52,7 +56,11 @@ export function loadSettings(): AppSettings {
 }
 
 export function saveSettings(settings: AppSettings): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+  } catch (error) {
+    console.error('Failed to save settings to localStorage:', error);
+  }
 }
 
 interface SettingsPanelProps {
@@ -99,6 +107,10 @@ export function SettingsPanel({ isOpen, onClose, settings, onSettingsChange, sub
   const [localSettings, setLocalSettings] = useState<AppSettings>(settings);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
+  // Accessibility: focus trap and escape key handling
+  const modalRef = useFocusTrap<HTMLDivElement>(isOpen, onClose);
+  const titleId = useId();
+
   useEffect(() => {
     setLocalSettings(settings);
   }, [settings]);
@@ -120,16 +132,21 @@ export function SettingsPanel({ isOpen, onClose, settings, onSettingsChange, sub
   const previewCategories = ['groceries', 'food_dining', 'transportation'];
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
+    <div
+      className="fixed inset-0 z-50 overflow-y-auto"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={titleId}
+    >
       {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/50 transition-opacity" onClick={handleCancel} />
+      <div className="fixed inset-0 bg-black/50 animate-fade-in" onClick={handleCancel} aria-hidden="true" />
 
       {/* Panel */}
       <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-md w-full">
+        <div ref={modalRef} className="relative bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-md w-full animate-slide-up">
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-slate-700">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Settings</h2>
+            <h2 id={titleId} className="text-lg font-semibold text-gray-900 dark:text-white">Settings</h2>
             <button
               onClick={handleCancel}
               className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
@@ -445,24 +462,60 @@ export function SettingsPanel({ isOpen, onClose, settings, onSettingsChange, sub
               )}
             </div>
 
-            {/* Date Format */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Date Format
-              </label>
-              <select
-                value={localSettings.dateFormat}
-                onChange={(e) => setLocalSettings({ ...localSettings, dateFormat: e.target.value as AppSettings['dateFormat'] })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              >
-                <option value="YYYY-MM-DD">2025-12-20 (ISO)</option>
-                <option value="DD/MM/YYYY">20/12/2025 (European)</option>
-                <option value="MM/DD/YYYY">12/20/2025 (US)</option>
-                <option value="DD.MM.YYYY">20.12.2025 (German)</option>
-              </select>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                How dates are displayed throughout the app
-              </p>
+            {/* Display Settings Section */}
+            <div className="border-t border-gray-200 dark:border-slate-700 pt-6">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                </svg>
+                Display Settings
+              </h3>
+
+              {/* Transaction Page Size */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Transactions Per Page
+                </label>
+                <div className="grid grid-cols-4 gap-2">
+                  {[50, 100, 200, 500].map((size) => (
+                    <button
+                      key={size}
+                      type="button"
+                      onClick={() => setLocalSettings({ ...localSettings, transactionPageSize: size })}
+                      className={`p-2 rounded-lg border-2 text-sm font-medium transition-all ${
+                        localSettings.transactionPageSize === size
+                          ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
+                          : 'border-gray-200 dark:border-slate-600 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-slate-500'
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Number of transactions shown per page. Lower values improve scrolling performance.
+                </p>
+              </div>
+
+              {/* Date Format */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Date Format
+                </label>
+                <select
+                  value={localSettings.dateFormat}
+                  onChange={(e) => setLocalSettings({ ...localSettings, dateFormat: e.target.value as AppSettings['dateFormat'] })}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                >
+                  <option value="YYYY-MM-DD">2025-12-20 (ISO)</option>
+                  <option value="DD/MM/YYYY">20/12/2025 (European)</option>
+                  <option value="MM/DD/YYYY">12/20/2025 (US)</option>
+                  <option value="DD.MM.YYYY">20.12.2025 (German)</option>
+                </select>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  How dates are displayed throughout the app
+                </p>
+              </div>
             </div>
 
             {/* Month Start Day */}

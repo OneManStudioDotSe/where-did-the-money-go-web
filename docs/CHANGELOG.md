@@ -54,12 +54,93 @@ All notable changes to this project will be documented in this file.
 
 ### New Files
 - `src/utils/text-utils.ts` - Title case conversion utility
+- `src/utils/date-utils.ts` - Date formatting utility with configurable formats
+- `src/components/ErrorBoundary.tsx` - Error boundary component for graceful crash handling
 - `public/favicon.svg` - Custom app favicon
+
+### Bug Fixes & Stability Improvements
+
+#### Charts
+- **Division by Zero**: Fixed potential crash in `SpendingVisualization.tsx` when `displayCategories` array is empty (lines 187, 288)
+
+#### Dark Mode
+- **TransactionEditModal**: Added full dark mode support (modal background, header, borders, text colors, buttons)
+- **CategorySelector**: Added dark mode support for search input, category cards, subcategory buttons, and empty state
+
+#### Error Handling
+- **ErrorBoundary**: New component wraps main content to catch and gracefully handle component crashes
+- **localStorage**: Added try/catch protection to all localStorage operations across:
+  - `SettingsPanel.tsx` - `saveSettings()`
+  - `category-service.ts` - `saveCustomMappings()`
+  - `useDarkMode.ts` - `getStoredTheme()` and `setMode()`
+  - `TimePeriodSelector.tsx` - month start day load/save
+
+#### Loading States
+- **Subscription Detection**: Improved loading flow - transactions now display immediately, with subscription detection running in a separate phase
 
 ### Technical Improvements
 - Added bar chart animation CSS in `src/index.css`
 - Added `showResetConfirmation` state and `performReset` function in App.tsx
 - Updated utility exports in `src/utils/index.ts`
+- Exported `ErrorBoundary` from `src/components/index.ts`
+
+---
+
+## [Unreleased] - 2025-12-21 (Part 2)
+
+### New Features
+
+#### Transaction List Pagination
+- **Pagination Controls**: Transaction list now displays transactions in pages (default: 100 per page)
+- **Page Navigation**: First/Previous/Next/Last page buttons with ellipsis for large page counts
+- **Page Info**: Shows "Showing X-Y of Z transactions" in toolbar
+- **Settings Integration**: Added `transactionPageSize` setting to configure page size (50, 100, 200, 500)
+
+#### Display Settings Section
+- **New Settings Panel Section**: Added "Display Settings" section in SettingsPanel
+- **Transactions Per Page**: Grid of buttons to select page size
+- **Reorganized Settings**: Date Format moved under Display Settings section
+
+### Performance Improvements
+
+#### Memory Management
+- **Window Debug Cleanup**: Fixed memory leak in App.tsx by adding cleanup for `window.debugSubscription` and `window.getTransactions` functions
+- **Memoization**: Added `useMemo` for expensive calculations in App.tsx (`totalSubcategories`, `totalExpenses`, `totalIncome`)
+- **SpendingVisualization**: Memoized expense/income filtering and calculations
+
+#### Bug Fixes
+- **Array Mutation**: Fixed direct array mutation in subscription-detection.ts using spread operator instead of push
+- **Month Boundary Bug**: Fixed date boundary calculation in TimePeriodSelector when `monthStartDay` is 1
+- **Currency Parsing**: Improved parseAmount in csv-parser.ts to handle various currency formats with thousands separators (e.g., "1.234,56" German format)
+- **Date Parsing**: Updated parseDate to return null for invalid dates instead of silently using current date
+
+### Accessibility Improvements
+
+#### Modal Accessibility
+- **Focus Trap Hook**: Created `useFocusTrap` hook for keyboard accessibility in modals
+- **ARIA Attributes**: Added `role="dialog"`, `aria-modal="true"`, `aria-labelledby` to all modals
+- **Escape Key**: All modals now close on Escape key press
+- **Focus Restoration**: Focus returns to previously focused element when modals close
+- Applied to: TransactionEditModal, SettingsPanel, SubscriptionEditModal, ExportDialog, UncategorizedCarousel
+
+### UI/UX Improvements
+
+#### Modal Animations
+- **Fade In Backdrop**: Added smooth fade-in animation for modal backdrops
+- **Slide Up Panel**: Added slide-up animation for modal panels
+- Added CSS keyframes `fade-in` and `slide-up` in index.css
+
+#### Responsive Design
+- **UncategorizedCarousel Mobile**: Changed from side-by-side to stacked layout on mobile screens
+- **Pagination Text**: Compacted pagination info for smaller screens
+
+### New Files
+- `src/hooks/useFocusTrap.ts` - Focus trap hook for modal accessibility
+
+### Technical Improvements
+- Added modal animation CSS keyframes in `src/index.css`
+- Updated `src/hooks/index.ts` to export useFocusTrap
+- TypeScript: Made window debug properties optional for proper cleanup support
 
 ---
 

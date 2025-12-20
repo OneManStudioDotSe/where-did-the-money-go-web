@@ -76,7 +76,7 @@ export function CategorySelector({
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search categories..."
-          className="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          className="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
         />
       </div>
 
@@ -87,12 +87,12 @@ export function CategorySelector({
           const isSelectedCategory = selectedCategoryId === category.id;
 
           return (
-            <div key={category.id} className="border border-gray-200 rounded-lg overflow-hidden">
+            <div key={category.id} className="border border-gray-200 dark:border-slate-600 rounded-lg overflow-hidden">
               {/* Category Header */}
               <button
                 onClick={() => handleCategoryClick(category.id)}
                 className={`w-full flex items-center gap-3 p-3 text-left transition-colors ${
-                  isSelectedCategory ? 'bg-primary-50' : 'hover:bg-gray-50'
+                  isSelectedCategory ? 'bg-primary-50 dark:bg-primary-900/30' : 'hover:bg-gray-50 dark:hover:bg-slate-700'
                 }`}
               >
                 <span
@@ -102,8 +102,8 @@ export function CategorySelector({
                   {category.icon}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-gray-900 truncate">{category.name}</p>
-                  <p className="text-xs text-gray-500">
+                  <p className="font-medium text-gray-900 dark:text-white truncate">{category.name}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
                     {category.subcategories.length} subcategories
                   </p>
                 </div>
@@ -126,7 +126,7 @@ export function CategorySelector({
 
               {/* Subcategories */}
               {isExpanded && (
-                <div className="border-t border-gray-100 bg-gray-50 p-2">
+                <div className="border-t border-gray-100 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 p-2">
                   <div className="grid grid-cols-2 gap-1">
                     {category.subcategories.map((subcategory) => {
                       const isSelected =
@@ -140,7 +140,7 @@ export function CategorySelector({
                           className={`px-3 py-2 text-sm rounded-md text-left transition-colors ${
                             isSelected
                               ? 'bg-primary-600 text-white'
-                              : 'bg-white hover:bg-gray-100 text-gray-700 border border-gray-200'
+                              : 'bg-white dark:bg-slate-700 hover:bg-gray-100 dark:hover:bg-slate-600 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-slate-500'
                           }`}
                         >
                           {subcategory.name}
@@ -155,7 +155,7 @@ export function CategorySelector({
         })}
 
         {filteredCategories.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
             <p className="text-sm">No categories found for "{searchQuery}"</p>
           </div>
         )}
