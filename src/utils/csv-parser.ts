@@ -5,9 +5,10 @@ import type {
   ColumnMapping,
   ColumnAnalysis,
   ColumnType,
+  BankId,
 } from '../types/csv';
 import type { Transaction, RawTransaction, TransactionBadge } from '../types/transaction';
-import { DEFAULT_CSV_CONFIG } from '../types/csv';
+import { DEFAULT_CSV_CONFIG, BANK_CONFIGS } from '../types/csv';
 
 /**
  * Remove BOM (Byte Order Mark) from the beginning of a string
@@ -323,11 +324,33 @@ function getBadges(amount: number, categoryId: string | null): TransactionBadge[
 }
 
 /**
+ * Apply bank-specific transformations to description
+ */
+function applyBankTransformations(description: string, bank: BankId | null): string {
+  if (!bank) return description;
+
+  const bankConfig = BANK_CONFIGS[bank];
+  if (!bankConfig) return description;
+
+  // SEB: trim description after first "/"
+  if (bankConfig.trimDescriptionAt) {
+    const trimChar = bankConfig.trimDescriptionAt;
+    const idx = description.indexOf(trimChar);
+    if (idx > 0) {
+      return description.substring(0, idx).trim();
+    }
+  }
+
+  return description;
+}
+
+/**
  * Convert parsed CSV rows to Transaction objects
  */
 export function convertToTransactions(
   result: CsvParseResult,
-  mapping: ColumnMapping
+  mapping: ColumnMapping,
+  bank: BankId | null = null
 ): Transaction[] {
   const { headers, rows, config } = result;
 
@@ -360,12 +383,16 @@ export function convertToTransactions(
     const valueDate =
       valueDateIdx !== -1 ? parseDate(row[valueDateIdx] || '') : date;
 
+    // Apply bank-specific transformations to description
+    const rawDescription = row[descIdx] || '';
+    const description = applyBankTransformations(rawDescription, bank);
+
     return {
       id: generateTransactionId(rawData, index),
       date,
       valueDate,
       amount,
-      description: row[descIdx] || '',
+      description,
       categoryId: null,
       subcategoryId: null,
       isSubscription: false,

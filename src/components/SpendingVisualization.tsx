@@ -229,50 +229,73 @@ function VerticalBarChart({ categories, maxBars = 8 }: { categories: CategoryTot
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const displayCategories = categories.slice(0, maxBars);
   const maxValue = Math.max(...displayCategories.map((c) => c.total));
-  const chartHeight = 180;
+  const chartHeight = 150;
+  const barAreaHeight = chartHeight - 20; // Leave room for icons
 
   return (
-    <div>
-      <div className="flex items-end justify-center gap-2" style={{ height: chartHeight }}>
-        {displayCategories.map((category, index) => {
-          const barHeight = maxValue > 0 ? (category.total / maxValue) * (chartHeight - 30) : 0;
-          const isHovered = hoveredIndex === index;
-
-          return (
-            <div
-              key={category.categoryId || 'uncategorized'}
-              className="flex flex-col items-center"
-              onMouseEnter={() => setHoveredIndex(index)}
-              onMouseLeave={() => setHoveredIndex(null)}
-            >
-              {/* Tooltip on hover */}
-              {isHovered && (
-                <div className="absolute -mt-16 px-2 py-1 bg-gray-900 dark:bg-slate-700 text-white text-xs rounded shadow-lg whitespace-nowrap z-10">
-                  {category.name}: {formatAmount(category.total)} kr ({category.percentage.toFixed(1)}%)
-                </div>
-              )}
-              {/* Bar */}
-              <div
-                className="w-8 rounded-t-md transition-all duration-300"
-                style={{
-                  height: `${barHeight}px`,
-                  backgroundColor: category.color,
-                  opacity: isHovered ? 1 : 0.85,
-                  transform: isHovered ? 'scaleY(1.02)' : 'scaleY(1)',
-                  transformOrigin: 'bottom',
-                }}
-              />
-              {/* Icon */}
-              <div className="mt-2 text-base">{category.icon}</div>
-            </div>
-          );
-        })}
+    <div className="flex">
+      {/* Y-axis labels - vertical on left */}
+      <div className="flex flex-col justify-between text-xs text-gray-400 dark:text-gray-500 text-right pr-2 py-1" style={{ height: barAreaHeight }}>
+        <span className="leading-none">{formatAmount(maxValue)} kr</span>
+        <span className="leading-none">{formatAmount(maxValue / 2)} kr</span>
+        <span className="leading-none">0</span>
       </div>
-      {/* Y-axis labels */}
-      <div className="flex justify-between text-xs text-gray-400 dark:text-gray-500 mt-2 px-4">
-        <span>0</span>
-        <span>{formatAmount(maxValue / 2)} kr</span>
-        <span>{formatAmount(maxValue)} kr</span>
+
+      {/* Chart area */}
+      <div className="flex-1">
+        {/* Y-axis line */}
+        <div className="relative border-l border-gray-200 dark:border-slate-600" style={{ height: barAreaHeight }}>
+          {/* Horizontal grid lines */}
+          <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
+            <div className="border-t border-gray-100 dark:border-slate-700 w-full" />
+            <div className="border-t border-gray-100 dark:border-slate-700 border-dashed w-full" />
+            <div className="border-t border-gray-200 dark:border-slate-600 w-full" />
+          </div>
+
+          {/* Bars */}
+          <div className="flex items-end justify-center gap-2 h-full px-2">
+            {displayCategories.map((category, index) => {
+              const barHeight = maxValue > 0 ? (category.total / maxValue) * (barAreaHeight - 10) : 0;
+              const isHovered = hoveredIndex === index;
+
+              return (
+                <div
+                  key={category.categoryId || 'uncategorized'}
+                  className="flex flex-col items-center relative"
+                  onMouseEnter={() => setHoveredIndex(index)}
+                  onMouseLeave={() => setHoveredIndex(null)}
+                >
+                  {/* Tooltip on hover */}
+                  {isHovered && (
+                    <div className="absolute bottom-full mb-2 px-2 py-1 bg-gray-900 dark:bg-slate-700 text-white text-xs rounded shadow-lg whitespace-nowrap z-10">
+                      {category.name}: {formatAmount(category.total)} kr ({category.percentage.toFixed(1)}%)
+                    </div>
+                  )}
+                  {/* Bar */}
+                  <div
+                    className="w-8 rounded-t-md transition-all duration-300"
+                    style={{
+                      height: `${barHeight}px`,
+                      backgroundColor: category.color,
+                      opacity: isHovered ? 1 : 0.85,
+                      transform: isHovered ? 'scaleY(1.02)' : 'scaleY(1)',
+                      transformOrigin: 'bottom',
+                    }}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* X-axis icons */}
+        <div className="flex justify-center gap-2 mt-2 px-2">
+          {displayCategories.map((category) => (
+            <div key={category.categoryId || 'uncategorized-icon'} className="w-8 text-center text-base">
+              {category.icon}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

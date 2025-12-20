@@ -2,12 +2,18 @@ import { useState, useEffect } from 'react';
 import type { IconSetId } from '../config/icon-sets';
 import { iconSetConfigs, getIconUrl, getCategoryEmoji } from '../config/icon-sets';
 import type { ThemeMode } from '../hooks/useDarkMode';
+import type { BankId } from '../types/csv';
+import { BANK_CONFIGS } from '../types/csv';
 
 export interface AppSettings {
   dateFormat: 'YYYY-MM-DD' | 'DD/MM/YYYY' | 'MM/DD/YYYY' | 'DD.MM.YYYY';
   monthStartDay: number;
   iconSet: IconSetId;
   theme: ThemeMode;
+  /** Maximum number of transactions to import (default: 2000) */
+  maxTransactionLimit: number;
+  /** Preferred bank for CSV parsing optimizations */
+  preferredBank: BankId | null;
 }
 
 const defaultSettings: AppSettings = {
@@ -15,6 +21,8 @@ const defaultSettings: AppSettings = {
   monthStartDay: 1,
   iconSet: 'emoji',
   theme: 'system',
+  maxTransactionLimit: 2000,
+  preferredBank: null,
 };
 
 const STORAGE_KEY = 'app_settings';
@@ -191,6 +199,62 @@ export function SettingsPanel({ isOpen, onClose, settings, onSettingsChange }: S
               </p>
             </div>
 
+            {/* Import Settings Section */}
+            <div className="border-t border-gray-200 dark:border-slate-700 pt-6">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+                Import Settings
+              </h3>
+
+              {/* Transaction Limit */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Transaction Import Limit
+                </label>
+                <div className="flex items-center gap-4">
+                  <input
+                    type="range"
+                    min="500"
+                    max="10000"
+                    step="500"
+                    value={localSettings.maxTransactionLimit}
+                    onChange={(e) => setLocalSettings({ ...localSettings, maxTransactionLimit: parseInt(e.target.value) })}
+                    className="flex-1 h-2 bg-gray-200 dark:bg-slate-600 rounded-lg appearance-none cursor-pointer accent-primary-600"
+                  />
+                  <span className="text-sm font-medium text-gray-900 dark:text-white min-w-[60px] text-right">
+                    {localSettings.maxTransactionLimit.toLocaleString()}
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Maximum transactions to import from a CSV file. Higher limits may slow down the app.
+                </p>
+              </div>
+
+              {/* Preferred Bank */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Preferred Bank
+                </label>
+                <select
+                  value={localSettings.preferredBank || ''}
+                  onChange={(e) => setLocalSettings({ ...localSettings, preferredBank: (e.target.value || null) as BankId | null })}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                >
+                  <option value="">Auto-detect</option>
+                  {Object.values(BANK_CONFIGS).map((bank) => (
+                    <option key={bank.id} value={bank.id}>
+                      {bank.name}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Select your bank to apply bank-specific parsing optimizations (e.g., SEB description trimming).
+                </p>
+              </div>
+            </div>
+
             {/* Date Format */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -201,10 +265,10 @@ export function SettingsPanel({ isOpen, onClose, settings, onSettingsChange }: S
                 onChange={(e) => setLocalSettings({ ...localSettings, dateFormat: e.target.value as AppSettings['dateFormat'] })}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
               >
-                <option value="YYYY-MM-DD">2025-12-19 (ISO)</option>
-                <option value="DD/MM/YYYY">19/12/2025 (European)</option>
-                <option value="MM/DD/YYYY">12/19/2025 (US)</option>
-                <option value="DD.MM.YYYY">19.12.2025 (German)</option>
+                <option value="YYYY-MM-DD">2025-12-20 (ISO)</option>
+                <option value="DD/MM/YYYY">20/12/2025 (European)</option>
+                <option value="MM/DD/YYYY">12/20/2025 (US)</option>
+                <option value="DD.MM.YYYY">20.12.2025 (German)</option>
               </select>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 How dates are displayed throughout the app

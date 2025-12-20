@@ -1,4 +1,48 @@
 /**
+ * Swedish bank identifiers
+ */
+export type BankId = 'seb' | 'swedbank' | 'nordea' | 'handelsbanken' | 'other';
+
+/**
+ * Bank-specific configuration
+ */
+export interface BankConfig {
+  id: BankId;
+  name: string;
+  /** Character to trim description at (e.g., "/" for SEB) */
+  trimDescriptionAt?: string;
+  /** Default delimiter for this bank's CSV exports */
+  defaultDelimiter?: string;
+}
+
+/**
+ * Bank configurations for Swedish banks
+ */
+export const BANK_CONFIGS: Record<BankId, BankConfig> = {
+  seb: {
+    id: 'seb',
+    name: 'SEB',
+    trimDescriptionAt: '/',
+  },
+  swedbank: {
+    id: 'swedbank',
+    name: 'Swedbank',
+  },
+  nordea: {
+    id: 'nordea',
+    name: 'Nordea',
+  },
+  handelsbanken: {
+    id: 'handelsbanken',
+    name: 'Handelsbanken',
+  },
+  other: {
+    id: 'other',
+    name: 'Other / Unknown',
+  },
+};
+
+/**
  * Column mapping configuration for CSV parsing
  */
 export interface ColumnMapping {

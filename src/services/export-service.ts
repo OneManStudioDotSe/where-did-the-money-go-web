@@ -80,7 +80,7 @@ function generateSummary(transactions: Transaction[]): TransactionSummary & { ca
 /**
  * Export transactions to CSV format
  */
-function exportToCsv(transactions: Transaction[], includeRawData: boolean = false): string {
+function exportToCsv(transactions: Transaction[], _includeRawData: boolean = false): string {
   const headers = [
     'Date',
     'Value Date',

@@ -9,7 +9,8 @@ import { useTransactionFilters, useTimePeriodFilter } from './hooks'
 import { useDarkMode } from './hooks/useDarkMode'
 import { useHashRouter } from './hooks/useHashRouter'
 import type { Transaction, TransactionFilters } from './types/transaction'
-import type { CsvParseError } from './types/csv'
+import type { CsvParseError, CsvConfig, ColumnMapping, BankId } from './types/csv'
+import { parseCSV, convertToTransactions } from './utils/csv-parser'
 import { Header } from './components/layout/Header'
 import { Footer } from './components/layout/Footer'
 import { FeaturesPage, HowItWorksPage, AboutPage, PrivacyPage, DisclaimerPage } from './pages'
@@ -76,19 +77,26 @@ function App() {
     setIsDemoMode(false)
   }
 
-  const handleCsvConfirm = (content: string) => {
+  const handleCsvConfirm = (content: string, config: CsvConfig, mapping: ColumnMapping, bank: BankId | null) => {
     setShowCsvConfirmation(false)
     setIsLoading(true)
     setFileName(pendingFileName)
 
     setTimeout(() => {
-      const result = parseTransactionsFromCSV(content)
+      const result = parseCSV(content, config)
 
       if ('type' in result) {
         setError(result)
         setTransactions([])
       } else {
-        const categorized = categorizeTransactions(result)
+        // Limit transactions based on settings
+        const limitedResult = {
+          ...result,
+          rows: result.rows.slice(0, appSettings.maxTransactionLimit),
+          rowCount: Math.min(result.rowCount, appSettings.maxTransactionLimit),
+        }
+        const parsedTransactions = convertToTransactions(limitedResult, mapping, bank)
+        const categorized = categorizeTransactions(parsedTransactions)
         setTransactions(categorized)
       }
       setIsLoading(false)
@@ -658,6 +666,8 @@ function App() {
           onConfirm={handleCsvConfirm}
           fileContent={pendingFileContent}
           fileName={pendingFileName}
+          maxTransactionLimit={appSettings.maxTransactionLimit}
+          preferredBank={appSettings.preferredBank}
         />
       )}
 

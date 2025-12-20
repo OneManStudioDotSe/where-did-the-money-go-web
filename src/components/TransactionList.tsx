@@ -83,6 +83,18 @@ function InfoTooltip({ content }: { content: string }) {
 export function TransactionList({ transactions, onTransactionClick }: TransactionListProps) {
   const [sort, setSort] = useState<SortState>({ field: 'date', direction: 'desc' });
   const [isCondensed, setIsCondensed] = useState(false);
+  const [isSorting, setIsSorting] = useState(false);
+
+  // Pre-compute category names cache to avoid repeated lookups during sort
+  const categoryNameCache = useMemo(() => {
+    const cache = new Map<string | null, string>();
+    transactions.forEach(t => {
+      if (!cache.has(t.categoryId)) {
+        cache.set(t.categoryId, getCategoryName(t.categoryId) || 'zzz');
+      }
+    });
+    return cache;
+  }, [transactions]);
 
   const sortedTransactions = useMemo(() => {
     return [...transactions].sort((a, b) => {
@@ -96,8 +108,9 @@ export function TransactionList({ transactions, onTransactionClick }: Transactio
           comparison = Math.abs(a.amount) - Math.abs(b.amount);
           break;
         case 'category':
-          const catA = getCategoryName(a.categoryId) || 'zzz';
-          const catB = getCategoryName(b.categoryId) || 'zzz';
+          // Use cached category names for faster sorting
+          const catA = categoryNameCache.get(a.categoryId) || 'zzz';
+          const catB = categoryNameCache.get(b.categoryId) || 'zzz';
           comparison = catA.localeCompare(catB, 'sv-SE');
           break;
         case 'description':
@@ -107,13 +120,27 @@ export function TransactionList({ transactions, onTransactionClick }: Transactio
 
       return sort.direction === 'asc' ? comparison : -comparison;
     });
-  }, [transactions, sort]);
+  }, [transactions, sort, categoryNameCache]);
 
   const handleSort = (field: TransactionSortField) => {
-    setSort((prev) => ({
-      field,
-      direction: prev.field === field && prev.direction === 'desc' ? 'asc' : 'desc',
-    }));
+    // Show loading state for large datasets
+    if (transactions.length > 500) {
+      setIsSorting(true);
+      // Use requestAnimationFrame to allow UI to update before heavy computation
+      requestAnimationFrame(() => {
+        setSort((prev) => ({
+          field,
+          direction: prev.field === field && prev.direction === 'desc' ? 'asc' : 'desc',
+        }));
+        // Clear loading state after sort completes
+        requestAnimationFrame(() => setIsSorting(false));
+      });
+    } else {
+      setSort((prev) => ({
+        field,
+        direction: prev.field === field && prev.direction === 'desc' ? 'asc' : 'desc',
+      }));
+    }
   };
 
   if (transactions.length === 0) {
@@ -138,7 +165,17 @@ export function TransactionList({ transactions, onTransactionClick }: Transactio
   }
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden">
+    <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden relative">
+      {/* Sorting Loading Overlay */}
+      {isSorting && (
+        <div className="absolute inset-0 bg-white/50 dark:bg-slate-800/50 z-10 flex items-center justify-center">
+          <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-700 rounded-lg shadow-lg border border-gray-200 dark:border-slate-600">
+            <div className="w-5 h-5 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+            <span className="text-sm text-gray-600 dark:text-gray-300">Sorting...</span>
+          </div>
+        </div>
+      )}
+
       {/* Toolbar */}
       <div className="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-slate-800/50 border-b border-gray-200 dark:border-slate-700">
         <div className="text-sm text-gray-600 dark:text-gray-400">
