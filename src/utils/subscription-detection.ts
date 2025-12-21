@@ -40,11 +40,15 @@ export function normalizeRecipientName(description: string): string {
     normalized = normalized.replace(prefix, '');
   }
 
-  // Remove trailing reference numbers and dates
+  // Remove trailing reference numbers, dates, and transaction codes
   normalized = normalized
-    .replace(/\s+\d{6,}$/g, '')           // Trailing reference numbers
-    .replace(/\s+\d{4}-\d{2}-\d{2}$/g, '') // Trailing dates
-    .replace(/\s+[A-Z]{2,3}\d{4,}$/g, '')  // Trailing codes like SE12345
+    .replace(/\s+\d{6,}$/g, '')             // Trailing reference numbers
+    .replace(/\s+\d{4}-\d{2}-\d{2}$/g, '')   // Trailing dates
+    .replace(/\s+[A-Z]{2,3}\d{4,}$/g, '')    // Trailing codes like SE12345
+    .replace(/\s+[A-Z]\d{3,}$/g, '')         // Trailing codes like P392, P3A2 (letter + 3+ digits)
+    .replace(/\s+[A-Z0-9]{3,6}$/gi, '')      // Trailing short alphanumeric codes (3-6 chars) like P3A2, AB123
+    .replace(/\s+\/\d{2}-\d{2}-\d{2}$/g, '') // Trailing date like /25-12-18
+    .replace(/\s*\*+\s*$/g, '')              // Trailing asterisks
     .trim();
 
   // Normalize multiple spaces

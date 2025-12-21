@@ -10,7 +10,6 @@ interface SpendingVisualizationProps {
 }
 
 type ChartType = 'bar' | 'bar-vertical' | 'donut';
-type ViewMode = 'category' | 'subcategory';
 
 interface CategoryTotal {
   categoryId: string | null;
@@ -345,11 +344,14 @@ function VerticalBarChart({ categories, maxBars = 8 }: { categories: CategoryTot
           </div>
         </div>
 
-        {/* X-axis icons */}
+        {/* X-axis icons with labels */}
         <div className="flex justify-center gap-2 mt-2 px-2">
           {displayCategories.map((category) => (
-            <div key={category.categoryId || 'uncategorized-icon'} className="w-8 text-center text-base">
-              {category.icon}
+            <div key={category.categoryId || 'uncategorized-icon'} className="w-8 flex flex-col items-center">
+              <span className="text-base">{category.icon}</span>
+              <span className="text-[9px] text-gray-500 dark:text-gray-400 truncate w-full text-center mt-0.5" title={category.name}>
+                {category.name.length > 6 ? category.name.slice(0, 5) + '…' : category.name}
+              </span>
             </div>
           ))}
         </div>
@@ -550,12 +552,8 @@ function TrendSection({
 
 function CategoryTotalsTable({
   categories,
-  viewMode,
-  onViewModeChange,
 }: {
   categories: CategoryTotal[];
-  viewMode: ViewMode;
-  onViewModeChange: (mode: ViewMode) => void;
 }) {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
 
@@ -574,31 +572,6 @@ function CategoryTotalsTable({
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-3">
-        <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Category Breakdown</h4>
-        <div className="flex rounded-lg border border-gray-200 dark:border-slate-600 overflow-hidden">
-          <button
-            onClick={() => onViewModeChange('category')}
-            className={`px-3 py-1 text-xs font-medium transition-colors ${
-              viewMode === 'category'
-                ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
-                : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-700'
-            }`}
-          >
-            Categories
-          </button>
-          <button
-            onClick={() => onViewModeChange('subcategory')}
-            className={`px-3 py-1 text-xs font-medium transition-colors border-l border-gray-200 dark:border-slate-600 ${
-              viewMode === 'subcategory'
-                ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
-                : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-700'
-            }`}
-          >
-            Subcategories
-          </button>
-        </div>
-      </div>
 
       <div className="border border-gray-200 dark:border-slate-700 rounded-lg overflow-hidden">
         <table className="w-full text-sm">
@@ -683,7 +656,6 @@ export function SpendingVisualization({
   allTransactions,
 }: SpendingVisualizationProps) {
   const [chartType, setChartType] = useState<ChartType>('bar');
-  const [viewMode, setViewMode] = useState<ViewMode>('category');
 
   const categoryTotals = useMemo(() => calculateCategoryTotals(transactions), [transactions]);
 
@@ -835,13 +807,10 @@ export function SpendingVisualization({
 
         {/* Legend for Donut */}
         {chartType === 'donut' && categoryTotals.length > 0 && (
-          <div className="flex flex-wrap gap-2 justify-center mb-6">
+          <div className="flex flex-wrap gap-3 justify-center mb-6">
             {categoryTotals.slice(0, 8).map((category) => (
               <div key={category.categoryId || 'uncategorized'} className="flex items-center gap-1.5">
-                <span
-                  className="w-3 h-3 rounded-sm"
-                  style={{ backgroundColor: category.color }}
-                />
+                <span className="text-base">{category.icon}</span>
                 <span className="text-xs text-gray-600 dark:text-gray-400">{category.name}</span>
               </div>
             ))}
@@ -862,11 +831,7 @@ export function SpendingVisualization({
 
         {/* Category Totals Table */}
         <div className="border-t border-gray-200 dark:border-slate-700 pt-4">
-          <CategoryTotalsTable
-            categories={categoryTotals}
-            viewMode={viewMode}
-            onViewModeChange={setViewMode}
-          />
+          <CategoryTotalsTable categories={categoryTotals} />
         </div>
       </div>
     </div>

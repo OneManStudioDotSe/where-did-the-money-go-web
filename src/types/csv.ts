@@ -12,6 +12,18 @@ export interface DescriptionTransformExample {
 }
 
 /**
+ * Prefix rule: add a prefix when pattern matches
+ */
+export interface PrefixRule {
+  /** Pattern to match at the start of description */
+  pattern: RegExp;
+  /** Prefix to add when pattern matches */
+  prefix: string;
+  /** Whether to remove the matched pattern (default: true) */
+  removeMatch?: boolean;
+}
+
+/**
  * Bank-specific configuration
  */
 export interface BankConfig {
@@ -21,6 +33,8 @@ export interface BankConfig {
   trimDescriptionAt?: string;
   /** Regex patterns to remove from descriptions (for complex transformations) */
   removePatterns?: RegExp[];
+  /** Rules for adding prefixes based on patterns (e.g., Swish detection) */
+  prefixRules?: PrefixRule[];
   /** Default delimiter for this bank's CSV exports */
   defaultDelimiter?: string;
   /** Description of the optimizations applied */
@@ -37,10 +51,17 @@ export const BANK_CONFIGS: Record<BankId, BankConfig> = {
     id: 'seb',
     name: 'SEB',
     trimDescriptionAt: '/',
-    optimizationDescription: 'Removes transaction codes after "/" character',
+    // Rules for adding "Swish - " prefix when description starts with 467 or 123
+    prefixRules: [
+      { pattern: /^467\s+/, prefix: 'Swish - ', removeMatch: true },
+      { pattern: /^123\s+/, prefix: 'Swish - ', removeMatch: true },
+    ],
+    optimizationDescription: 'Removes "/" codes, identifies Swish transactions (467, 123)',
     examples: [
       { before: 'NETFLIX COM /25-12-18', after: 'NETFLIX COM' },
       { before: 'ICA MAXI /24-12-20', after: 'ICA MAXI' },
+      { before: '467 JOHN DOE', after: 'Swish - JOHN DOE' },
+      { before: '123 JANE DOE', after: 'Swish - JANE DOE' },
     ],
   },
   swedbank: {

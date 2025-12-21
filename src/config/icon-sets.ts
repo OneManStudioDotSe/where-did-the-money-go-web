@@ -1,4 +1,4 @@
-export type IconSetId = 'emoji' | 'icons8-3d' | 'phosphor' | 'openmoji';
+export type IconSetId = 'emoji' | 'icons8-3d' | 'lucide' | 'openmoji';
 
 export interface IconSetConfig {
   id: IconSetId;
@@ -20,11 +20,11 @@ export const iconSetConfigs: Record<IconSetId, IconSetConfig> = {
     description: 'Modern 3D style icons',
     previewIcons: ['shopping-cart', 'cutlery', 'car'],
   },
-  phosphor: {
-    id: 'phosphor',
-    name: 'Phosphor',
-    description: 'Clean line icons',
-    previewIcons: ['shopping-cart', 'fork-knife', 'car'],
+  lucide: {
+    id: 'lucide',
+    name: 'Lucide',
+    description: 'Modern line icons',
+    previewIcons: ['shopping-cart', 'utensils', 'car'],
   },
   openmoji: {
     id: 'openmoji',
@@ -48,6 +48,7 @@ export const categoryIconMappings: Record<IconSetId, Record<string, string>> = {
     children: '👶',
     subscriptions: '📱',
     financial: '💰',
+    public_services: '🏛️',
     donations: '🎁',
     income: '💵',
     other: '📦',
@@ -63,21 +64,23 @@ export const categoryIconMappings: Record<IconSetId, Record<string, string>> = {
     children: 'baby',
     subscriptions: 'smartphone',
     financial: 'money-bag',
+    public_services: 'bank-building',
     donations: 'gift',
     income: 'wallet',
     other: 'box',
   },
-  phosphor: {
-    housing: 'house',
+  lucide: {
+    housing: 'home',
     transportation: 'car',
     groceries: 'shopping-cart',
-    food_dining: 'fork-knife',
-    shopping: 'bag',
-    entertainment: 'film-strip',
+    food_dining: 'utensils',
+    shopping: 'shopping-bag',
+    entertainment: 'film',
     health: 'pill',
     children: 'baby',
-    subscriptions: 'device-mobile',
+    subscriptions: 'smartphone',
     financial: 'coins',
+    public_services: 'landmark',
     donations: 'gift',
     income: 'wallet',
     other: 'package',
@@ -93,6 +96,7 @@ export const categoryIconMappings: Record<IconSetId, Record<string, string>> = {
     children: '1F476',
     subscriptions: '1F4F1',
     financial: '1F4B0',
+    public_services: '1F3DB-FE0F',
     donations: '1F381',
     income: '1F4B5',
     other: '1F4E6',
@@ -109,8 +113,8 @@ export function getIconUrl(iconSet: IconSetId, categoryId: string): string | nul
       return null; // Emoji doesn't use URLs
     case 'icons8-3d':
       return `https://img.icons8.com/3d-fluency/48/${iconId}.png`;
-    case 'phosphor':
-      return `https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/${iconId}.svg`;
+    case 'lucide':
+      return `https://cdn.jsdelivr.net/npm/lucide-static@0.469.0/icons/${iconId}.svg`;
     case 'openmoji':
       return `https://cdn.jsdelivr.net/npm/openmoji@15.0.0/color/svg/${iconId}.svg`;
     default:
@@ -127,7 +131,11 @@ export function getCategoryEmoji(categoryId: string): string {
 export function preloadIconSet(iconSet: IconSetId): void {
   if (iconSet === 'emoji') return;
 
-  Object.keys(categoryIconMappings[iconSet]).forEach((categoryId) => {
+  // Guard against invalid icon sets (e.g., from old localStorage values)
+  const mapping = categoryIconMappings[iconSet];
+  if (!mapping) return;
+
+  Object.keys(mapping).forEach((categoryId) => {
     const url = getIconUrl(iconSet, categoryId);
     if (url) {
       const img = new Image();

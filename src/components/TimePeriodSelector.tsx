@@ -39,14 +39,74 @@ function formatSwedishDate(date: Date): string {
   return date.toLocaleDateString('sv-SE', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
-function getAdjustedMonth(date: Date, monthStartDay: number): { month: number; year: number } {
-  // If the date is before the month start day, it belongs to the previous month
-  if (date.getDate() < monthStartDay) {
-    const prevMonth = date.getMonth() === 0 ? 11 : date.getMonth() - 1;
-    const prevYear = date.getMonth() === 0 ? date.getFullYear() - 1 : date.getFullYear();
-    return { month: prevMonth, year: prevYear };
+/**
+ * Given a transaction date and monthStartDay, determine which "salary month" this transaction belongs to.
+ * For example, if monthStartDay is 25:
+ *   - Dec 25 → Jan 24 is "January" (the month when the period ends)
+ *   - Jan 25 → Feb 24 is "February"
+ *
+ * Returns { periodMonth, periodYear } representing the label month
+ */
+function getSalaryPeriod(date: Date, monthStartDay: number): { periodMonth: number; periodYear: number } {
+  const day = date.getDate();
+  const month = date.getMonth();
+  const year = date.getFullYear();
+
+  if (monthStartDay === 1) {
+    // Standard calendar month
+    return { periodMonth: month, periodYear: year };
   }
-  return { month: date.getMonth(), year: date.getFullYear() };
+
+  // For salary-aligned periods:
+  // If we're before the monthStartDay, we belong to the previous month's "salary month"
+  // If we're on or after the monthStartDay, we belong to the current month's "salary month"
+  if (day < monthStartDay) {
+    // Transaction is before the start day, so it belongs to the previous salary period
+    // The label will be the current calendar month
+    return { periodMonth: month, periodYear: year };
+  } else {
+    // Transaction is on or after the start day, so it belongs to the next salary period
+    // The label will be the next calendar month
+    const nextMonth = month + 1;
+    if (nextMonth > 11) {
+      return { periodMonth: 0, periodYear: year + 1 };
+    }
+    return { periodMonth: nextMonth, periodYear: year };
+  }
+}
+
+/**
+ * Get the start and end dates for a salary period given the label month and monthStartDay
+ */
+function getSalaryPeriodDates(periodMonth: number, periodYear: number, monthStartDay: number): { start: Date; end: Date } {
+  if (monthStartDay === 1) {
+    // Standard calendar month
+    const start = new Date(periodYear, periodMonth, 1);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(periodYear, periodMonth + 1, 0);
+    end.setHours(23, 59, 59, 999);
+    return { start, end };
+  }
+
+  // Salary-aligned period:
+  // For "January 2025" with monthStartDay=25, the period is Dec 25, 2024 → Jan 24, 2025
+  // Start: previous month's monthStartDay
+  // End: current month's (monthStartDay - 1)
+
+  let startMonth = periodMonth - 1;
+  let startYear = periodYear;
+  if (startMonth < 0) {
+    startMonth = 11;
+    startYear = periodYear - 1;
+  }
+
+  const start = new Date(startYear, startMonth, monthStartDay);
+  start.setHours(0, 0, 0, 0);
+
+  const end = new Date(periodYear, periodMonth, monthStartDay - 1);
+  end.setHours(23, 59, 59, 999);
+
+  return { start, end };
 }
 
 function getPeriodsFromTransactions(
@@ -92,34 +152,18 @@ function getPeriodsFromTransactions(
         break;
       }
       case 'month': {
-        // Use adjusted month based on custom start day
-        const adjusted = getAdjustedMonth(date, monthStartDay);
-        key = `${adjusted.year}-${(adjusted.month + 1).toString().padStart(2, '0')}`;
+        // Get the salary period this transaction belongs to
+        const { periodMonth, periodYear } = getSalaryPeriod(date, monthStartDay);
+        key = `${periodYear}-${(periodMonth + 1).toString().padStart(2, '0')}`;
 
-        // Start date: monthStartDay of the adjusted month
-        start = new Date(adjusted.year, adjusted.month, monthStartDay);
-        start.setHours(0, 0, 0, 0);
+        // Get the actual date range for this salary period
+        const dates = getSalaryPeriodDates(periodMonth, periodYear, monthStartDay);
+        start = dates.start;
+        end = dates.end;
 
-        // End date: day before monthStartDay of the next month
-        // Note: When monthStartDay is 1, we want the last day of the current month
-        // Using day 0 of next month gives us the last day of current month
-        const nextMonth = adjusted.month === 11 ? 0 : adjusted.month + 1;
-        const nextYear = adjusted.month === 11 ? adjusted.year + 1 : adjusted.year;
-        if (monthStartDay === 1) {
-          // Standard month: end on last day of the month
-          end = new Date(nextYear, nextMonth, 0);
-        } else {
-          // Custom start day: end on the day before the next period starts
-          end = new Date(nextYear, nextMonth, monthStartDay - 1);
-        }
-        end.setHours(23, 59, 59, 999);
-
-        // Label shows the month name
-        const labelDate = new Date(adjusted.year, adjusted.month, 15);
+        // Label shows the period's month name (the month being labeled)
+        const labelDate = new Date(periodYear, periodMonth, 15);
         label = labelDate.toLocaleDateString('sv-SE', { year: 'numeric', month: 'long' });
-        if (monthStartDay !== 1) {
-          label += ` (${monthStartDay}th)`;
-        }
         shortLabel = labelDate.toLocaleDateString('sv-SE', { month: 'short' });
         break;
       }

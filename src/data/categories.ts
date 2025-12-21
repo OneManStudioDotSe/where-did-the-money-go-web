@@ -131,6 +131,18 @@ export const defaultCategories: Category[] = [
     ],
   },
   {
+    id: 'public_services',
+    name: 'Public Services',
+    icon: '🏛️',
+    color: '#64748b',
+    subcategories: [
+      { id: 'municipal_fees', name: 'Municipal Fees', parentCategoryId: 'public_services' },
+      { id: 'parking_fines', name: 'Parking Fines', parentCategoryId: 'public_services' },
+      { id: 'permits', name: 'Permits & Licenses', parentCategoryId: 'public_services' },
+      { id: 'public_fees', name: 'Public Fees', parentCategoryId: 'public_services' },
+    ],
+  },
+  {
     id: 'donations',
     name: 'Donations',
     icon: '🎁',

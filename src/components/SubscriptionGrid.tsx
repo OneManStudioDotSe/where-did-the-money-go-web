@@ -118,7 +118,7 @@ export function SubscriptionGrid({
             <div className="flex items-center gap-2 mt-1">
               {subscriptions.filter(s => s.recurringType === 'subscription').length > 0 && (
                 <span className="text-xs px-1.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400">
-                  {subscriptions.filter(s => s.recurringType === 'subscription').length} sub
+                  {subscriptions.filter(s => s.recurringType === 'subscription').length} subscriptions
                 </span>
               )}
               {subscriptions.filter(s => s.recurringType === 'recurring_expense').length > 0 && (
@@ -195,7 +195,7 @@ export function SubscriptionGrid({
       {selectedDetails && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 animate-fade-in" onClick={closeModal}>
           <div
-            className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl max-w-md w-full max-h-[80vh] overflow-hidden animate-slide-up"
+            className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl max-w-3xl w-full max-h-[80vh] overflow-hidden animate-slide-up"
             onClick={e => e.stopPropagation()}
           >
             {/* Modal Header */}
@@ -213,7 +213,7 @@ export function SubscriptionGrid({
                   </h2>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
                     {selectedDetails.categoryName}
-                    {selectedDetails.subcategoryName && ` > ${selectedDetails.subcategoryName}`}
+                    {selectedDetails.subcategoryName && ` › ${selectedDetails.subcategoryName}`}
                   </p>
                 </div>
                 <button
@@ -227,105 +227,115 @@ export function SubscriptionGrid({
               </div>
             </div>
 
-            {/* Modal Content */}
-            <div className="px-6 py-4 space-y-4">
-              {/* Two Column Layout: Left = Cost Info, Right = Details */}
-              <div className="grid grid-cols-2 gap-4">
-                {/* Left Column - Cost Information */}
-                <div className="bg-primary-50 dark:bg-primary-900/20 rounded-lg p-4 space-y-3">
-                  <div>
-                    <div className="text-xs text-primary-600 dark:text-primary-400 uppercase tracking-wide">
-                      Monthly
-                    </div>
-                    <div className="text-xl font-bold text-primary-900 dark:text-primary-100">
-                      {formatAmount(selectedDetails.sub.amount)}
+            {/* Modal Content - Horizontal Layout */}
+            <div className="px-6 py-4">
+              <div className="flex gap-6">
+                {/* Left Side - Subscription Information */}
+                <div className="flex-1 space-y-4">
+                  {/* Cost Information */}
+                  <div className="bg-primary-50 dark:bg-primary-900/20 rounded-lg p-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <div className="text-xs text-primary-600 dark:text-primary-400 uppercase tracking-wide">
+                          Monthly
+                        </div>
+                        <div className="text-2xl font-bold text-primary-900 dark:text-primary-100">
+                          {formatAmount(selectedDetails.sub.amount)}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-primary-600 dark:text-primary-400 uppercase tracking-wide">
+                          Yearly
+                        </div>
+                        <div className="text-2xl font-bold text-primary-900 dark:text-primary-100">
+                          {formatAmount(selectedDetails.sub.amount * 12)}
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <div className="pt-2 border-t border-primary-200 dark:border-primary-800">
-                    <div className="text-xs text-primary-600 dark:text-primary-400 uppercase tracking-wide">
-                      Yearly
-                    </div>
-                    <div className="text-xl font-bold text-primary-900 dark:text-primary-100">
-                      {formatAmount(selectedDetails.sub.amount * 12)}
+
+                  {/* Details */}
+                  <div className="bg-gray-50 dark:bg-slate-700/50 rounded-lg p-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Type</div>
+                        <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full ${
+                          selectedDetails.sub.recurringType === 'subscription'
+                            ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400'
+                            : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
+                        }`}>
+                          {selectedDetails.sub.recurringType === 'subscription' ? 'Subscription' : 'Recurring'}
+                        </span>
+                      </div>
+                      <div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Billing Day</div>
+                        <div className="font-medium text-gray-900 dark:text-white mt-1">
+                          {selectedDetails.sub.billingDay}{getOrdinalSuffix(selectedDetails.sub.billingDay)} of month
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Total Payments</div>
+                        <div className="font-medium text-gray-900 dark:text-white mt-1">
+                          {selectedDetails.sub.transactionIds.length}
+                        </div>
+                      </div>
+                      {selectedDetails.transactions[0] && (
+                        <div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Last Paid</div>
+                          <div className="font-medium text-gray-900 dark:text-white mt-1">
+                            {selectedDetails.transactions[0].date.toLocaleDateString('sv-SE')}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
+
+                  {/* Edit Button */}
+                  {onEditSubscription && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        closeModal();
+                        onEditSubscription(selectedDetails.sub);
+                      }}
+                      className="w-full px-4 py-2.5 text-sm font-medium text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20 hover:bg-primary-100 dark:hover:bg-primary-900/30 rounded-lg transition-colors flex items-center justify-center gap-2"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      Edit Subscription
+                    </button>
+                  )}
                 </div>
 
-                {/* Right Column - Details */}
-                <div className="bg-gray-50 dark:bg-slate-700/50 rounded-lg p-4 space-y-3">
-                  <div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Type</div>
-                    <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full ${
-                      selectedDetails.sub.recurringType === 'subscription'
-                        ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400'
-                        : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
-                    }`}>
-                      {selectedDetails.sub.recurringType === 'subscription' ? 'Subscription' : 'Recurring'}
-                    </span>
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Billing Day</div>
-                    <div className="font-medium text-gray-900 dark:text-white">
-                      {selectedDetails.sub.billingDay}{getOrdinalSuffix(selectedDetails.sub.billingDay)}
+                {/* Right Side - Transactions List */}
+                <div className="w-72 flex-shrink-0">
+                  <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
+                    Payment History ({selectedDetails.transactions.length})
+                  </h4>
+                  {selectedDetails.transactions.length > 0 ? (
+                    <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                      {selectedDetails.transactions.map((t) => (
+                        <div
+                          key={t.id}
+                          className="flex items-center justify-between py-2 px-3 bg-gray-50 dark:bg-slate-700/50 rounded-lg text-sm"
+                        >
+                          <span className="text-gray-600 dark:text-gray-400">
+                            {t.date.toLocaleDateString('sv-SE', { year: 'numeric', month: 'short', day: 'numeric' })}
+                          </span>
+                          <span className="font-medium text-gray-900 dark:text-white">
+                            {formatAmount(Math.abs(t.amount))}
+                          </span>
+                        </div>
+                      ))}
                     </div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Payments</div>
-                    <div className="font-medium text-gray-900 dark:text-white">
-                      {selectedDetails.sub.transactionIds.length}
-                    </div>
-                  </div>
-                  {selectedDetails.transactions[0] && (
-                    <div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Last Paid</div>
-                      <div className="font-medium text-gray-900 dark:text-white">
-                        {selectedDetails.transactions[0].date.toLocaleDateString('sv-SE')}
-                      </div>
+                  ) : (
+                    <div className="text-center py-8 text-gray-400 dark:text-gray-500">
+                      <p className="text-sm">No payments recorded</p>
                     </div>
                   )}
                 </div>
               </div>
-
-              {/* Recent Transactions */}
-              {selectedDetails.transactions.length > 0 && (
-                <div>
-                  <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
-                    Recent Payments
-                  </h4>
-                  <div className="space-y-2 max-h-40 overflow-y-auto">
-                    {selectedDetails.transactions.slice(0, 5).map((t) => (
-                      <div
-                        key={t.id}
-                        className="flex items-center justify-between py-2 px-3 bg-gray-50 dark:bg-slate-700/50 rounded-lg text-sm"
-                      >
-                        <span className="text-gray-600 dark:text-gray-400">
-                          {t.date.toLocaleDateString('sv-SE')}
-                        </span>
-                        <span className="font-medium text-gray-900 dark:text-white">
-                          {formatAmount(Math.abs(t.amount))}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Edit Button */}
-              {onEditSubscription && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    closeModal();
-                    onEditSubscription(selectedDetails.sub);
-                  }}
-                  className="w-full px-4 py-2.5 text-sm font-medium text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20 hover:bg-primary-100 dark:hover:bg-primary-900/30 rounded-lg transition-colors flex items-center justify-center gap-2"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                  Edit Subscription
-                </button>
-              )}
             </div>
           </div>
         </div>

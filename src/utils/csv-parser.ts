@@ -400,6 +400,20 @@ function applyBankTransformations(description: string, bank: BankId | null): str
   if (!bankConfig) return description;
 
   let result = description;
+  let prefixToAdd = '';
+
+  // Apply prefix rules (e.g., SEB Swish detection: 467/123 -> "Swish - ")
+  if (bankConfig.prefixRules) {
+    for (const rule of bankConfig.prefixRules) {
+      if (rule.pattern.test(result)) {
+        prefixToAdd = rule.prefix;
+        if (rule.removeMatch !== false) {
+          result = result.replace(rule.pattern, '');
+        }
+        break; // Only apply first matching rule
+      }
+    }
+  }
 
   // Apply regex pattern removals (e.g., Nordea prefixes and suffixes)
   if (bankConfig.removePatterns) {
@@ -416,6 +430,11 @@ function applyBankTransformations(description: string, bank: BankId | null): str
     if (idx > 0) {
       result = result.substring(0, idx).trim();
     }
+  }
+
+  // Add the prefix at the end (after all other transformations)
+  if (prefixToAdd) {
+    result = prefixToAdd + result;
   }
 
   return result;

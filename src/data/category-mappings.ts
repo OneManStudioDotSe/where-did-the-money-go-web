@@ -69,6 +69,7 @@ export const defaultCategoryMappings: CategoryMapping[] = [
   createMapping('P-SERVICE', 'transportation', 'parking', 'contains', 75),
 
   // === TRANSPORTATION - PUBLIC TRANSIT ===
+  createMapping('SL', 'transportation', 'public_transit', 'exact', 90),  // Exact match for "SL"
   createMapping('SL ', 'transportation', 'public_transit', 'starts_with', 80),
   createMapping('AB STORSTOCK', 'transportation', 'public_transit', 'contains', 80),
   createMapping('SJ PENDELTAG', 'transportation', 'public_transit', 'contains', 80),
@@ -180,4 +181,24 @@ export const defaultCategoryMappings: CategoryMapping[] = [
   createMapping('FKASSA', 'income', 'benefits', 'contains', 85),
   createMapping('BARNBDR', 'income', 'benefits', 'contains', 85),
   createMapping('KLARNA REFUN', 'income', 'refund', 'contains', 80),
+
+  // === PUBLIC SERVICES ===
+  // Municipal fees (kommunala avgifter)
+  createMapping('KOMMUN', 'public_services', 'municipal_fees', 'contains', 75),
+  createMapping('KOMMUNAL', 'public_services', 'municipal_fees', 'contains', 75),
+  createMapping('STOCKHOLMS STAD', 'public_services', 'municipal_fees', 'contains', 80),
+  createMapping('GÖTEBORGS STAD', 'public_services', 'municipal_fees', 'contains', 80),
+  createMapping('MALMÖ STAD', 'public_services', 'municipal_fees', 'contains', 80),
+  // Parking fines
+  createMapping('PARKERINGSBOT', 'public_services', 'parking_fines', 'contains', 85),
+  createMapping('P-BOT', 'public_services', 'parking_fines', 'contains', 85),
+  createMapping('KONTROLLAVGIFT', 'public_services', 'parking_fines', 'contains', 85),
+  createMapping('FELPARKERINGSAVGIFT', 'public_services', 'parking_fines', 'contains', 85),
+  // Government agencies
+  createMapping('SKATTEVERKET', 'public_services', 'public_fees', 'contains', 85),
+  createMapping('TRANSPORTSTYRELSEN', 'public_services', 'public_fees', 'contains', 85),
+  createMapping('POLISEN', 'public_services', 'public_fees', 'contains', 80),
+  createMapping('KRONOFOGDEN', 'public_services', 'public_fees', 'contains', 85),
+  createMapping('LANTMÄTERIET', 'public_services', 'permits', 'contains', 80),
+  createMapping('MIGRATIONSVERKET', 'public_services', 'permits', 'contains', 80),
 ];

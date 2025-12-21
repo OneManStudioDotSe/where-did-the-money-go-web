@@ -161,7 +161,7 @@ export function SubscriptionList({
             <div className="flex items-center gap-2 mt-1">
               {subscriptions.filter(s => s.recurringType === 'subscription').length > 0 && (
                 <span className="text-xs px-1.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400">
-                  {subscriptions.filter(s => s.recurringType === 'subscription').length} sub
+                  {subscriptions.filter(s => s.recurringType === 'subscription').length} subscriptions
                 </span>
               )}
               {subscriptions.filter(s => s.recurringType === 'recurring_expense').length > 0 && (

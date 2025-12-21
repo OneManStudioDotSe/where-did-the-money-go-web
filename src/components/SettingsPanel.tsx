@@ -5,6 +5,7 @@ import type { ThemeMode } from '../hooks/useDarkMode';
 import type { BankId } from '../types/csv';
 import { BANK_CONFIGS } from '../types/csv';
 import { useFocusTrap } from '../hooks';
+import type { AIProvider } from '../types/insights';
 
 /** Subscription view variation */
 export type SubscriptionViewVariation = 'list' | 'grid';
@@ -27,6 +28,10 @@ export interface AppSettings {
   subscriptionPlacement: SubscriptionPlacement;
   /** Number of transactions to show per page (default: 100) */
   transactionPageSize: number;
+  /** AI provider for insights (openai or anthropic) */
+  aiProvider: AIProvider | null;
+  /** API key for the selected AI provider */
+  aiApiKey: string;
 }
 
 const defaultSettings: AppSettings = {
@@ -39,15 +44,25 @@ const defaultSettings: AppSettings = {
   subscriptionViewVariation: 'list',
   subscriptionPlacement: 'both',
   transactionPageSize: 100,
+  aiProvider: null,
+  aiApiKey: '',
 };
 
 const STORAGE_KEY = 'app_settings';
+
+// Valid icon set IDs for migration from old values
+const VALID_ICON_SETS: IconSetId[] = ['emoji', 'icons8-3d', 'lucide', 'openmoji'];
 
 export function loadSettings(): AppSettings {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
-      return { ...defaultSettings, ...JSON.parse(stored) };
+      const parsed = JSON.parse(stored);
+      // Migrate old 'phosphor' icon set to 'lucide'
+      if (parsed.iconSet && !VALID_ICON_SETS.includes(parsed.iconSet)) {
+        parsed.iconSet = 'emoji'; // Fall back to default if invalid
+      }
+      return { ...defaultSettings, ...parsed };
     }
   } catch {
     // Ignore errors, return defaults
@@ -106,6 +121,7 @@ function IconPreview({ iconSet, categoryId }: { iconSet: IconSetId; categoryId: 
 export function SettingsPanel({ isOpen, onClose, settings, onSettingsChange, subscriptionCount = 0, onClearSubscriptions }: SettingsPanelProps) {
   const [localSettings, setLocalSettings] = useState<AppSettings>(settings);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [showApiKey, setShowApiKey] = useState(false);
 
   // Accessibility: focus trap and escape key handling
   const modalRef = useFocusTrap<HTMLDivElement>(isOpen, onClose);
@@ -128,7 +144,7 @@ export function SettingsPanel({ isOpen, onClose, settings, onSettingsChange, sub
 
   if (!isOpen) return null;
 
-  const iconSets: IconSetId[] = ['emoji', 'icons8-3d', 'phosphor', 'openmoji'];
+  const iconSets: IconSetId[] = ['emoji', 'icons8-3d', 'lucide', 'openmoji'];
   const previewCategories = ['groceries', 'food_dining', 'transportation'];
 
   return (
@@ -580,6 +596,124 @@ export function SettingsPanel({ isOpen, onClose, settings, onSettingsChange, sub
                 When calculating monthly periods, start from this day instead of the 1st.
                 Useful if your salary arrives on a specific date.
               </p>
+            </div>
+
+            {/* AI Insights Section */}
+            <div className="border-t border-gray-200 dark:border-slate-700 pt-6">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+                AI insights (beta)
+              </h3>
+
+              {/* AI Provider */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  AI provider
+                </label>
+                <div className="grid grid-cols-3 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setLocalSettings({ ...localSettings, aiProvider: 'openai' })}
+                    className={`p-3 rounded-lg border-2 transition-all ${
+                      localSettings.aiProvider === 'openai'
+                        ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30'
+                        : 'border-gray-200 dark:border-slate-600 hover:border-gray-300 dark:hover:border-slate-500'
+                    }`}
+                  >
+                    <div className="flex flex-col items-center gap-2">
+                      <span className="text-base font-semibold text-gray-700 dark:text-gray-300">OpenAI</span>
+                      <span className="text-xs text-gray-400 dark:text-gray-500 text-center">GPT-4o mini</span>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLocalSettings({ ...localSettings, aiProvider: 'anthropic' })}
+                    className={`p-3 rounded-lg border-2 transition-all ${
+                      localSettings.aiProvider === 'anthropic'
+                        ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30'
+                        : 'border-gray-200 dark:border-slate-600 hover:border-gray-300 dark:hover:border-slate-500'
+                    }`}
+                  >
+                    <div className="flex flex-col items-center gap-2">
+                      <span className="text-base font-semibold text-gray-700 dark:text-gray-300">Anthropic</span>
+                      <span className="text-xs text-gray-400 dark:text-gray-500 text-center">Claude 3.5 Haiku</span>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLocalSettings({ ...localSettings, aiProvider: 'gemini' })}
+                    className={`p-3 rounded-lg border-2 transition-all ${
+                      localSettings.aiProvider === 'gemini'
+                        ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30'
+                        : 'border-gray-200 dark:border-slate-600 hover:border-gray-300 dark:hover:border-slate-500'
+                    }`}
+                  >
+                    <div className="flex flex-col items-center gap-2">
+                      <span className="text-base font-semibold text-gray-700 dark:text-gray-300">Gemini</span>
+                      <span className="text-xs text-gray-400 dark:text-gray-500 text-center">2.0 Flash</span>
+                    </div>
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                  Select your preferred AI provider for spending insights. You'll need your own API key.
+                </p>
+              </div>
+
+              {/* API Key */}
+              {localSettings.aiProvider && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    API key
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showApiKey ? 'text' : 'password'}
+                      value={localSettings.aiApiKey}
+                      onChange={(e) => setLocalSettings({ ...localSettings, aiApiKey: e.target.value })}
+                      placeholder={localSettings.aiProvider === 'openai' ? 'sk-...' : localSettings.aiProvider === 'anthropic' ? 'sk-ant-...' : 'AIza...'}
+                      className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 font-mono text-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowApiKey(!showApiKey)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    >
+                      {showApiKey ? (
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                        </svg>
+                      ) : (
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Your API key is stored locally and never sent to our servers. Only used for direct API calls.
+                  </p>
+                  {localSettings.aiApiKey && (
+                    <div className="mt-2 flex items-center gap-2 text-xs text-success-600 dark:text-success-400">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      API key configured
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* No provider selected info */}
+              {!localSettings.aiProvider && (
+                <div className="p-3 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Select an AI provider to enable spending insights. Your data is processed directly with the provider - nothing is stored on external servers.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
