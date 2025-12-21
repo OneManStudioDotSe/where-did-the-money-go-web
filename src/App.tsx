@@ -635,7 +635,7 @@ function App() {
           {/* Tab Content */}
           <div className={`relative ${isPending ? 'opacity-70 pointer-events-none' : ''}`}>
           {activeTab === 'overview' && (
-            <>
+            <div className="animate-tab-content">
               {/* Time Period Selector */}
               <TimePeriodSelector
                 transactions={transactions}
@@ -681,11 +681,11 @@ function App() {
                   </div>
                 )}
               </div>
-            </>
+            </div>
           )}
 
           {activeTab === 'transactions' && (
-            <>
+            <div className="animate-tab-content">
               {/* Time Period Selector */}
               <TimePeriodSelector
                 transactions={transactions}
@@ -707,16 +707,18 @@ function App() {
                 onTransactionClick={handleTransactionClick}
                 pageSize={appSettings.transactionPageSize}
               />
-            </>
+            </div>
           )}
 
           {activeTab === 'subscriptions' && (appSettings.subscriptionPlacement === 'tab' || appSettings.subscriptionPlacement === 'both') && (
-            <SubscriptionPanel
-              subscriptions={subscriptions}
-              transactions={transactions}
-              viewMode={appSettings.subscriptionViewVariation}
-              onEditSubscription={handleEditSubscription}
-            />
+            <div className="animate-tab-content">
+              <SubscriptionPanel
+                subscriptions={subscriptions}
+                transactions={transactions}
+                viewMode={appSettings.subscriptionViewVariation}
+                onEditSubscription={handleEditSubscription}
+              />
+            </div>
           )}
           </div>
         </>

@@ -245,7 +245,7 @@ function BarChart({ categories, maxBars = 10 }: { categories: CategoryTotal[]; m
             </div>
             {/* Subcategory drill-down */}
             {isExpanded && (
-              <div className="ml-9 mt-2 space-y-1.5 pb-2 border-l-2 border-gray-200 dark:border-slate-600 pl-3">
+              <div className="ml-9 mt-2 space-y-1.5 pb-2 border-l-2 border-gray-200 dark:border-slate-600 pl-3 animate-slide-down">
                 {category.subcategories.map((sub) => {
                   const subBarWidth = category.total > 0 ? (sub.total / category.total) * 100 : 0;
                   return (

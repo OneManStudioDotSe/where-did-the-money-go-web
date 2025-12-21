@@ -67,10 +67,12 @@ export function Badge({ type, showLabel = true, className = '' }: BadgeProps) {
   const [showTooltip, setShowTooltip] = useState(false);
   const config = badgeConfigs[type];
 
+  const isPulsing = type === 'uncategorized';
+
   return (
     <div className="relative inline-block">
       <span
-        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${config.bgColor} ${config.textColor} ${className}`}
+        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${config.bgColor} ${config.textColor} ${isPulsing ? 'animate-pulse-subtle' : ''} ${className}`}
         onMouseEnter={() => setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}
       >

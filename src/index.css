@@ -141,3 +141,209 @@ body * {
 .animate-slide-up {
   animation: slide-up 0.3s ease-out forwards;
 }
+
+/* Card hover lift effect */
+.animate-card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.animate-card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
+
+/* Button press effect */
+.animate-press {
+  transition: transform 0.1s ease;
+}
+
+.animate-press:active {
+  transform: scale(0.97);
+}
+
+/* Shimmer loading skeleton */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+html.dark .animate-shimmer {
+  background: linear-gradient(90deg, #334155 25%, #475569 50%, #334155 75%);
+  background-size: 200% 100%;
+}
+
+/* Stagger animation for list items */
+@keyframes stagger-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-stagger {
+  animation: stagger-in 0.3s ease-out forwards;
+  opacity: 0;
+}
+
+/* Tab content transition */
+@keyframes tab-in {
+  from {
+    opacity: 0;
+    transform: translateX(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-tab-content {
+  animation: tab-in 0.2s ease-out forwards;
+}
+
+/* Scale in for appearing elements */
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scale-in {
+  animation: scale-in 0.2s ease-out forwards;
+}
+
+/* Subtle bounce on hover */
+.animate-bounce-hover {
+  transition: transform 0.2s ease;
+}
+
+.animate-bounce-hover:hover {
+  transform: translateY(-1px);
+}
+
+/* Icon spin on hover */
+.animate-spin-hover {
+  transition: transform 0.3s ease;
+}
+
+.animate-spin-hover:hover {
+  transform: rotate(180deg);
+}
+
+/* Pulse for notifications/badges */
+@keyframes pulse-subtle {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s ease-in-out infinite;
+}
+
+/* Number count up animation */
+@keyframes count-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-count-up {
+  animation: count-up 0.4s ease-out forwards;
+}
+
+/* Highlight flash for updated items */
+@keyframes highlight-flash {
+  0% {
+    background-color: rgb(20 184 166 / 0.15);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.animate-highlight {
+  animation: highlight-flash 1s ease-out;
+}
+
+/* Progress bar fill */
+@keyframes progress-fill {
+  from {
+    width: 0%;
+  }
+}
+
+.animate-progress {
+  animation: progress-fill 0.8s ease-out forwards;
+}
+
+/* Checkbox/toggle animation */
+@keyframes check-pop {
+  0% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-check {
+  animation: check-pop 0.2s ease-out forwards;
+}
+
+/* Slide down for dropdowns */
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-down {
+  animation: slide-down 0.2s ease-out forwards;
+}
+
+/* Rotate arrow for expandable sections */
+.animate-rotate {
+  transition: transform 0.2s ease;
+}
+
+.animate-rotate.rotated {
+  transform: rotate(180deg);
+}

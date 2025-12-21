@@ -286,7 +286,7 @@ export function TransactionList({ transactions, onTransactionClick, pageSize = D
               <div
                 key={transaction.id}
                 onClick={() => onTransactionClick?.(transaction)}
-                className={`grid grid-cols-12 gap-2 px-4 py-1.5 items-center hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors ${
+                className={`grid grid-cols-12 gap-2 px-4 py-1.5 items-center hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors animate-bounce-hover ${
                   onTransactionClick ? 'cursor-pointer' : ''
                 }`}
               >
@@ -344,7 +344,7 @@ export function TransactionList({ transactions, onTransactionClick, pageSize = D
             <div
               key={transaction.id}
               onClick={() => onTransactionClick?.(transaction)}
-              className={`grid grid-cols-12 gap-2 px-4 py-3 items-center hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors ${
+              className={`grid grid-cols-12 gap-2 px-4 py-3 items-center hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors animate-bounce-hover ${
                 onTransactionClick ? 'cursor-pointer' : ''
               }`}
             >

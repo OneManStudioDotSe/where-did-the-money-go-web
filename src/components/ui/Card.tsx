@@ -18,9 +18,9 @@ const paddingClasses = {
 const variantClasses = {
   default: 'bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 shadow-sm',
   elevated:
-    'bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-md hover:shadow-lg transition-shadow',
+    'bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-md animate-card-hover',
   interactive:
-    'bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 shadow-sm hover:shadow-md hover:border-primary-300 dark:hover:border-primary-600 transition-all cursor-pointer',
+    'bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 shadow-sm animate-card-hover hover:border-primary-300 dark:hover:border-primary-600 cursor-pointer',
 };
 
 export function Card({
