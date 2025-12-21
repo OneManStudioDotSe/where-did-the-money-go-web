@@ -7,13 +7,79 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased]
 
 ### Planned
-- Subscription detection algorithm
-- Custom category creation UI
 - AI-powered insights and recommendations
-- Export to CSV/JSON
+
+---
+
+## [0.8.0] - 2025-12-21 - Custom Subcategories
+
+### Added
+- **Custom Subcategory Creation**
+  - Add custom subcategories to any of the 13 default categories
+  - AddSubcategoryModal with category selector and name input
+  - Live preview of new subcategory before creation
+  - Duplicate name validation
+  - Custom subcategories persisted in localStorage
+
+- **Category System Modal Enhancements**
+  - "Add Subcategory" button in Categories & Subcategories section
+  - Custom subcategory count badge (+N custom)
+  - Delete button (X) for custom subcategories
+  - Visual distinction for user-created items
+
+- **CategorySelector Updates**
+  - Custom subcategories now appear in transaction editing
+  - "custom" badge on user-created subcategories
+  - Seamless integration with existing category workflow
+
+### Technical Details
+- New localStorage key: `custom_subcategories`
+- Added `isCustom` field to Subcategory interface
+- New functions in category-service.ts for custom subcategory management
+- Categories automatically merge default + custom subcategories
+
+---
+
+## [0.7.0] - 2025-12-21 - Animations & UX Polish
+
+### Added
+- **Subtle Animations Throughout**
+  - Card hover lift effect with shadow enhancement
+  - Button press effect (scale down on click)
+  - Tab content fade/slide transitions
+  - Modal backdrop fade-in and slide-up animations
+  - Transaction list row hover animations
+  - Subscription card hover animations
+  - Settings gear icon rotation on hover
+  - Uncategorized badge subtle pulse animation
+  - Subcategory drill-down slide animation
+  - Bar chart growth animation
+
+- **Transaction List Pagination**
+  - Configurable page sizes (50, 100, 200, 500 transactions)
+  - Page size selector in Settings panel
+  - Smart page number display with ellipsis
+  - First/Previous/Next/Last navigation buttons
+  - Auto-scroll to top on page change
+  - Results count showing range (e.g., "1-100 of 500")
+
+- **Accessibility Improvements**
+  - Focus trap applied to all modals (Settings, Export, Edit, Carousel)
+  - ARIA attributes on modal dialogs (role, aria-modal, aria-labelledby)
+  - Keyboard navigation: Tab cycles within modal, Escape closes
+  - Focus restoration on modal close
+
+- **Responsive Design Enhancements**
+  - UncategorizedCarousel stacked layout on mobile
+  - Better button layouts on smaller screens
+
+### Technical Details
+- 15+ new CSS animation utilities in index.css
+- Focus trap implemented via custom useFocusTrap hook
+- No new npm dependencies
+- All animations respect reduced-motion preferences
 
 ---
 
@@ -303,7 +369,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-### [0.2.0] - TBD - Filtering & Charts Phase
+### [0.2.0] - Filtering & Charts Phase
 
 #### Planned
 - Transaction filtering by category, date, amount

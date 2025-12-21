@@ -46,23 +46,11 @@ export function Header({ isDark, onToggleDark, onOpenSettings, currentRoute, onN
             >
               {/* Logo Icon */}
               <div className="relative">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-lg shadow-primary-500/25 group-hover:shadow-primary-500/40 transition-all group-hover:scale-105">
-                  <svg
-                    className="w-7 h-7 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                    />
-                  </svg>
-                </div>
-                {/* Accent dot */}
-                <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-primary-400 rounded-full border-2 border-white dark:border-slate-900 shadow-sm" />
+                <img
+                  src="/logo_4.png"
+                  alt="Where Did The Money Go? Logo"
+                  className="w-12 h-12 p-1.5 rounded-xl bg-white dark:bg-slate-700 shadow-lg shadow-primary-500/25 group-hover:shadow-primary-500/40 transition-all group-hover:scale-105"
+                />
               </div>
               {/* Logo Text */}
               <div className="hidden sm:block">

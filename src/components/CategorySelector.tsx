@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { defaultCategories } from '../data/categories';
+import { getAllCategoriesWithCustomSubcategories } from '../utils/category-service';
 import type { Category } from '../types/category';
 
 interface CategorySelectorProps {
@@ -18,11 +18,14 @@ export function CategorySelector({
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedCategory, setExpandedCategory] = useState<string | null>(selectedCategoryId);
 
+  // Get all categories including custom subcategories
+  const allCategories = useMemo(() => getAllCategoriesWithCustomSubcategories(), []);
+
   const filteredCategories = useMemo(() => {
-    if (!searchQuery.trim()) return defaultCategories;
+    if (!searchQuery.trim()) return allCategories;
 
     const query = searchQuery.toLowerCase();
-    return defaultCategories
+    return allCategories
       .map((category) => {
         const categoryMatches = category.name.toLowerCase().includes(query);
         const matchingSubcategories = category.subcategories.filter((sub) =>
@@ -40,7 +43,7 @@ export function CategorySelector({
         return null;
       })
       .filter((c): c is Category => c !== null);
-  }, [searchQuery]);
+  }, [searchQuery, allCategories]);
 
   const handleCategoryClick = (categoryId: string) => {
     if (expandedCategory === categoryId) {
@@ -143,7 +146,18 @@ export function CategorySelector({
                               : 'bg-white dark:bg-slate-700 hover:bg-gray-100 dark:hover:bg-slate-600 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-slate-500'
                           }`}
                         >
-                          {subcategory.name}
+                          <span className="flex items-center gap-1">
+                            {subcategory.name}
+                            {subcategory.isCustom && (
+                              <span className={`text-[10px] px-1 py-0.5 rounded ${
+                                isSelected
+                                  ? 'bg-white/20 text-white'
+                                  : 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
+                              }`}>
+                                custom
+                              </span>
+                            )}
+                          </span>
                         </button>
                       );
                     })}

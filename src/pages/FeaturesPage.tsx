@@ -3,73 +3,73 @@ import { Card } from '../components/ui/Card';
 const features = [
   {
     icon: '🔒',
-    title: 'Privacy First',
+    title: 'Privacy first',
     description:
       'Your financial data never leaves your browser. No accounts, no servers, no data collection. Everything runs locally on your device.',
   },
   {
     icon: '📊',
-    title: 'Visual Analytics',
+    title: 'Visual analytics',
     description:
       'Beautiful charts and visualizations help you understand your spending patterns at a glance. Bar charts, donut charts, and detailed breakdowns.',
   },
   {
     icon: '🏷️',
-    title: 'Smart Categorization',
+    title: 'Smart categorization',
     description:
       '183 Swedish merchant pattern mappings automatically categorize your transactions. 13 categories with 51 subcategories cover all spending types.',
   },
   {
     icon: '📅',
-    title: 'Flexible Time Periods',
+    title: 'Flexible time periods',
     description:
       'View your spending by day, week, month, quarter, or year. Set a custom month start day to align with your salary date.',
   },
   {
     icon: '🔍',
-    title: 'Powerful Filtering',
+    title: 'Powerful filtering',
     description:
       'Filter transactions by category, date range, amount, or search text. Find exactly what you need instantly.',
   },
   {
     icon: '🎨',
-    title: 'Customizable Icons',
+    title: 'Customizable icons',
     description:
       'Choose from 4 icon sets: Emoji, 3D Fluency, Phosphor, or OpenMoji. Pick the style that suits your preference.',
   },
   {
     icon: '🌙',
-    title: 'Dark Mode',
+    title: 'Dark mode',
     description:
       'Easy on the eyes with full dark mode support. Automatically follows your system preference or set it manually.',
   },
   {
     icon: '📱',
-    title: 'Responsive Design',
+    title: 'Responsive design',
     description:
       'Works great on desktop, tablet, and mobile. Your expense tracking goes wherever you do.',
   },
   {
     icon: '🇸🇪',
-    title: 'Swedish Bank Support',
+    title: 'Swedish bank support',
     description:
       'Optimized for Swedish bank CSV exports (Swedbank, SEB format). Auto-detects columns and handles Swedish date formats.',
   },
   {
     icon: '✏️',
-    title: 'Manual Overrides',
+    title: 'Manual overrides',
     description:
       'Click any transaction to change its category. Your manual categorizations are remembered for future imports.',
   },
   {
     icon: '📦',
-    title: 'Uncategorized Workflow',
+    title: 'Uncategorized workflow',
     description:
       'Dedicated carousel for handling uncategorized transactions. Quickly categorize batches of transactions with ease.',
   },
   {
     icon: '💾',
-    title: 'Persistent Settings',
+    title: 'Persistent settings',
     description:
       'Your preferences and custom category mappings are saved locally. Come back anytime and pick up where you left off.',
   },
@@ -112,7 +112,7 @@ export function FeaturesPage() {
             href="#/"
             className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors"
           >
-            Get Started
+            Get started
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>

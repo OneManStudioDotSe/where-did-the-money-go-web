@@ -122,12 +122,6 @@ export function AboutPage() {
       </Card>
 
       {/* Contact */}
-      <Card variant="elevated" padding="lg" className="text-center">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Questions?</h2>
-        <p className="text-gray-600 dark:text-gray-300">
-          This is an open source project. Feel free to explore, contribute, or report issues.
-        </p>
-      </Card>
     </div>
   );
 }

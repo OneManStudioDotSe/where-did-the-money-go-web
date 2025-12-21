@@ -19,6 +19,8 @@ export interface Subcategory {
   id: string;
   name: string;
   parentCategoryId: string;
+  /** Whether this is a user-created subcategory */
+  isCustom?: boolean;
 }
 
 /**

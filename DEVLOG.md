@@ -109,17 +109,6 @@ A chronological journal of development decisions, progress, and learnings.
    - Avoiding dependency bloat
    - Each addition must be justified
 
-**Files Created:**
-- `src/types/transaction.ts` - Transaction, Badge interfaces
-- `src/types/category.ts` - Category, Subcategory, Mapping interfaces
-- `src/types/csv.ts` - CSV parsing configuration types
-- `src/types/index.ts` - Central exports
-- `src/data/categories.ts` - Default category definitions
-- `src/data/category-mappings.ts` - Swedish merchant patterns
-- `docs/CSV_FORMAT.md` - Swedish bank CSV specification
-- `docs/CATEGORIES.md` - Category hierarchy documentation
-- `sample-data/transactions.csv` - Development test data
-
 **Key Design Decisions:**
 
 1. **Category Mapping Priority System:**
@@ -184,11 +173,6 @@ npm run preview
    - Merchant mapping count reflects real mappings in the codebase
    - Category colors used for visual consistency
 
-**Files Modified:**
-- `src/App.tsx` - Added modal states, category/CSV info modals
-
-**No New Dependencies Added**
-
 ---
 
 ## Entry #004 - 2025-12-19
@@ -222,17 +206,6 @@ npm run preview
   - State management for transactions
   - Summary statistics display (expenses, income, categorization %, net change)
   - Conditional rendering (upload view vs analysis view)
-
-**Files Created:**
-- `src/utils/csv-parser.ts` - CSV parsing and column detection
-- `src/utils/category-service.ts` - Category matching and lookups
-- `src/utils/index.ts` - Utility exports
-- `src/components/FileUpload.tsx` - Drag & drop file upload
-- `src/components/TransactionList.tsx` - Transaction table display
-- `src/components/index.ts` - Component exports
-
-**Files Modified:**
-- `src/App.tsx` - Full integration of upload flow and transaction display
 
 **Key Decisions:**
 
@@ -303,14 +276,6 @@ npm run dev
    - Sets expectations before loading
    - Positioned below file upload, suggesting "try before you commit"
 
-**Files Modified:**
-- `src/App.tsx` - Added demo mode state, handler, and UI elements
-
-**Files Created:**
-- `public/demo-data.csv` - Sample transactions served as static asset
-
-**No New Dependencies Added**
-
 ---
 
 ## Entry #006 - 2025-12-19
@@ -354,17 +319,6 @@ npm run dev
    - All filters use AND logic (must match all)
    - Category filter: transaction must match ANY selected category
    - Empty filters are ignored (no filtering applied)
-
-**Files Created:**
-- `src/components/FilterPanel.tsx` - Filter UI component
-- `src/hooks/useTransactionFilters.ts` - Filter logic hook
-- `src/hooks/index.ts` - Hook exports
-
-**Files Modified:**
-- `src/components/index.ts` - Added FilterPanel export
-- `src/App.tsx` - Integrated filtering state and components
-
-**No New Dependencies Added**
 
 ---
 
@@ -412,17 +366,6 @@ npm run dev
    - Shows count of available periods per type
    - Sorted most recent first
 
-**Files Created:**
-- `src/components/TimePeriodSelector.tsx` - Period selection UI
-- `src/hooks/useTimePeriodFilter.ts` - Period filtering hook
-
-**Files Modified:**
-- `src/components/index.ts` - Added TimePeriodSelector export
-- `src/hooks/index.ts` - Added useTimePeriodFilter export
-- `src/App.tsx` - Integrated period selector and filtering
-
-**No New Dependencies Added**
-
 ---
 
 ## Entry #008 - 2025-12-19
@@ -450,12 +393,6 @@ npm run dev
 1. **In-component sorting:** State managed within TransactionList for simplicity
 2. **CSS-based tooltips:** Using group-hover instead of JS tooltip library
 3. **Month start day:** Affects how transactions are grouped into "months"
-
-**Files Modified:**
-- `src/components/TransactionList.tsx` - Sorting, condensed view, tooltips
-- `src/components/TimePeriodSelector.tsx` - Settings panel for month start day
-
-**No New Dependencies Added**
 
 ---
 
@@ -519,15 +456,6 @@ npm run dev
    - Both panels share the same filtered data
    - Period selection affects both simultaneously
 
-**Files Created:**
-- `src/components/SpendingVisualization.tsx` - Main visualization component
-
-**Files Modified:**
-- `src/components/index.ts` - Export SpendingVisualization
-- `src/App.tsx` - Two-column layout with visualization
-
-**No New Dependencies Added**
-
 ---
 
 ## Entry #010 - 2025-12-19
@@ -577,18 +505,6 @@ npm run dev
    - New Phase 8 covers UI themes and icons
    - Planned features: minimal icons, colorful icons, custom themes, dark mode
    - AI Insights moved to Phase 9
-
-**Files Created:**
-- `src/components/SettingsPanel.tsx` - Settings modal component
-
-**Files Modified:**
-- `src/App.tsx` - Layout ratio, settings button, settings panel integration
-- `src/components/SpendingVisualization.tsx` - Vertical bar chart, chart toggle
-- `src/components/TransactionList.tsx` - Info icon tooltip
-- `src/components/ProjectRoadmap.tsx` - New Phase 8, renumbered Phase 9
-- `src/components/index.ts` - Export SettingsPanel
-
-**No New Dependencies Added**
 
 ---
 
@@ -659,18 +575,6 @@ npm run dev
    - No separate "save all" step needed
    - Uncategorized count updates live
 
-**Files Created:**
-- `src/components/CategorySelector.tsx` - Reusable category picker
-- `src/components/TransactionEditModal.tsx` - Individual transaction editing
-- `src/components/UncategorizedCarousel.tsx` - Batch categorization workflow
-
-**Files Modified:**
-- `src/components/index.ts` - Export new components
-- `src/components/ProjectRoadmap.tsx` - Mark manual assignment as complete
-- `src/App.tsx` - State for modals, handlers, integration
-
-**No New Dependencies Added**
-
 ---
 
 ## Entry #012 - 2025-12-19
@@ -719,38 +623,6 @@ npm run dev
    - Three variants: default, elevated, interactive
    - Subcomponents: CardHeader, CardContent, CardFooter
    - Dark mode compatible
-
-**Files Created:**
-- `src/config/icon-sets.ts` - Icon set configurations
-- `src/components/ui/CategoryIcon.tsx` - Universal icon component
-- `src/components/ui/Card.tsx` - Reusable card with variants
-- `src/components/DarkModeToggle.tsx` - Theme toggle button
-- `src/components/layout/Header.tsx` - Sticky header
-- `src/components/layout/Footer.tsx` - Footer component
-- `src/components/layout/MobileMenu.tsx` - Mobile navigation
-- `src/hooks/useDarkMode.ts` - Dark mode state management
-- `src/hooks/useHashRouter.ts` - Hash-based routing
-- `src/context/SettingsContext.tsx` - Settings context provider
-- `src/pages/FeaturesPage.tsx` - Features showcase
-- `src/pages/HowItWorksPage.tsx` - Step-by-step guide
-- `src/pages/AboutPage.tsx` - About the app
-- `src/pages/PrivacyPage.tsx` - Privacy policy
-- `src/pages/DisclaimerPage.tsx` - Legal disclaimer
-
-**Files Modified:**
-- `src/index.css` - Teal color palette, dark mode base
-- `src/App.tsx` - Layout with Header/Footer, routing
-- `src/components/SettingsPanel.tsx` - Dark mode + icon set options
-- `src/components/TransactionList.tsx` - Dark mode classes
-- `src/components/FilterPanel.tsx` - Dark mode classes
-- `src/components/SpendingVisualization.tsx` - Dark mode classes
-- `src/components/FileUpload.tsx` - Dark mode classes
-- `src/components/ProjectRoadmap.tsx` - Dark mode classes, updated Phase 8
-- `src/components/CategorySelector.tsx` - Dark mode classes
-- `src/components/TimePeriodSelector.tsx` - Dark mode classes
-- `src/components/UncategorizedCarousel.tsx` - Dark mode classes
-- `src/components/TransactionEditModal.tsx` - Dark mode classes
-- `src/components/index.ts` - Export new components
 
 **Key Decisions:**
 

@@ -54,19 +54,19 @@ const steps = [
 const tips = [
   {
     icon: '💡',
-    title: 'Try Demo Mode',
+    title: 'Try demo mode',
     description:
       'Not ready to upload your own data? Click "Load Demo Data" to explore the app with sample transactions.',
   },
   {
     icon: '📅',
-    title: 'Set Your Salary Day',
+    title: 'Set your salary day',
     description:
       'If you get paid on the 25th, change the month start day in Settings to see spending aligned with your pay periods.',
   },
   {
     icon: '🔄',
-    title: 'Regular Exports',
+    title: 'Regular exports',
     description:
       'Export your bank data monthly and upload to track spending trends over time.',
   },
@@ -77,7 +77,7 @@ export function HowItWorksPage() {
     <div className="max-w-4xl mx-auto py-12 px-4">
       {/* Hero */}
       <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">How It Works</h1>
+        <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">How it works</h1>
         <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
           Get started in minutes. No sign-up required, no data leaves your device.
         </p>
@@ -131,7 +131,7 @@ export function HowItWorksPage() {
       {/* Tips Section */}
       <div className="mb-12">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 text-center">
-          Pro Tips
+          Pro tips
         </h2>
         <div className="grid md:grid-cols-3 gap-6">
           {tips.map((tip, index) => (
@@ -150,7 +150,7 @@ export function HowItWorksPage() {
           href="#/"
           className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors"
         >
-          Start Tracking Now
+          Start tracking now
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>

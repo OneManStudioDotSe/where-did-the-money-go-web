@@ -1,8 +1,10 @@
-import { useState, useEffect, useTransition, useMemo } from 'react'
+import { useState, useEffect, useTransition, useMemo, useCallback } from 'react'
 import './index.css'
 import { defaultCategories } from './data/categories'
 import { defaultCategoryMappings } from './data/category-mappings'
 import { FileUpload, TransactionList, FilterPanel, defaultFilters, ProjectRoadmap, TimePeriodSelector, SpendingVisualization, SettingsPanel, loadSettings, TransactionEditModal, UncategorizedCarousel, CsvConfirmationDialog, ExportDialog, SubscriptionConfirmationDialog, SubscriptionPanel, SubscriptionCard, SubscriptionEditModal, ErrorBoundary } from './components'
+import { AddSubcategoryModal } from './components/AddSubcategoryModal'
+import { getAllCategoriesWithCustomSubcategories, getCustomSubcategories, removeCustomSubcategory } from './utils/category-service'
 import type { TimePeriod, AppSettings } from './components'
 import { parseTransactionsFromCSV, categorizeTransactions, getCategorizedStats } from './utils'
 import { useTransactionFilters, useTimePeriodFilter } from './hooks'
@@ -37,6 +39,8 @@ function App() {
   const [showExportDialog, setShowExportDialog] = useState(false)
   const [showSubscriptionConfirmation, setShowSubscriptionConfirmation] = useState(false)
   const [showResetConfirmation, setShowResetConfirmation] = useState(false)
+  const [showAddSubcategoryModal, setShowAddSubcategoryModal] = useState(false)
+  const [customSubcategoriesVersion, setCustomSubcategoriesVersion] = useState(0)
   const [pendingFileContent, setPendingFileContent] = useState<string | null>(null)
   const [pendingFileName, setPendingFileName] = useState<string | null>(null)
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null)
@@ -103,11 +107,29 @@ function App() {
     filters
   )
 
-  // Memoize static calculation - only needs to run once
-  const totalSubcategories = useMemo(() =>
-    defaultCategories.reduce((sum, cat) => sum + cat.subcategories.length, 0),
-    []
+  // Get all categories with custom subcategories merged in
+  const allCategories = useMemo(() =>
+    getAllCategoriesWithCustomSubcategories(),
+    [customSubcategoriesVersion]
   )
+
+  // Memoize subcategory count calculation
+  const totalSubcategories = useMemo(() =>
+    allCategories.reduce((sum, cat) => sum + cat.subcategories.length, 0),
+    [allCategories]
+  )
+
+  // Get custom subcategories for display
+  const customSubcategories = useMemo(() =>
+    getCustomSubcategories(),
+    [customSubcategoriesVersion]
+  )
+
+  // Handle custom subcategory deletion
+  const handleDeleteCustomSubcategory = useCallback((id: string) => {
+    removeCustomSubcategory(id)
+    setCustomSubcategoriesVersion(v => v + 1)
+  }, [])
 
   const handleFileLoaded = (content: string, name: string) => {
     // Show confirmation dialog instead of immediately processing
@@ -389,7 +411,7 @@ function App() {
           {/* Welcome Card with File Upload */}
           <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-6 mb-8 hover:shadow-md transition-shadow">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-              Get Started
+              Get started
             </h2>
             <p className="text-gray-600 dark:text-gray-300 mb-6">
               Upload your bank CSV export to analyze your spending. Your data is processed
@@ -476,7 +498,7 @@ function App() {
 
           {/* Tech Stack */}
           <div className="bg-gray-100 dark:bg-slate-800/50 rounded-xl p-6 border border-gray-200 dark:border-slate-700">
-            <h3 className="font-medium text-gray-900 dark:text-white mb-2">Built With</h3>
+            <h3 className="font-medium text-gray-900 dark:text-white mb-2">Built with</h3>
             <div className="flex flex-wrap gap-2">
               {['React 19', 'TypeScript', 'Tailwind CSS 4', 'Vite 6'].map((tech) => (
                 <span key={tech} className="px-3 py-1.5 bg-white dark:bg-slate-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 shadow-sm">
@@ -513,7 +535,7 @@ function App() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                  Transaction Analysis
+                  Transaction analysis
                   {isDemoMode && (
                     <span className="px-2 py-0.5 bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-300 text-xs font-semibold rounded-full">
                       DEMO
@@ -538,19 +560,19 @@ function App() {
             {/* Stats Grid */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="bg-gray-50 dark:bg-slate-700/50 rounded-lg p-4">
-                <p className="text-sm text-gray-500 dark:text-gray-400">Total Expenses</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Total expenses</p>
                 <p className="text-xl font-semibold text-danger-600 dark:text-danger-400">
                   -{totalExpenses.toLocaleString('sv-SE', { minimumFractionDigits: 2 })} kr
                 </p>
               </div>
               <div className="bg-gray-50 dark:bg-slate-700/50 rounded-lg p-4">
-                <p className="text-sm text-gray-500 dark:text-gray-400">Total Income</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Total income</p>
                 <p className="text-xl font-semibold text-success-600 dark:text-success-400">
                   +{totalIncome.toLocaleString('sv-SE', { minimumFractionDigits: 2 })} kr
                 </p>
               </div>
               <div className="bg-gray-50 dark:bg-slate-700/50 rounded-lg p-4">
-                <p className="text-sm text-gray-500 dark:text-gray-400">Net Change</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Net change</p>
                 <p className={`text-xl font-semibold ${totalIncome - totalExpenses >= 0 ? 'text-success-600 dark:text-success-400' : 'text-danger-600 dark:text-danger-400'}`}>
                   {(totalIncome - totalExpenses) >= 0 ? '+' : ''}
                   {(totalIncome - totalExpenses).toLocaleString('sv-SE', { minimumFractionDigits: 2 })} kr
@@ -752,11 +774,11 @@ function App() {
 
       {/* Categories Modal */}
       {showCategoriesModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-4xl w-full max-h-[80vh] overflow-hidden">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-4xl w-full max-h-[80vh] overflow-hidden animate-slide-up">
             <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-slate-700">
               <div>
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Category System</h2>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Category system</h2>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                   {defaultCategories.length} categories • {totalSubcategories} subcategories • {defaultCategoryMappings.length} merchant mappings
                 </p>
@@ -771,40 +793,144 @@ function App() {
               </button>
             </div>
             <div className="p-6 overflow-y-auto max-h-[calc(80vh-120px)]">
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {defaultCategories.map((category) => (
-                  <div
-                    key={category.id}
-                    className="border border-gray-200 dark:border-slate-700 rounded-lg p-4 hover:border-gray-300 dark:hover:border-slate-600 transition-colors"
-                  >
-                    <div className="flex items-center gap-2 mb-3">
-                      <span
-                        className="w-8 h-8 rounded-lg flex items-center justify-center text-lg"
-                        style={{ backgroundColor: `${category.color}20` }}
-                      >
-                        {category.icon}
+              {/* Categories Grid */}
+              <div className="mb-8">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                    <span className="w-6 h-6 rounded bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 dark:text-primary-400">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                      </svg>
+                    </span>
+                    Categories & subcategories
+                    {customSubcategories.length > 0 && (
+                      <span className="ml-2 px-1.5 py-0.5 text-xs font-medium rounded bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400">
+                        +{customSubcategories.length} custom
                       </span>
-                      <div>
-                        <h3 className="font-medium text-gray-900 dark:text-white">{category.name}</h3>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">{category.subcategories.length} subcategories</p>
+                    )}
+                  </h3>
+                  <button
+                    onClick={() => setShowAddSubcategoryModal(true)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-colors animate-press"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Add subcategory
+                  </button>
+                </div>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {allCategories.map((category) => (
+                    <div
+                      key={category.id}
+                      className="border border-gray-200 dark:border-slate-700 rounded-lg p-4 hover:border-gray-300 dark:hover:border-slate-600 transition-colors"
+                    >
+                      <div className="flex items-center gap-2 mb-3">
+                        <span
+                          className="w-8 h-8 rounded-lg flex items-center justify-center text-lg"
+                          style={{ backgroundColor: `${category.color}20` }}
+                        >
+                          {category.icon}
+                        </span>
+                        <div>
+                          <h3 className="font-medium text-gray-900 dark:text-white">{category.name}</h3>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">{category.subcategories.length} subcategories</p>
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {category.subcategories.map((sub) => (
+                          <span
+                            key={sub.id}
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full ${sub.isCustom ? 'pr-1' : ''}`}
+                            style={{
+                              backgroundColor: `${category.color}15`,
+                              color: category.color,
+                            }}
+                          >
+                            {sub.name}
+                            {sub.isCustom && (
+                              <button
+                                onClick={() => handleDeleteCustomSubcategory(sub.id)}
+                                className="ml-0.5 p-0.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+                                title="Delete custom subcategory"
+                              >
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </button>
+                            )}
+                          </span>
+                        ))}
                       </div>
                     </div>
-                    <div className="flex flex-wrap gap-1">
-                      {category.subcategories.map((sub) => (
-                        <span
-                          key={sub.id}
-                          className="px-2 py-0.5 text-xs rounded-full"
-                          style={{
-                            backgroundColor: `${category.color}15`,
-                            color: category.color,
-                          }}
-                        >
-                          {sub.name}
-                        </span>
-                      ))}
-                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Merchant Mappings Section */}
+              <div>
+                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
+                  <span className="w-6 h-6 rounded bg-success-100 dark:bg-success-900/30 flex items-center justify-center text-success-600 dark:text-success-400">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                    </svg>
+                  </span>
+                  Merchant mappings ({defaultCategoryMappings.length} patterns)
+                </h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+                  These patterns are used to automatically categorize transactions based on their description.
+                </p>
+                <div className="border border-gray-200 dark:border-slate-700 rounded-lg overflow-hidden">
+                  <div className="max-h-64 overflow-y-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-50 dark:bg-slate-700 sticky top-0">
+                        <tr>
+                          <th className="text-left px-4 py-2 font-medium text-gray-700 dark:text-gray-300">Pattern</th>
+                          <th className="text-left px-4 py-2 font-medium text-gray-700 dark:text-gray-300">Category</th>
+                          <th className="text-left px-4 py-2 font-medium text-gray-700 dark:text-gray-300">Subcategory</th>
+                          <th className="text-center px-4 py-2 font-medium text-gray-700 dark:text-gray-300">Match Type</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200 dark:divide-slate-700">
+                        {defaultCategoryMappings.map((mapping) => {
+                          const category = defaultCategories.find(c => c.id === mapping.categoryId);
+                          const subcategory = category?.subcategories.find(s => s.id === mapping.subcategoryId);
+                          return (
+                            <tr key={mapping.id} className="hover:bg-gray-50 dark:hover:bg-slate-700/30">
+                              <td className="px-4 py-2">
+                                <code className="px-1.5 py-0.5 bg-gray-100 dark:bg-slate-700 rounded text-xs font-mono text-gray-800 dark:text-gray-200">
+                                  {mapping.pattern}
+                                </code>
+                              </td>
+                              <td className="px-4 py-2">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-sm">{category?.icon}</span>
+                                  <span className="text-gray-700 dark:text-gray-300">{category?.name || mapping.categoryId}</span>
+                                </div>
+                              </td>
+                              <td className="px-4 py-2 text-gray-600 dark:text-gray-400">
+                                {subcategory?.name || mapping.subcategoryId}
+                              </td>
+                              <td className="px-4 py-2 text-center">
+                                <span className={`px-2 py-0.5 text-xs rounded-full ${
+                                  mapping.matchType === 'exact'
+                                    ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
+                                    : mapping.matchType === 'starts_with'
+                                    ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400'
+                                    : mapping.matchType === 'regex'
+                                    ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400'
+                                    : 'bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-400'
+                                }`}>
+                                  {mapping.matchType}
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
                   </div>
-                ))}
+                </div>
               </div>
             </div>
           </div>
@@ -817,7 +943,7 @@ function App() {
           <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
             <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-slate-700">
               <div>
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">CSV Parser Specification</h2>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">CSV parser specification</h2>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Swedish bank export format (Swedbank/SEB style)</p>
               </div>
               <button
@@ -832,7 +958,7 @@ function App() {
             <div className="p-6 overflow-y-auto max-h-[calc(80vh-120px)]">
               {/* File Format */}
               <div className="mb-6">
-                <h3 className="font-medium text-gray-900 dark:text-white mb-3">File Format</h3>
+                <h3 className="font-medium text-gray-900 dark:text-white mb-3">File format</h3>
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   {[
                     { label: 'Encoding', value: 'UTF-8 (with BOM)' },
@@ -850,12 +976,12 @@ function App() {
 
               {/* Expected Columns */}
               <div className="mb-6">
-                <h3 className="font-medium text-gray-900 dark:text-white mb-3">Expected Columns</h3>
+                <h3 className="font-medium text-gray-900 dark:text-white mb-3">Expected columns</h3>
                 <div className="border border-gray-200 dark:border-slate-700 rounded-lg overflow-hidden">
                   <table className="w-full text-sm">
                     <thead className="bg-gray-50 dark:bg-slate-700/50">
                       <tr>
-                        <th className="text-left px-4 py-2 font-medium text-gray-700 dark:text-gray-300">Swedish Header</th>
+                        <th className="text-left px-4 py-2 font-medium text-gray-700 dark:text-gray-300">Swedish header</th>
                         <th className="text-left px-4 py-2 font-medium text-gray-700 dark:text-gray-300">Description</th>
                         <th className="text-center px-4 py-2 font-medium text-gray-700 dark:text-gray-300">Required</th>
                       </tr>
@@ -884,7 +1010,7 @@ function App() {
 
               {/* Amount Convention */}
               <div className="mb-6">
-                <h3 className="font-medium text-gray-900 dark:text-white mb-3">Amount Convention</h3>
+                <h3 className="font-medium text-gray-900 dark:text-white mb-3">Amount convention</h3>
                 <div className="flex gap-4">
                   <div className="flex-1 bg-danger-50 dark:bg-danger-900/20 border border-danger-200 dark:border-danger-800 rounded-lg p-3">
                     <p className="text-sm font-medium text-danger-600 dark:text-danger-400">Negative (-)</p>
@@ -899,7 +1025,7 @@ function App() {
 
               {/* Example Row */}
               <div>
-                <h3 className="font-medium text-gray-900 dark:text-white mb-3">Example Row</h3>
+                <h3 className="font-medium text-gray-900 dark:text-white mb-3">Example row</h3>
                 <div className="bg-gray-900 rounded-lg p-4 overflow-x-auto">
                   <code className="text-sm text-green-400 whitespace-nowrap">
                     2025-12-18;2025-12-18;5484381424;NETFLIX COM /25-12-18;-149.000;8686.500
@@ -990,7 +1116,7 @@ function App() {
                   </svg>
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Start Over?</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Start over?</h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                     This will clear all transaction data from the current session.
                   </p>
@@ -1005,13 +1131,13 @@ function App() {
                   onClick={() => performReset(false)}
                   className="w-full px-4 py-2.5 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors"
                 >
-                  Keep Subscriptions & Start Over
+                  Keep subscriptions & start over
                 </button>
                 <button
                   onClick={() => performReset(true)}
                   className="w-full px-4 py-2.5 text-sm font-medium text-danger-600 dark:text-danger-400 hover:bg-danger-50 dark:hover:bg-danger-900/20 border border-danger-300 dark:border-danger-700 rounded-lg transition-colors"
                 >
-                  Reset Everything (Including Subscriptions)
+                  Reset everything (including subscriptions)
                 </button>
                 <button
                   onClick={() => setShowResetConfirmation(false)}
@@ -1024,6 +1150,13 @@ function App() {
           </div>
         </div>
       )}
+
+      {/* Add Subcategory Modal */}
+      <AddSubcategoryModal
+        isOpen={showAddSubcategoryModal}
+        onClose={() => setShowAddSubcategoryModal(false)}
+        onSubcategoryAdded={() => setCustomSubcategoriesVersion(v => v + 1)}
+      />
     </div>
   )
 }

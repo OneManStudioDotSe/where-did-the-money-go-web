@@ -399,16 +399,33 @@ function applyBankTransformations(description: string, bank: BankId | null): str
   const bankConfig = BANK_CONFIGS[bank];
   if (!bankConfig) return description;
 
-  // SEB: trim description after first "/"
+  let result = description;
+
+  // Apply regex pattern removals (e.g., Nordea prefixes and suffixes)
+  if (bankConfig.removePatterns) {
+    for (const pattern of bankConfig.removePatterns) {
+      result = result.replace(pattern, '');
+    }
+    result = result.trim();
+  }
+
+  // Trim description at specific character (e.g., SEB "/" character)
   if (bankConfig.trimDescriptionAt) {
     const trimChar = bankConfig.trimDescriptionAt;
-    const idx = description.indexOf(trimChar);
+    const idx = result.indexOf(trimChar);
     if (idx > 0) {
-      return description.substring(0, idx).trim();
+      result = result.substring(0, idx).trim();
     }
   }
 
-  return description;
+  return result;
+}
+
+/**
+ * Apply bank-specific transformations to a description (exported for UI preview)
+ */
+export function applyBankTransform(description: string, bank: BankId): string {
+  return applyBankTransformations(description, bank);
 }
 
 /**

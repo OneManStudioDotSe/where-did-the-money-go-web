@@ -1,7 +1,108 @@
 import type { Transaction } from '../types/transaction';
-import type { CategoryMapping, Category, CategoryOption } from '../types/category';
+import type { CategoryMapping, Category, CategoryOption, Subcategory } from '../types/category';
 import { defaultCategoryMappings } from '../data/category-mappings';
 import { defaultCategories } from '../data/categories';
+
+// ============================================
+// Custom Subcategory Storage
+// ============================================
+
+const CUSTOM_SUBCATEGORIES_KEY = 'custom_subcategories';
+
+/**
+ * Get all custom subcategories from localStorage
+ */
+export function getCustomSubcategories(): Subcategory[] {
+  try {
+    const stored = localStorage.getItem(CUSTOM_SUBCATEGORIES_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Save custom subcategories to localStorage
+ */
+export function saveCustomSubcategories(subcategories: Subcategory[]): void {
+  try {
+    localStorage.setItem(CUSTOM_SUBCATEGORIES_KEY, JSON.stringify(subcategories));
+  } catch (error) {
+    console.error('Failed to save custom subcategories to localStorage:', error);
+  }
+}
+
+/**
+ * Add a new custom subcategory
+ */
+export function addCustomSubcategory(parentCategoryId: string, name: string): Subcategory {
+  const customSubcategories = getCustomSubcategories();
+  const newSubcategory: Subcategory = {
+    id: `custom-${Date.now()}`,
+    name: name.trim(),
+    parentCategoryId,
+    isCustom: true,
+  };
+  customSubcategories.push(newSubcategory);
+  saveCustomSubcategories(customSubcategories);
+  return newSubcategory;
+}
+
+/**
+ * Remove a custom subcategory
+ */
+export function removeCustomSubcategory(id: string): void {
+  const customSubcategories = getCustomSubcategories().filter((s) => s.id !== id);
+  saveCustomSubcategories(customSubcategories);
+}
+
+/**
+ * Check if a subcategory name already exists in a category
+ */
+export function subcategoryExists(parentCategoryId: string, name: string): boolean {
+  const category = getCategoryWithCustomSubcategories(parentCategoryId);
+  if (!category) return false;
+  const normalizedName = name.trim().toLowerCase();
+  return category.subcategories.some((s) => s.name.toLowerCase() === normalizedName);
+}
+
+/**
+ * Get a category with custom subcategories merged in
+ */
+export function getCategoryWithCustomSubcategories(categoryId: string): Category | undefined {
+  const baseCategory = defaultCategories.find((c) => c.id === categoryId);
+  if (!baseCategory) return undefined;
+
+  const customSubcategories = getCustomSubcategories().filter(
+    (s) => s.parentCategoryId === categoryId
+  );
+
+  return {
+    ...baseCategory,
+    subcategories: [...baseCategory.subcategories, ...customSubcategories],
+  };
+}
+
+/**
+ * Get all categories with custom subcategories merged in
+ */
+export function getAllCategoriesWithCustomSubcategories(): Category[] {
+  const customSubcategories = getCustomSubcategories();
+
+  return defaultCategories.map((category) => {
+    const categoryCustomSubs = customSubcategories.filter(
+      (s) => s.parentCategoryId === category.id
+    );
+    return {
+      ...category,
+      subcategories: [...category.subcategories, ...categoryCustomSubs],
+    };
+  });
+}
+
+// ============================================
+// Custom Mapping Storage
+// ============================================
 
 /**
  * Get all custom mappings from localStorage
@@ -130,10 +231,10 @@ export function categorizeTransactions(transactions: Transaction[]): Transaction
 }
 
 /**
- * Get category by ID
+ * Get category by ID (includes custom subcategories)
  */
 export function getCategoryById(categoryId: string): Category | undefined {
-  return defaultCategories.find((c) => c.id === categoryId);
+  return getCategoryWithCustomSubcategories(categoryId);
 }
 
 /**
@@ -174,12 +275,13 @@ export function getCategoryIcon(categoryId: string | null): string {
 }
 
 /**
- * Get flattened category options for dropdowns
+ * Get flattened category options for dropdowns (includes custom subcategories)
  */
 export function getCategoryOptions(): CategoryOption[] {
   const options: CategoryOption[] = [];
+  const allCategories = getAllCategoriesWithCustomSubcategories();
 
-  for (const category of defaultCategories) {
+  for (const category of allCategories) {
     for (const subcategory of category.subcategories) {
       options.push({
         categoryId: category.id,

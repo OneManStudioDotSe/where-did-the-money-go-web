@@ -145,7 +145,7 @@ export function SettingsPanel({ isOpen, onClose, settings, onSettingsChange, sub
       <div className="flex min-h-full items-center justify-center p-4">
         <div ref={modalRef} className="relative bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-md w-full animate-slide-up">
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-slate-700">
+          <div className="flex items-center justify-between px-6 py-5 border-b border-gray-200 dark:border-slate-700">
             <h2 id={titleId} className="text-lg font-semibold text-gray-900 dark:text-white">Settings</h2>
             <button
               onClick={handleCancel}
@@ -195,7 +195,7 @@ export function SettingsPanel({ isOpen, onClose, settings, onSettingsChange, sub
             {/* Icon Set */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Icon Set
+                Icon set
               </label>
               <div className="grid grid-cols-2 gap-3">
                 {iconSets.map((setId) => {
@@ -239,13 +239,13 @@ export function SettingsPanel({ isOpen, onClose, settings, onSettingsChange, sub
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                 </svg>
-                Import Settings
+                Import settings
               </h3>
 
               {/* Transaction Limit */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Transaction Import Limit
+                  Transaction import limit
                 </label>
                 <div className="flex items-center gap-4">
                   <input
@@ -269,7 +269,7 @@ export function SettingsPanel({ isOpen, onClose, settings, onSettingsChange, sub
               {/* Preferred Bank */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Preferred Bank
+                  Preferred bank
                 </label>
                 <select
                   value={localSettings.preferredBank || ''}
@@ -284,8 +284,50 @@ export function SettingsPanel({ isOpen, onClose, settings, onSettingsChange, sub
                   ))}
                 </select>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Select your bank to apply bank-specific parsing optimizations (e.g., SEB description trimming).
+                  Select your bank to apply bank-specific parsing optimizations.
                 </p>
+
+                {/* Bank-specific optimizations info */}
+                {localSettings.preferredBank && (
+                  <div className="mt-3 p-3 bg-primary-50 dark:bg-primary-900/20 rounded-lg border border-primary-100 dark:border-primary-800">
+                    <p className="text-xs font-medium text-primary-700 dark:text-primary-300 mb-2 flex items-center gap-1.5">
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Optimizations for {BANK_CONFIGS[localSettings.preferredBank].name}
+                    </p>
+
+                    {/* Description */}
+                    {BANK_CONFIGS[localSettings.preferredBank].optimizationDescription && (
+                      <p className="text-xs text-primary-600 dark:text-primary-400 mb-2">
+                        {BANK_CONFIGS[localSettings.preferredBank].optimizationDescription}
+                      </p>
+                    )}
+
+                    {/* Before/After Examples */}
+                    {BANK_CONFIGS[localSettings.preferredBank].examples &&
+                     BANK_CONFIGS[localSettings.preferredBank].examples!.length > 0 && (
+                      <div className="mt-2 space-y-1.5">
+                        <p className="text-[10px] font-medium text-primary-500 dark:text-primary-400 uppercase tracking-wider">
+                          Examples
+                        </p>
+                        {BANK_CONFIGS[localSettings.preferredBank].examples!.slice(0, 3).map((example, idx) => (
+                          <div key={idx} className="flex items-center gap-2 text-xs">
+                            <span className="text-gray-500 dark:text-gray-400 font-mono text-[11px] bg-white/50 dark:bg-slate-800/50 px-1.5 py-0.5 rounded truncate max-w-[140px]" title={example.before}>
+                              {example.before}
+                            </span>
+                            <svg className="w-3 h-3 text-primary-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                            </svg>
+                            <span className="text-primary-700 dark:text-primary-300 font-medium font-mono text-[11px] bg-white/50 dark:bg-slate-800/50 px-1.5 py-0.5 rounded truncate max-w-[120px]" title={example.after}>
+                              {example.after}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -295,13 +337,13 @@ export function SettingsPanel({ isOpen, onClose, settings, onSettingsChange, sub
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                Subscription Display
+                Subscription display
               </h3>
 
               {/* View Variation */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  View Style
+                  View style
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                   <button
@@ -317,7 +359,7 @@ export function SettingsPanel({ isOpen, onClose, settings, onSettingsChange, sub
                       <svg className="w-6 h-6 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
                       </svg>
-                      <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Accordion List</span>
+                      <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Accordion list</span>
                       <span className="text-xs text-gray-400 dark:text-gray-500 text-center">Grouped by category</span>
                     </div>
                   </button>
@@ -334,7 +376,7 @@ export function SettingsPanel({ isOpen, onClose, settings, onSettingsChange, sub
                       <svg className="w-6 h-6 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                       </svg>
-                      <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Card Grid</span>
+                      <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Card grid</span>
                       <span className="text-xs text-gray-400 dark:text-gray-500 text-center">Compact cards</span>
                     </div>
                   </button>
@@ -376,7 +418,7 @@ export function SettingsPanel({ isOpen, onClose, settings, onSettingsChange, sub
                     <div className="flex items-center gap-3">
                       <span className="text-lg">📑</span>
                       <div>
-                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Tab Only</p>
+                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Tab only</p>
                         <p className="text-xs text-gray-400 dark:text-gray-500">Dedicated Subscriptions tab only</p>
                       </div>
                     </div>
@@ -393,7 +435,7 @@ export function SettingsPanel({ isOpen, onClose, settings, onSettingsChange, sub
                     <div className="flex items-center gap-3">
                       <span className="text-lg">🏠</span>
                       <div>
-                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Overview Only</p>
+                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Overview only</p>
                         <p className="text-xs text-gray-400 dark:text-gray-500">Compact card in Overview tab only</p>
                       </div>
                     </div>
@@ -405,7 +447,7 @@ export function SettingsPanel({ isOpen, onClose, settings, onSettingsChange, sub
               {onClearSubscriptions && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Data Management
+                    Data management
                   </label>
                   {!showClearConfirm ? (
                     <button
@@ -422,7 +464,7 @@ export function SettingsPanel({ isOpen, onClose, settings, onSettingsChange, sub
                         <span className="text-lg">🗑️</span>
                         <div>
                           <p className="text-sm font-medium text-danger-600 dark:text-danger-400">
-                            Clear All Subscriptions
+                            Clear all subscriptions
                           </p>
                           <p className="text-xs text-gray-400 dark:text-gray-500">
                             {subscriptionCount === 0
@@ -446,7 +488,7 @@ export function SettingsPanel({ isOpen, onClose, settings, onSettingsChange, sub
                           }}
                           className="flex-1 px-3 py-2 bg-danger-600 text-white text-sm font-medium rounded-lg hover:bg-danger-700 transition-colors"
                         >
-                          Yes, Clear All
+                          Yes, clear all
                         </button>
                         <button
                           type="button"
@@ -468,13 +510,13 @@ export function SettingsPanel({ isOpen, onClose, settings, onSettingsChange, sub
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
                 </svg>
-                Display Settings
+                Display settings
               </h3>
 
               {/* Transaction Page Size */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Transactions Per Page
+                  Transactions per page
                 </label>
                 <div className="grid grid-cols-4 gap-2">
                   {[50, 100, 200, 500].map((size) => (
@@ -500,7 +542,7 @@ export function SettingsPanel({ isOpen, onClose, settings, onSettingsChange, sub
               {/* Date Format */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Date Format
+                  Date format
                 </label>
                 <select
                   value={localSettings.dateFormat}
@@ -521,7 +563,7 @@ export function SettingsPanel({ isOpen, onClose, settings, onSettingsChange, sub
             {/* Month Start Day */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Month Start Day
+                Month start day
               </label>
               <select
                 value={localSettings.monthStartDay}
@@ -553,7 +595,7 @@ export function SettingsPanel({ isOpen, onClose, settings, onSettingsChange, sub
               onClick={handleSave}
               className="px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors"
             >
-              Save Settings
+              Save settings
             </button>
           </div>
         </div>
