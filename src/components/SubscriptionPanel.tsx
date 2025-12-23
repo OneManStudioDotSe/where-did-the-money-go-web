@@ -1,8 +1,11 @@
 import { useState, useMemo } from 'react';
-import type { Subscription, Transaction } from '../types/transaction';
+import type { Subscription, Transaction, RecurringType } from '../types/transaction';
 import { SubscriptionList } from './SubscriptionList';
 import { SubscriptionGrid } from './SubscriptionGrid';
 import { getCategoryIcon, getCategoryColor } from '../utils/category-service';
+
+type SortOption = 'name' | 'amount' | 'day';
+type SortDirection = 'asc' | 'desc';
 
 interface UpcomingPayment {
   subscription: Subscription;
@@ -91,66 +94,223 @@ export function SubscriptionPanel({
 }: SubscriptionPanelProps) {
   const [internalViewMode, setInternalViewMode] = useState<ViewMode>('list');
 
+  // Filter state - which types to show
+  const [typeFilters, setTypeFilters] = useState<Set<RecurringType>>(
+    new Set(['subscription', 'recurring_expense', 'fixed_expense'])
+  );
+
+  // Sort state
+  const [sortBy, setSortBy] = useState<SortOption>('name');
+  const [sortDir, setSortDir] = useState<SortDirection>('asc');
+
   // Use external view mode if provided, otherwise use internal state
   const viewMode = externalViewMode ?? internalViewMode;
   const setViewMode = setInternalViewMode;
+
+  // Toggle a type filter
+  const toggleTypeFilter = (type: RecurringType) => {
+    setTypeFilters(prev => {
+      const next = new Set(prev);
+      if (next.has(type)) {
+        // Don't allow removing all filters
+        if (next.size > 1) {
+          next.delete(type);
+        }
+      } else {
+        next.add(type);
+      }
+      return next;
+    });
+  };
+
+  // Cycle sort option
+  const handleSort = (option: SortOption) => {
+    if (sortBy === option) {
+      setSortDir(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(option);
+      setSortDir('asc');
+    }
+  };
+
+  // Filter and sort subscriptions
+  const filteredAndSortedSubscriptions = useMemo(() => {
+    let result = subscriptions.filter(s => typeFilters.has(s.recurringType));
+
+    result.sort((a, b) => {
+      let comparison = 0;
+      switch (sortBy) {
+        case 'name':
+          comparison = a.name.localeCompare(b.name, 'sv-SE');
+          break;
+        case 'amount':
+          comparison = a.amount - b.amount;
+          break;
+        case 'day':
+          comparison = a.billingDay - b.billingDay;
+          break;
+      }
+      return sortDir === 'asc' ? comparison : -comparison;
+    });
+
+    return result;
+  }, [subscriptions, typeFilters, sortBy, sortDir]);
+
+  // Count by type for filter buttons
+  const subscriptionCount = subscriptions.filter(s => s.recurringType === 'subscription').length;
+  const recurringCount = subscriptions.filter(s => s.recurringType === 'recurring_expense').length;
+  const fixedCount = subscriptions.filter(s => s.recurringType === 'fixed_expense').length;
 
   return (
     <div className={compact ? '' : 'space-y-4'}>
       {/* Header with View Toggle - toggle hidden when external viewMode is provided (controlled by settings) */}
       {!compact && (
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Subscriptions
-          </h2>
-          {!externalViewMode && (
-            <div className="flex items-center gap-1 p-1 bg-gray-100 dark:bg-slate-700 rounded-lg">
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Recurring Payments
+            </h2>
+            {!externalViewMode && (
+              <div className="flex items-center gap-1 p-1 bg-gray-100 dark:bg-slate-700 rounded-lg">
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                    viewMode === 'list'
+                      ? 'bg-white dark:bg-slate-600 text-gray-900 dark:text-white shadow-sm'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                  }`}
+                >
+                  <span className="flex items-center gap-1.5">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                    </svg>
+                    List
+                  </span>
+                </button>
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                    viewMode === 'grid'
+                      ? 'bg-white dark:bg-slate-600 text-gray-900 dark:text-white shadow-sm'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                  }`}
+                >
+                  <span className="flex items-center gap-1.5">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                    </svg>
+                    Grid
+                  </span>
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Filter and Sort Controls */}
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            {/* Type Filters */}
+            <span className="text-gray-500 dark:text-gray-400">Show:</span>
+            {subscriptionCount > 0 && (
               <button
-                onClick={() => setViewMode('list')}
-                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                  viewMode === 'list'
-                    ? 'bg-white dark:bg-slate-600 text-gray-900 dark:text-white shadow-sm'
-                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                onClick={() => toggleTypeFilter('subscription')}
+                className={`px-2 py-1 rounded-full transition-colors ${
+                  typeFilters.has('subscription')
+                    ? 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300'
+                    : 'bg-gray-100 dark:bg-slate-700 text-gray-400 dark:text-gray-500'
                 }`}
               >
-                <span className="flex items-center gap-1.5">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                  </svg>
-                  List
-                </span>
+                Subs ({subscriptionCount})
               </button>
+            )}
+            {recurringCount > 0 && (
               <button
-                onClick={() => setViewMode('grid')}
-                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                  viewMode === 'grid'
-                    ? 'bg-white dark:bg-slate-600 text-gray-900 dark:text-white shadow-sm'
-                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                onClick={() => toggleTypeFilter('recurring_expense')}
+                className={`px-2 py-1 rounded-full transition-colors ${
+                  typeFilters.has('recurring_expense')
+                    ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300'
+                    : 'bg-gray-100 dark:bg-slate-700 text-gray-400 dark:text-gray-500'
                 }`}
               >
-                <span className="flex items-center gap-1.5">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                  </svg>
-                  Grid
-                </span>
+                Recurring ({recurringCount})
               </button>
-            </div>
-          )}
+            )}
+            {fixedCount > 0 && (
+              <button
+                onClick={() => toggleTypeFilter('fixed_expense')}
+                className={`px-2 py-1 rounded-full transition-colors ${
+                  typeFilters.has('fixed_expense')
+                    ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300'
+                    : 'bg-gray-100 dark:bg-slate-700 text-gray-400 dark:text-gray-500'
+                }`}
+              >
+                Fixed ({fixedCount})
+              </button>
+            )}
+
+            <span className="mx-1 text-gray-300 dark:text-gray-600">|</span>
+
+            {/* Sort Options */}
+            <span className="text-gray-500 dark:text-gray-400">Sort:</span>
+            <button
+              onClick={() => handleSort('name')}
+              className={`px-2 py-1 rounded transition-colors flex items-center gap-1 ${
+                sortBy === 'name'
+                  ? 'bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300'
+                  : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-600'
+              }`}
+            >
+              Name
+              {sortBy === 'name' && (
+                <svg className={`w-3 h-3 ${sortDir === 'desc' ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                </svg>
+              )}
+            </button>
+            <button
+              onClick={() => handleSort('amount')}
+              className={`px-2 py-1 rounded transition-colors flex items-center gap-1 ${
+                sortBy === 'amount'
+                  ? 'bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300'
+                  : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-600'
+              }`}
+            >
+              Amount
+              {sortBy === 'amount' && (
+                <svg className={`w-3 h-3 ${sortDir === 'desc' ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                </svg>
+              )}
+            </button>
+            <button
+              onClick={() => handleSort('day')}
+              className={`px-2 py-1 rounded transition-colors flex items-center gap-1 ${
+                sortBy === 'day'
+                  ? 'bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300'
+                  : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-600'
+              }`}
+            >
+              Day
+              {sortBy === 'day' && (
+                <svg className={`w-3 h-3 ${sortDir === 'desc' ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                </svg>
+              )}
+            </button>
+          </div>
         </div>
       )}
 
       {/* Content */}
       {viewMode === 'list' ? (
         <SubscriptionList
-          subscriptions={subscriptions}
+          subscriptions={filteredAndSortedSubscriptions}
           transactions={transactions}
           onSubscriptionClick={onSubscriptionClick}
           onEditSubscription={onEditSubscription}
         />
       ) : (
         <SubscriptionGrid
-          subscriptions={subscriptions}
+          subscriptions={filteredAndSortedSubscriptions}
           transactions={transactions}
           onSubscriptionClick={onSubscriptionClick}
           onEditSubscription={onEditSubscription}
@@ -203,11 +363,11 @@ export function SubscriptionCard({
             <svg className="w-5 h-5 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
-            Subscriptions
+            Recurring Payments
           </h3>
         </div>
         <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-          <p className="text-sm">No subscriptions detected</p>
+          <p className="text-sm">No recurring payments detected</p>
           <p className="text-xs mt-1">Import transactions to detect recurring payments</p>
         </div>
       </div>
@@ -222,7 +382,7 @@ export function SubscriptionCard({
           <svg className="w-5 h-5 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
-          Subscriptions
+          Recurring Payments
         </h3>
         {onViewAll && (
           <button

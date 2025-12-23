@@ -158,15 +158,20 @@ export function SubscriptionList({
             <div className="text-sm text-primary-600 dark:text-primary-400">
               {subscriptions.length} active
             </div>
-            <div className="flex items-center gap-2 mt-1">
+            <div className="flex items-center gap-2 mt-1 flex-wrap justify-end">
               {subscriptions.filter(s => s.recurringType === 'subscription').length > 0 && (
                 <span className="text-xs px-1.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400">
-                  {subscriptions.filter(s => s.recurringType === 'subscription').length} subscriptions
+                  {subscriptions.filter(s => s.recurringType === 'subscription').length} subs
                 </span>
               )}
               {subscriptions.filter(s => s.recurringType === 'recurring_expense').length > 0 && (
                 <span className="text-xs px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400">
                   {subscriptions.filter(s => s.recurringType === 'recurring_expense').length} recurring
+                </span>
+              )}
+              {subscriptions.filter(s => s.recurringType === 'fixed_expense').length > 0 && (
+                <span className="text-xs px-1.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400">
+                  {subscriptions.filter(s => s.recurringType === 'fixed_expense').length} fixed
                 </span>
               )}
             </div>
@@ -243,9 +248,11 @@ export function SubscriptionList({
                             <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
                               sub.recurringType === 'subscription'
                                 ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400'
+                                : sub.recurringType === 'fixed_expense'
+                                ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
                                 : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
                             }`}>
-                              {sub.recurringType === 'subscription' ? 'Sub' : 'Recurring'}
+                              {sub.recurringType === 'subscription' ? 'Sub' : sub.recurringType === 'fixed_expense' ? 'Fixed' : 'Recurring'}
                             </span>
                           </div>
                           <span className="font-semibold text-gray-900 dark:text-white">
@@ -261,9 +268,11 @@ export function SubscriptionList({
                               <span className={`text-xs px-2 py-0.5 rounded-full ${
                                 sub.recurringType === 'subscription'
                                   ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400'
+                                  : sub.recurringType === 'fixed_expense'
+                                  ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
                                   : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
                               }`}>
-                                {sub.recurringType === 'subscription' ? 'Subscription' : 'Recurring expense'}
+                                {sub.recurringType === 'subscription' ? 'Subscription' : sub.recurringType === 'fixed_expense' ? 'Fixed expense' : 'Recurring expense'}
                               </span>
                             </div>
                             <div className="flex justify-between text-gray-600 dark:text-gray-400">
