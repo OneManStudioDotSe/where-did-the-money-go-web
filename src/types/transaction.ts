@@ -33,7 +33,8 @@ export interface Transaction {
  */
 export type RecurringType =
   | 'subscription'      // Cancellable services (Netflix, Spotify, gym)
-  | 'recurring_expense'; // Fixed expenses (loan, rent, insurance)
+  | 'recurring_expense' // Regular recurring expenses
+  | 'fixed_expense';    // Fixed expenses (loan, rent, insurance)
 
 /**
  * Badge types for visual indicators on transactions
@@ -41,7 +42,8 @@ export type RecurringType =
 export type TransactionBadgeType =
   | 'uncategorized'      // Needs manual categorization
   | 'subscription'       // Cancellable recurring service
-  | 'recurring_expense'  // Fixed recurring expense (loan, rent)
+  | 'recurring_expense'  // Regular recurring expense
+  | 'fixed_expense'      // Fixed expense (loan, rent, insurance)
   | 'high_value'         // Above threshold amount
   | 'refund'             // Money returned
   | 'income';            // Positive amount
@@ -120,6 +122,10 @@ export interface DetectedSubscription {
   recipientName: string;
   /** Average amount charged */
   averageAmount: number;
+  /** Minimum amount charged */
+  minAmount: number;
+  /** Maximum amount charged */
+  maxAmount: number;
   /** Most common day of month the payment occurs */
   commonDayOfMonth: number;
   /** Transaction IDs that belong to this subscription */

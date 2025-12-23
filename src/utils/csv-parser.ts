@@ -428,7 +428,31 @@ function applyBankTransformations(description: string, bank: BankId | null): str
     const trimChar = bankConfig.trimDescriptionAt;
     const idx = result.indexOf(trimChar);
     if (idx > 0) {
-      result = result.substring(0, idx).trim();
+      result = result.substring(0, idx);
+    }
+  }
+
+  // Trim whitespace at beginning and end (after all trimming operations)
+  result = result.trim();
+
+  // Apply text replacements (e.g., Sl -> SL, Försäkr -> Försäkring)
+  if (bankConfig.textReplacements) {
+    for (const replacement of bankConfig.textReplacements) {
+      if (replacement.matchType === 'exact') {
+        // Exact match: the whole string must match the pattern
+        const pattern = replacement.pattern instanceof RegExp
+          ? replacement.pattern
+          : new RegExp(`^${replacement.pattern}$`, 'i');
+        if (pattern.test(result)) {
+          result = replacement.replacement;
+        }
+      } else {
+        // Contains match (default): replace anywhere in the string
+        const pattern = replacement.pattern instanceof RegExp
+          ? replacement.pattern
+          : new RegExp(replacement.pattern, 'gi');
+        result = result.replace(pattern, replacement.replacement);
+      }
     }
   }
 

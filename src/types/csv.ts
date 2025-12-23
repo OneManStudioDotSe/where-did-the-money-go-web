@@ -23,6 +23,15 @@ export interface PrefixRule {
   removeMatch?: boolean;
 }
 
+export interface TextReplacement {
+  /** Pattern to match (can be string or regex) */
+  pattern: string | RegExp;
+  /** Replacement text */
+  replacement: string;
+  /** Match type: 'exact' matches whole word, 'contains' matches anywhere */
+  matchType?: 'exact' | 'contains';
+}
+
 /**
  * Bank-specific configuration
  */
@@ -35,6 +44,8 @@ export interface BankConfig {
   removePatterns?: RegExp[];
   /** Rules for adding prefixes based on patterns (e.g., Swish detection) */
   prefixRules?: PrefixRule[];
+  /** Text replacements to apply (e.g., expand abbreviations, fix casing) */
+  textReplacements?: TextReplacement[];
   /** Default delimiter for this bank's CSV exports */
   defaultDelimiter?: string;
   /** Description of the optimizations applied */
@@ -56,12 +67,23 @@ export const BANK_CONFIGS: Record<BankId, BankConfig> = {
       { pattern: /^467\s+/, prefix: 'Swish - ', removeMatch: true },
       { pattern: /^123\s+/, prefix: 'Swish - ', removeMatch: true },
     ],
-    optimizationDescription: 'Removes "/" codes, identifies Swish transactions (467, 123)',
+    // SEB-specific text replacements to expand abbreviations and fix casing
+    textReplacements: [
+      // "Sl" should always be "SL" (Stockholm public transit)
+      { pattern: /^Sl$/i, replacement: 'SL', matchType: 'exact' },
+      // "Försäkr" should be expanded to "Försäkring"
+      { pattern: /Försäkr$/i, replacement: 'Försäkring', matchType: 'contains' },
+      { pattern: /Gsuit$/i, replacement: 'Gsuite', matchType: 'contains' },
+    ],
+    optimizationDescription: 'Removes "/" codes, identifies Swish transactions (467, 123), expands abbreviations',
     examples: [
       { before: 'NETFLIX COM /25-12-18', after: 'NETFLIX COM' },
       { before: 'ICA MAXI /24-12-20', after: 'ICA MAXI' },
       { before: '467 JOHN DOE', after: 'Swish - JOHN DOE' },
       { before: '123 JANE DOE', after: 'Swish - JANE DOE' },
+      { before: 'SL', after: 'SL' },
+      { before: 'Sl', after: 'SL' },
+      { before: 'IF FÖRSÄKR', after: 'IF FÖRSÄKRING' },
     ],
   },
   swedbank: {

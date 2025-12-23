@@ -15,7 +15,7 @@ interface DetectionConfig {
 }
 
 const DEFAULT_CONFIG: DetectionConfig = {
-  minOccurrences: 3,
+  minOccurrences: 4,
   dayTolerance: 5,
   amountTolerance: 0.15,
   maxGapDays: 45,
@@ -33,31 +33,62 @@ export function normalizeRecipientName(description: string): string {
     /^(KORTKÖP|KORTKOP|AUTOGIRO|BG|PG|SWISH|BETALNING|ÖVERFÖRING|INSÄTTNING)\s*/i,
     /^\d{4}-\d{2}-\d{2}\s*/,  // Date prefixes
     /^\*{4}\d{4}\s*/,          // Card number pattern ****1234
-    /^[A-Z]{2}\d{6,}\s*/,      // Reference numbers
+    /^[A-Z]{2}\d{6,}\s*/,      // Reference numbers like SE123456
   ];
 
   for (const prefix of prefixes) {
     normalized = normalized.replace(prefix, '');
   }
 
-  // Remove trailing reference numbers, dates, and transaction codes
+  // Remove trailing reference numbers and transaction codes
+  // Be careful NOT to remove legitimate Swedish words
   normalized = normalized
-    .replace(/\s+\d{6,}$/g, '')             // Trailing reference numbers
-    .replace(/\s+\d{4}-\d{2}-\d{2}$/g, '')   // Trailing dates
-    .replace(/\s+[A-Z]{2,3}\d{4,}$/g, '')    // Trailing codes like SE12345
-    .replace(/\s+[A-Z]\d{3,}$/g, '')         // Trailing codes like P392, P3A2 (letter + 3+ digits)
-    .replace(/\s+[A-Z0-9]{3,6}$/gi, '')      // Trailing short alphanumeric codes (3-6 chars) like P3A2, AB123
-    .replace(/\s+\/\d{2}-\d{2}-\d{2}$/g, '') // Trailing date like /25-12-18
-    .replace(/\s*\*+\s*$/g, '')              // Trailing asterisks
+    .replace(/\s+\d{4}-\d{2}-\d{2}$/g, '')     // Trailing dates like "2024-01-15"
+    .replace(/\s+\/\d{2}-\d{2}-\d{2}$/g, '')   // Trailing date like /25-12-18
+    .replace(/\s+[A-Z]{2,3}\d{4,}$/g, '')      // Trailing codes like SE12345
+    .replace(/\s+[A-Z]\d{4,}$/g, '')           // Trailing codes like P39211 (letter + 4+ digits, stricter)
+    .replace(/\s+\d{3,4}$/g, '')               // Trailing short numbers (3-4 digits only, common card/ref codes)
+    .replace(/\s*\*+\s*$/g, '')                // Trailing asterisks
     .trim();
 
   // Normalize multiple spaces
   normalized = normalized.replace(/\s+/g, ' ');
 
-  // Convert to title case for consistency
-  normalized = normalized.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+  // Convert to title case for consistency, handling Swedish characters
+  normalized = toSwedishTitleCase(normalized);
 
   return normalized || description.trim();
+}
+
+/**
+ * Convert a string to title case, properly handling Swedish characters (Å, Ä, Ö)
+ * JavaScript's \b and \w don't recognize Swedish letters as word characters
+ */
+function toSwedishTitleCase(str: string): string {
+  if (!str) return str;
+
+  // First lowercase everything
+  const lower = str.toLowerCase();
+
+  // Then capitalize first letter of each word
+  // We need to handle Swedish letters (å, ä, ö) which aren't matched by \w
+  let result = '';
+  let capitalizeNext = true;
+
+  for (let i = 0; i < lower.length; i++) {
+    const char = lower[i];
+    if (char === ' ' || char === '-' || char === '/') {
+      result += char;
+      capitalizeNext = true;
+    } else if (capitalizeNext) {
+      result += char.toUpperCase();
+      capitalizeNext = false;
+    } else {
+      result += char;
+    }
+  }
+
+  return result;
 }
 
 /**
@@ -73,6 +104,8 @@ function amountsMatch(amount1: number, amount2: number, tolerance: number): bool
 /**
  * Check if amounts are consistent, allowing for a few outliers
  * Returns the "core" amount (median) and whether enough transactions match
+ *
+ * Rule: At least half of the transactions must have matching amounts
  */
 function checkAmountConsistency(
   amounts: number[],
@@ -93,8 +126,8 @@ function checkAmountConsistency(
   // Count how many amounts match the core amount within tolerance
   const matchingCount = amounts.filter(a => amountsMatch(a, -coreAmount, tolerance)).length;
 
-  // Need at least minRequired matches (or 80% of total, whichever is higher)
-  const minMatches = Math.max(minRequired, Math.ceil(amounts.length * 0.8));
+  // Need at least half of the transactions to have matching amounts
+  const minMatches = Math.max(minRequired, Math.ceil(amounts.length / 2));
   const isConsistent = matchingCount >= minMatches;
 
   return { isConsistent, coreAmount, matchingCount };
@@ -227,6 +260,11 @@ export function detectSubscriptions(
     const coreAmount = amountCheck.coreAmount;
     const commonDay = getMostCommonDay(sorted.map(t => t.date));
 
+    // Calculate min and max amounts (absolute values since amounts are negative)
+    const absAmounts = amounts.map(a => Math.abs(a));
+    const minAmount = Math.min(...absAmounts);
+    const maxAmount = Math.max(...absAmounts);
+
     // Check if all transactions share the same category
     const categoryIds = new Set(sorted.map(t => t.categoryId));
     const subcategoryIds = new Set(sorted.map(t => t.subcategoryId));
@@ -235,11 +273,13 @@ export function detectSubscriptions(
       id: generateSubscriptionId(recipientName, coreAmount),
       recipientName,
       averageAmount: Math.round(coreAmount * 100) / 100,
+      minAmount: Math.round(minAmount * 100) / 100,
+      maxAmount: Math.round(maxAmount * 100) / 100,
       commonDayOfMonth: commonDay,
       transactionIds: sorted.map(t => t.id),
       occurrenceCount: sorted.length,
       isConfirmed: null,
-      recurringType: null, // User will choose: 'subscription' or 'recurring_expense'
+      recurringType: null, // User will choose: 'subscription', 'recurring_expense', or 'fixed_expense'
       categoryId: categoryIds.size === 1 ? sorted[0].categoryId : null,
       subcategoryId: subcategoryIds.size === 1 ? sorted[0].subcategoryId : null,
       firstSeen: sorted[0].date,
@@ -282,11 +322,16 @@ export function markTransactionsAsRecurring(
     const recurringType = recurringTransactionIds.get(t.id);
     if (recurringType) {
       const hasRecurringBadge = t.badges.some(
-        b => b.type === 'subscription' || b.type === 'recurring_expense'
+        b => b.type === 'subscription' || b.type === 'recurring_expense' || b.type === 'fixed_expense'
       );
-      const badge = recurringType === 'subscription'
-        ? { type: 'subscription' as const, label: 'Subscription' }
-        : { type: 'recurring_expense' as const, label: 'Recurring' };
+      let badge: { type: 'subscription' | 'recurring_expense' | 'fixed_expense'; label: string };
+      if (recurringType === 'subscription') {
+        badge = { type: 'subscription', label: 'Subscription' };
+      } else if (recurringType === 'fixed_expense') {
+        badge = { type: 'fixed_expense', label: 'Fixed' };
+      } else {
+        badge = { type: 'recurring_expense', label: 'Recurring' };
+      }
       return {
         ...t,
         isSubscription: true,
@@ -440,8 +485,8 @@ export function debugSubscriptionDetection(
     const amounts = expenses.map(t => t.amount);
     const amountCheck = checkAmountConsistency(amounts, config.amountTolerance, config.minOccurrences);
     if (!amountCheck.isConsistent) {
-      const minMatches = Math.max(config.minOccurrences, Math.ceil(amounts.length * 0.8));
-      console.log(`❌ FAIL: Not enough amounts match (need ${minMatches}, got ${amountCheck.matchingCount})`);
+      const minMatches = Math.max(config.minOccurrences, Math.ceil(amounts.length / 2));
+      console.log(`❌ FAIL: Not enough amounts match (need ${minMatches} = half of ${amounts.length}, got ${amountCheck.matchingCount})`);
       console.log(`   Median amount: ${amountCheck.coreAmount.toFixed(2)}, Amounts: ${amounts.map(a => a.toFixed(2)).join(', ')}`);
       console.groupEnd();
       continue;
