@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { DarkModeToggle } from '../DarkModeToggle';
 import { MobileMenu } from './MobileMenu';
+import { Logo } from '../ui/Logo';
 
 interface HeaderProps {
   isDark: boolean;
@@ -42,25 +43,9 @@ export function Header({ isDark, onToggleDark, onOpenSettings, currentRoute, onN
                 e.preventDefault();
                 onNavigate('#/');
               }}
-              className="flex items-center gap-4 group"
+              className="group"
             >
-              {/* Logo Icon */}
-              <div className="relative">
-                <img
-                  src="/logo_4.png"
-                  alt="Where Did The Money Go? Logo"
-                  className="w-12 h-12 p-1.5 rounded-xl bg-white dark:bg-slate-700 shadow-lg shadow-primary-500/25 group-hover:shadow-primary-500/40 transition-all group-hover:scale-105"
-                />
-              </div>
-              {/* Logo Text */}
-              <div className="hidden sm:block">
-                <h1 className="text-xl font-bold text-gray-900 dark:text-white leading-tight">
-                  Where Did The Money Go?
-                </h1>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Privacy-first expense tracking
-                </p>
-              </div>
+              <Logo size="md" showText className="group-hover:scale-[1.02] transition-transform [&>div:first-child]:group-hover:shadow-primary-500/40 [&_h1]:hidden [&_p]:hidden sm:[&_h1]:block sm:[&_p]:block" />
             </a>
 
             {/* Desktop Navigation */}
