@@ -286,7 +286,7 @@ function VerticalBarChart({ categories, maxBars = 8 }: { categories: CategoryTot
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const displayCategories = categories.slice(0, maxBars);
   const maxValue = displayCategories.length > 0 ? Math.max(...displayCategories.map((c) => c.total)) : 0;
-  const chartHeight = 150;
+  const chartHeight = 180;
   const barAreaHeight = chartHeight - 20; // Leave room for icons
 
   return (
@@ -330,7 +330,7 @@ function VerticalBarChart({ categories, maxBars = 8 }: { categories: CategoryTot
                   )}
                   {/* Bar */}
                   <div
-                    className="w-8 rounded-t-md transition-all duration-300"
+                    className="w-14 rounded-t-md transition-all duration-300"
                     style={{
                       height: `${barHeight}px`,
                       backgroundColor: category.color,
@@ -348,10 +348,10 @@ function VerticalBarChart({ categories, maxBars = 8 }: { categories: CategoryTot
         {/* X-axis icons with labels */}
         <div className="flex justify-center gap-2 mt-2 px-2">
           {displayCategories.map((category) => (
-            <div key={category.categoryId || 'uncategorized-icon'} className="w-8 flex flex-col items-center">
-              <span className="text-base">{category.icon}</span>
-              <span className="text-[9px] text-gray-500 dark:text-gray-400 truncate w-full text-center mt-0.5" title={category.name}>
-                {category.name.length > 6 ? category.name.slice(0, 5) + '…' : category.name}
+            <div key={category.categoryId || 'uncategorized-icon'} className="w-14 flex flex-col items-center">
+              <span className="text-lg">{category.icon}</span>
+              <span className="text-xs font-medium text-gray-600 dark:text-gray-300 truncate w-full text-center mt-1" title={category.name}>
+                {category.name.length > 8 ? category.name.slice(0, 7) + '…' : category.name}
               </span>
             </div>
           ))}
@@ -656,7 +656,7 @@ export function SpendingVisualization({
   selectedPeriod,
   allTransactions,
 }: SpendingVisualizationProps) {
-  const [chartType, setChartType] = useState<ChartType>('bar');
+  const [chartType, setChartType] = useState<ChartType>('bar-vertical');
 
   const categoryTotals = useMemo(() => calculateCategoryTotals(transactions), [transactions]);
 
