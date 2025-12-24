@@ -2,7 +2,7 @@ import { useState, useEffect, useTransition, useMemo, useCallback } from 'react'
 import './index.css'
 import { defaultCategories } from './data/categories'
 import { defaultCategoryMappings } from './data/category-mappings'
-import { FileUpload, TransactionList, FilterPanel, defaultFilters, ProjectRoadmap, TimePeriodSelector, SpendingVisualization, SettingsPanel, loadSettings, TransactionEditModal, UncategorizedCarousel, CsvConfirmationDialog, ExportDialog, SubscriptionConfirmationDialog, SubscriptionPanel, SubscriptionCard, SubscriptionEditModal, ErrorBoundary } from './components'
+import { FileUpload, TransactionList, FilterPanel, defaultFilters, ProjectRoadmap, TimePeriodSelector, SpendingVisualization, SettingsPanel, loadSettings, TransactionEditModal, UncategorizedCarousel, CsvConfirmationDialog, ExportDialog, SubscriptionConfirmationDialog, SubscriptionPanel, SubscriptionCard, SubscriptionEditModal, ErrorBoundary, LoadingOverlay } from './components'
 import { AddSubcategoryModal } from './components/AddSubcategoryModal'
 import { CategorySystemModal } from './components/CategorySystemModal'
 import { getAllCategoriesWithCustomSubcategories, getCustomSubcategories, removeCustomSubcategory } from './utils/category-service'
@@ -22,6 +22,8 @@ import { preloadIconSet } from './config/icon-sets'
 import { detectSubscriptions, createSubscription, markTransactionsAsRecurring, loadSubscriptions, saveSubscriptions, debugSubscriptionDetection } from './utils/subscription-detection'
 import type { RecurringType } from './types/transaction'
 import { AIInsightsPanel } from './components/AIInsightsPanel'
+import { useToast } from './context/ToastContext'
+import { saveTransactions, loadTransactions, clearTransactions } from './utils/transaction-persistence'
 
 // Expose debug function globally for browser console access
 declare global {
@@ -64,11 +66,31 @@ function App() {
   // Hooks
   const { isDark, toggleDark, setMode } = useDarkMode()
   const { route, navigate } = useHashRouter()
+  const toast = useToast()
 
   // Sync theme with settings
   useEffect(() => {
     setMode(appSettings.theme)
   }, [appSettings.theme, setMode])
+
+  // Load saved transactions on mount
+  useEffect(() => {
+    const { transactions: savedTransactions, metadata } = loadTransactions()
+    if (savedTransactions.length > 0 && metadata) {
+      setTransactions(savedTransactions)
+      setFileName(metadata.fileName)
+      setIsDemoMode(metadata.isDemoMode)
+      toast.info(`Restored ${savedTransactions.length} transactions from your last session`)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // Only run on mount
+
+  // Auto-save transactions when they change
+  useEffect(() => {
+    if (transactions.length > 0) {
+      saveTransactions(transactions, fileName, isDemoMode)
+    }
+  }, [transactions, fileName, isDemoMode])
 
   // Preload icons when icon set changes
   useEffect(() => {
@@ -132,7 +154,8 @@ function App() {
   const handleDeleteCustomSubcategory = useCallback((id: string) => {
     removeCustomSubcategory(id)
     setCustomSubcategoriesVersion(v => v + 1)
-  }, [])
+    toast.info('Custom subcategory deleted')
+  }, [toast])
 
   const handleFileLoaded = (content: string, name: string) => {
     // Show confirmation dialog instead of immediately processing
@@ -176,6 +199,7 @@ function App() {
         setTimeout(() => {
           const detected = detectSubscriptions(categorized)
           setIsLoading(false)
+          toast.success(`Successfully imported ${categorized.length} transactions`)
           if (detected.length > 0) {
             setDetectedSubscriptions(detected)
             setShowSubscriptionConfirmation(true)
@@ -222,6 +246,9 @@ function App() {
       return updated
     })
     setDetectedSubscriptions([])
+    if (newSubscriptions.length > 0) {
+      toast.success(`Added ${newSubscriptions.length} recurring ${newSubscriptions.length === 1 ? 'expense' : 'expenses'}`)
+    }
   }
 
   const handleSubscriptionCancel = () => {
@@ -240,6 +267,7 @@ function App() {
       isSubscription: false,
       badges: t.badges.filter(b => b.type !== 'subscription' && b.type !== 'recurring_expense')
     })))
+    toast.info('All recurring expenses have been cleared')
   }
 
   const handleEditSubscription = (subscription: Subscription) => {
@@ -252,6 +280,7 @@ function App() {
       saveSubscriptions(newSubscriptions)
       return newSubscriptions
     })
+    toast.success('Recurring expense updated')
   }
 
   const handleDeleteSubscription = (subscriptionId: string) => {
@@ -276,6 +305,7 @@ function App() {
       saveSubscriptions(newSubscriptions)
       return newSubscriptions
     })
+    toast.info('Recurring expense deleted')
   }
 
   const handleCsvCancel = () => {
@@ -306,6 +336,7 @@ function App() {
       } else {
         const categorized = categorizeTransactions(result)
         setTransactions(categorized)
+        toast.success('Demo data loaded successfully')
       }
     } catch {
       setError({
@@ -314,6 +345,7 @@ function App() {
         details: 'Please try again or upload your own CSV file',
       })
       setIsDemoMode(false)
+      toast.error('Failed to load demo data')
     }
     setIsLoading(false)
   }
@@ -321,6 +353,7 @@ function App() {
   const handleError = (err: CsvParseError) => {
     setError(err)
     setTransactions([])
+    toast.error(err.message)
   }
 
   const handleClearData = () => {
@@ -342,10 +375,14 @@ function App() {
     setSelectedPeriod(null)
     setActiveTab('overview')
     setShowResetConfirmation(false)
+    clearTransactions() // Clear from localStorage
 
     if (alsoResetSubscriptions) {
       setSubscriptions([])
       saveSubscriptions([])
+      toast.info('All data has been reset')
+    } else {
+      toast.info('Transaction data cleared')
     }
   }
 
@@ -1075,6 +1112,13 @@ function App() {
         isOpen={showAddSubcategoryModal}
         onClose={() => setShowAddSubcategoryModal(false)}
         onSubcategoryAdded={() => setCustomSubcategoriesVersion(v => v + 1)}
+      />
+
+      {/* Loading Overlay */}
+      <LoadingOverlay
+        isVisible={isLoading}
+        message="Processing your data..."
+        subMessage="Analyzing transactions and detecting patterns"
       />
     </div>
   )
