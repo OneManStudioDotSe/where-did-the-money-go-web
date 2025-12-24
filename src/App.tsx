@@ -2,7 +2,7 @@ import { useState, useEffect, useTransition, useMemo, useCallback } from 'react'
 import './index.css'
 import { defaultCategories } from './data/categories'
 import { defaultCategoryMappings } from './data/category-mappings'
-import { FileUpload, TransactionList, FilterPanel, defaultFilters, ProjectRoadmap, TimePeriodSelector, SpendingVisualization, SettingsPanel, loadSettings, TransactionEditModal, UncategorizedCarousel, CsvConfirmationDialog, ExportDialog, SubscriptionConfirmationDialog, SubscriptionPanel, SubscriptionCard, SubscriptionEditModal, ErrorBoundary, LoadingOverlay } from './components'
+import { FileUpload, TransactionList, FilterPanel, defaultFilters, ProjectRoadmap, TimePeriodSelector, SpendingVisualization, SettingsPanel, loadSettings, TransactionEditModal, UncategorizedCarousel, CsvConfirmationDialog, ExportDialog, SubscriptionConfirmationDialog, SubscriptionPanel, SubscriptionCard, SubscriptionEditModal, ErrorBoundary, LoadingOverlay, TopMerchants } from './components'
 import { AddSubcategoryModal } from './components/AddSubcategoryModal'
 import { CategorySystemModal } from './components/CategorySystemModal'
 import { getAllCategoriesWithCustomSubcategories, getCustomSubcategories, removeCustomSubcategory } from './utils/category-service'
@@ -775,6 +775,11 @@ function App() {
                 )}
               </div>
 
+              {/* Top Merchants Analysis */}
+              <div className="mt-6">
+                <TopMerchants transactions={filteredTransactions} />
+              </div>
+
               {/* AI Insights Panel */}
               <div className="mt-6">
                 <AIInsightsPanel
@@ -859,7 +864,7 @@ function App() {
       {/* Main Content with Side Ads */}
       <div className="flex-1 flex justify-center gap-8 xl:gap-12 px-4 py-8">
         {/* Left Ad Column */}
-        <AdPlaceholder position="left" />
+        {appSettings.showAds && <AdPlaceholder position="left" />}
 
         {/* Main Content */}
         <main className="max-w-7xl w-full">
@@ -869,7 +874,7 @@ function App() {
         </main>
 
         {/* Right Ad Column */}
-        <AdPlaceholder position="right" />
+        {appSettings.showAds && <AdPlaceholder position="right" />}
       </div>
 
       {/* Footer */}
@@ -1057,6 +1062,7 @@ function App() {
         onClose={() => setShowExportDialog(false)}
         transactions={transactions}
         filteredTransactions={filteredTransactions}
+        subscriptions={subscriptions}
       />
 
       {/* Reset Confirmation Dialog */}
