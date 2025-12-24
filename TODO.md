@@ -16,22 +16,16 @@
 
 ## Phase 3: Enhanced Insights & Visualizations
 - [ ] Monthly comparison charts - Compare spending across months
-- [ ] Category trends over time - See how spending in each category changes
-- [ ] Budget goals/limits - Set spending limits per category with visual progress
-- [ ] Spending forecasts - Predict end-of-month totals based on current patterns
-- [ ] Top merchants analysis - See where you spend most frequently
+- [x] Top merchants analysis - See where you spend most frequently
 
 ## Phase 4: User Experience & Polish
-- [ ] Keyboard shortcuts - Quick navigation and actions
 - [ ] Bulk transaction editing - Select multiple transactions to recategorize
-- [ ] Search/filter improvements - Search by description, amount ranges, date ranges
-- [ ] Export enhancements - PDF reports, filtered exports, custom date ranges
+- [x] Export enhancements - PDF reports, filtered exports, custom date ranges
 - [ ] Onboarding tour - First-time user walkthrough
-- [ ] Accessibility improvements - Screen reader support, focus management
 
 ## Critical Fixes (High Priority)
 - [ ] Error boundaries for each major section (not just one global)
-- [ ] Empty states for all lists and panels
+- [x] Empty states for all lists and panels
 - [ ] Mobile responsiveness audit and fixes
 
 ---
