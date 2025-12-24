@@ -33,7 +33,9 @@ export const defaultCategoryMappings: CategoryMapping[] = [
   createMapping('GOOGLE ONE', 'subscriptions', 'software', 'contains', 85),
   createMapping('APPLE COM/BI', 'subscriptions', 'software', 'contains', 85),
   createMapping('GOOGLE GSUIT', 'subscriptions', 'software', 'contains', 85),
+  createMapping('GOOGLE GOOG', 'subscriptions', 'software', 'contains', 85),
   createMapping('GOOGLE PLAY', 'entertainment', 'gaming', 'contains', 80),
+  createMapping('GOOGLE ROBLO', 'entertainment', 'gaming', 'contains', 80),
 
   // === GROCERIES - SUPERMARKETS ===
   createMapping('WILLYS', 'groceries', 'supermarket', 'contains', 70),
@@ -51,6 +53,10 @@ export const defaultCategoryMappings: CategoryMapping[] = [
   createMapping('PRESSBYRAN', 'groceries', 'convenience', 'contains', 70),
   createMapping('7-ELEVEN', 'groceries', 'convenience', 'contains', 70),
   createMapping('CONVINI', 'groceries', 'convenience', 'contains', 70),
+  createMapping('MYWAY', 'groceries', 'convenience', 'contains', 70),
+  createMapping('MY WAY', 'groceries', 'convenience', 'contains', 70),
+  createMapping('DIREKTEN', 'groceries', 'convenience', 'contains', 70),
+  createMapping('QUICKSHOPS', 'groceries', 'convenience', 'contains', 70),
 
   // === ALCOHOL ===
   createMapping('SYSTEMBOLAGE', 'groceries', 'alcohol', 'contains', 75),
@@ -65,8 +71,10 @@ export const defaultCategoryMappings: CategoryMapping[] = [
   // === TRANSPORTATION - PARKING ===
   createMapping('EASYPARK', 'transportation', 'parking', 'contains', 75),
   createMapping('AIMO PARK', 'transportation', 'parking', 'contains', 75),
+  createMapping('AIMO AIMO P', 'transportation', 'parking', 'contains', 75),
   createMapping('PARKMAN', 'transportation', 'parking', 'contains', 75),
   createMapping('P-SERVICE', 'transportation', 'parking', 'contains', 75),
+  createMapping('PARKERINGSSERVICE', 'transportation', 'parking', 'contains', 75),
 
   // === TRANSPORTATION - PUBLIC TRANSIT ===
   createMapping('SL', 'transportation', 'public_transit', 'exact', 90),  // Exact match for "SL"
@@ -88,7 +96,16 @@ export const defaultCategoryMappings: CategoryMapping[] = [
   createMapping('ESPRESSO HOU', 'food_dining', 'coffee', 'contains', 70),
   createMapping('WAYNES COFFE', 'food_dining', 'coffee', 'contains', 70),
   createMapping('COFFEE HOUSE', 'food_dining', 'coffee', 'contains', 70),
+  createMapping('COFFE HOUSE', 'food_dining', 'coffee', 'contains', 70),
   createMapping('STARBUCKS', 'food_dining', 'coffee', 'contains', 70),
+  createMapping('FRANKLIN COF', 'food_dining', 'coffee', 'contains', 70),
+  createMapping('FIKATERIAN', 'food_dining', 'coffee', 'contains', 70),
+  createMapping('GRILLSKA HUS', 'food_dining', 'coffee', 'contains', 70),
+  createMapping('LUSSINS KOND', 'food_dining', 'coffee', 'contains', 70),
+  createMapping('KLADDKAKAN', 'food_dining', 'coffee', 'contains', 70),
+  createMapping('CAFE VAXTHUS', 'food_dining', 'coffee', 'contains', 70),
+  createMapping('ELIN CAFE', 'food_dining', 'coffee', 'contains', 70),
+  createMapping('CAFE FRESH', 'food_dining', 'coffee', 'contains', 70),
   createMapping('CAFE', 'food_dining', 'coffee', 'contains', 50),
 
   // === FOOD & DINING - FAST FOOD ===
@@ -99,6 +116,30 @@ export const defaultCategoryMappings: CategoryMapping[] = [
 
   // === FOOD & DINING - RESTAURANTS ===
   createMapping('MELINS', 'food_dining', 'restaurant', 'contains', 70),
+  createMapping('O LEARYS', 'food_dining', 'restaurant', 'contains', 70),
+  createMapping('DADOS KÖK', 'food_dining', 'restaurant', 'contains', 70),
+  createMapping('ANTONIOS KOK', 'food_dining', 'restaurant', 'contains', 70),
+  createMapping('BONGO KOK', 'food_dining', 'restaurant', 'contains', 70),
+  createMapping('STEAKHOUSE', 'food_dining', 'restaurant', 'contains', 70),
+  createMapping('KIMCHISTAN', 'food_dining', 'restaurant', 'contains', 70),
+  createMapping('58 DIM SUM', 'food_dining', 'restaurant', 'contains', 70),
+  createMapping('LA NETA', 'food_dining', 'restaurant', 'contains', 70),
+  createMapping('LILLA RUCCOL', 'food_dining', 'restaurant', 'contains', 70),
+  createMapping('IL FORNO', 'food_dining', 'restaurant', 'contains', 70),
+  createMapping('BROTHER TUCK', 'food_dining', 'restaurant', 'contains', 70),
+  createMapping('JACKS BURGER', 'food_dining', 'restaurant', 'contains', 70),
+  createMapping('EFENDI', 'food_dining', 'restaurant', 'contains', 70),
+  createMapping('NORDISKA BAR', 'food_dining', 'restaurant', 'contains', 70),
+  createMapping('RAMA 2 THAI', 'food_dining', 'restaurant', 'contains', 70),
+  createMapping('UM THAI', 'food_dining', 'restaurant', 'contains', 70),
+  createMapping('GREKISK', 'food_dining', 'restaurant', 'contains', 70),
+  createMapping('GREKISKA', 'food_dining', 'restaurant', 'contains', 70),
+  createMapping('THE BISHOPS', 'food_dining', 'restaurant', 'contains', 70),
+  createMapping('LEBANESE FOO', 'food_dining', 'restaurant', 'contains', 70),
+  createMapping('PONG EXPRE', 'food_dining', 'restaurant', 'contains', 70),
+  createMapping('SULTAN EN SM', 'food_dining', 'restaurant', 'contains', 70),
+  createMapping('BRON RESTAUR', 'food_dining', 'restaurant', 'contains', 70),
+  createMapping('GRILLPALATSE', 'food_dining', 'restaurant', 'contains', 70),
   createMapping('RESTAURANG', 'food_dining', 'restaurant', 'contains', 60),
 
   // === FOOD & DINING - DELIVERY ===
@@ -124,6 +165,13 @@ export const defaultCategoryMappings: CategoryMapping[] = [
   createMapping('TRYGG-HANSA', 'subscriptions', 'insurance', 'contains', 85),
   createMapping('ICA FÖRSÄKR', 'subscriptions', 'insurance', 'contains', 85),
   createMapping('ICA FORSAKR', 'subscriptions', 'insurance', 'contains', 85),
+  createMapping('HEDVIG', 'subscriptions', 'insurance', 'contains', 85),
+  createMapping('T HEDVIG', 'subscriptions', 'insurance', 'contains', 85),
+  createMapping('BLIWA', 'subscriptions', 'insurance', 'contains', 85),
+
+  // === SUBSCRIPTIONS - OTHER ===
+  createMapping('ENKLA VARDAG', 'subscriptions', 'other', 'contains', 85),
+  createMapping('BILLMATE', 'subscriptions', 'other', 'contains', 85),
 
   // === HEALTH ===
   createMapping('KRONANS APOT', 'health', 'pharmacy', 'contains', 75),
@@ -144,27 +192,55 @@ export const defaultCategoryMappings: CategoryMapping[] = [
   createMapping('RODA KORSET', 'donations', 'charity', 'contains', 80),
   createMapping('STADSMISSION', 'donations', 'charity', 'contains', 80),
 
-  // === SHOPPING ===
+  // === SHOPPING - ONLINE ===
   createMapping('AMAZON', 'shopping', 'online', 'contains', 70),
+  createMapping('LUXEMBOURG', 'shopping', 'online', 'contains', 70), // Amazon purchases
+  createMapping('PAYPAL ALIP', 'shopping', 'online', 'contains', 70),
+  createMapping('ETSY', 'shopping', 'online', 'contains', 70),
+  createMapping('VINTED', 'shopping', 'online', 'contains', 70),
+  createMapping('CDON', 'shopping', 'online', 'contains', 70),
+  createMapping('SMARTPHOTO', 'shopping', 'online', 'contains', 70),
+  createMapping('ZALANDO', 'shopping', 'online', 'contains', 70),
+  createMapping('K*', 'shopping', 'online', 'starts_with', 40), // Klarna purchases
+
+  // === SHOPPING - HOME GOODS ===
   createMapping('IKEA', 'shopping', 'home_goods', 'contains', 70),
+  createMapping('CLAS OHLSON', 'shopping', 'home_goods', 'contains', 70),
+
+  // === SHOPPING - CLOTHING ===
   createMapping('H&M', 'shopping', 'clothing', 'contains', 70),
   createMapping('HM SE', 'shopping', 'clothing', 'starts_with', 70),
   createMapping('LINDEX', 'shopping', 'clothing', 'contains', 70),
   createMapping('KAPPAHL', 'shopping', 'clothing', 'contains', 70),
-  createMapping('CLAS OHLSON', 'shopping', 'home_goods', 'contains', 70),
+  createMapping('DEICHMANN', 'shopping', 'clothing', 'contains', 70),
+  createMapping('DIN SKO', 'shopping', 'clothing', 'contains', 70),
+  createMapping('XXL SPORT', 'shopping', 'clothing', 'contains', 70),
+  createMapping('STADIUM', 'shopping', 'clothing', 'contains', 70),
+  createMapping('LINDRA SECON', 'shopping', 'clothing', 'contains', 70),
+  createMapping('MYRORNA', 'shopping', 'clothing', 'contains', 70),
+
+  // === SHOPPING - HARDWARE ===
   createMapping('BAUHAUS', 'shopping', 'hardware', 'contains', 70),
   createMapping('HORNBACH', 'shopping', 'hardware', 'contains', 70),
-  createMapping('ZALANDO', 'shopping', 'online', 'contains', 70),
-  createMapping('K*', 'shopping', 'online', 'starts_with', 40), // Klarna purchases
+  createMapping('AUTODOC', 'shopping', 'hardware', 'contains', 70),
+  createMapping('EMBLADS BILS', 'shopping', 'hardware', 'contains', 70),
 
   // === ENTERTAINMENT - EVENTS ===
   createMapping('FILMSTADEN', 'entertainment', 'events', 'contains', 75),
   createMapping('TICKETMASTER', 'entertainment', 'events', 'contains', 75),
   createMapping('TICKET SE', 'entertainment', 'events', 'contains', 75),
+  createMapping('KULTURBILJET', 'entertainment', 'events', 'contains', 75),
+  createMapping('ZITA FOLKETS', 'entertainment', 'events', 'contains', 75),
+  createMapping('TM TICKETMA', 'entertainment', 'events', 'contains', 75),
+  createMapping('K*AXS SWEDEN', 'entertainment', 'events', 'contains', 75),
+  createMapping('JESSIES MUSI', 'entertainment', 'events', 'contains', 75),
 
   // === ENTERTAINMENT - ACTIVITIES ===
   createMapping('JUMPYARD', 'entertainment', 'activities', 'contains', 75),
   createMapping('RACEHALL', 'entertainment', 'activities', 'contains', 75),
+  createMapping('ACCROPARK', 'entertainment', 'activities', 'contains', 75),
+  createMapping('GLOMSTAPOOLE', 'entertainment', 'activities', 'contains', 75),
+  createMapping('HESSELBY SLO', 'entertainment', 'activities', 'contains', 75),
 
   // === CHILDREN ===
   createMapping('LEKIA', 'children', 'toys', 'contains', 70),
@@ -178,6 +254,8 @@ export const defaultCategoryMappings: CategoryMapping[] = [
   createMapping('BANKAKTIEBOL', 'financial', 'bank_fees', 'contains', 70),
 
   // === INCOME ===
+  createMapping('LÖN', 'income', 'salary', 'contains', 90),
+  createMapping('LON', 'income', 'salary', 'contains', 90),
   createMapping('FKASSA', 'income', 'benefits', 'contains', 85),
   createMapping('BARNBDR', 'income', 'benefits', 'contains', 85),
   createMapping('KLARNA REFUN', 'income', 'refund', 'contains', 80),
