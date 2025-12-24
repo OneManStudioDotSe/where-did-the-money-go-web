@@ -17,6 +17,7 @@ export { SubscriptionGrid } from './SubscriptionGrid';
 export { SubscriptionPanel, SubscriptionCard } from './SubscriptionPanel';
 export { SubscriptionEditModal } from './SubscriptionEditModal';
 export { ErrorBoundary } from './ErrorBoundary';
+export { TopMerchants } from './TopMerchants';
 export type { TimePeriod } from './TimePeriodSelector';
 export type { AppSettings, SubscriptionViewVariation, SubscriptionPlacement } from './SettingsPanel';
 
@@ -32,3 +33,4 @@ export { Badge, TransactionBadges, getTransactionBadges } from './ui/Badge';
 export type { BadgeType } from './ui/Badge';
 export { Skeleton, TransactionListSkeleton, DashboardSkeleton, ChartSkeleton, StatCardSkeleton } from './ui/Skeleton';
 export { LoadingOverlay } from './ui/LoadingOverlay';
+export { EmptyState, TransactionsEmptyState, RecurringEmptyState, ChartEmptyState, SearchEmptyState, MerchantsEmptyState, InsightsEmptyState } from './ui/EmptyState';

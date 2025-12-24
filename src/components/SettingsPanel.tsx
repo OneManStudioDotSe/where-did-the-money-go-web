@@ -32,6 +32,8 @@ export interface AppSettings {
   aiProvider: AIProvider | null;
   /** API key for the selected AI provider */
   aiApiKey: string;
+  /** Whether to show ad placeholders (default: true) */
+  showAds: boolean;
 }
 
 const defaultSettings: AppSettings = {
@@ -46,6 +48,7 @@ const defaultSettings: AppSettings = {
   transactionPageSize: 100,
   aiProvider: null,
   aiApiKey: '',
+  showAds: true,
 };
 
 const STORAGE_KEY = 'app_settings';
@@ -553,6 +556,35 @@ export function SettingsPanel({ isOpen, onClose, settings, onSettingsChange, sub
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   Number of transactions shown per page. Lower values improve scrolling performance.
                 </p>
+              </div>
+
+              {/* Show Ad Placeholders */}
+              <div className="mb-4">
+                <label className="flex items-center justify-between cursor-pointer">
+                  <div>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Show ad placeholders
+                    </span>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                      Display placeholder banners for future ad spaces
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={localSettings.showAds}
+                    onClick={() => setLocalSettings({ ...localSettings, showAds: !localSettings.showAds })}
+                    className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800 ${
+                      localSettings.showAds ? 'bg-primary-600' : 'bg-gray-200 dark:bg-slate-600'
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                        localSettings.showAds ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </label>
               </div>
 
               {/* Date Format */}

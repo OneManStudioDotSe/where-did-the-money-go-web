@@ -3,6 +3,7 @@ import type { Subscription, Transaction, RecurringType } from '../types/transact
 import { SubscriptionList } from './SubscriptionList';
 import { SubscriptionGrid } from './SubscriptionGrid';
 import { getCategoryIcon, getCategoryColor } from '../utils/category-service';
+import { RecurringEmptyState } from './ui/EmptyState';
 
 type SortOption = 'name' | 'amount' | 'day';
 type SortDirection = 'asc' | 'desc';
@@ -366,10 +367,7 @@ export function SubscriptionCard({
             Recurring Payments
           </h3>
         </div>
-        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-          <p className="text-sm">No recurring payments detected</p>
-          <p className="text-xs mt-1">Import transactions to detect recurring payments</p>
-        </div>
+        <RecurringEmptyState />
       </div>
     );
   }
