@@ -214,23 +214,25 @@ function App() {
         setTimeout(() => {
           const detected = detectSubscriptions(categorized)
 
-          // Validate transactions for suspicious patterns
-          const validation = validateTransactions(categorized)
-          const suspiciousWithDismissed = applyDismissedStatus(validation.suspicious)
-          setSuspiciousTransactions(suspiciousWithDismissed)
+          // Validate transactions for suspicious patterns (if enabled in settings)
+          if (appSettings.enableSuspiciousDetection) {
+            const validation = validateTransactions(categorized)
+            const suspiciousWithDismissed = applyDismissedStatus(validation.suspicious)
+            setSuspiciousTransactions(suspiciousWithDismissed)
 
-          // Mark suspicious transactions with badges
-          const withSuspiciousBadges = markSuspiciousTransactions(categorized, suspiciousWithDismissed)
-          setTransactions(withSuspiciousBadges)
+            // Mark suspicious transactions with badges
+            const withSuspiciousBadges = markSuspiciousTransactions(categorized, suspiciousWithDismissed)
+            setTransactions(withSuspiciousBadges)
+
+            // Show suspicious warning if there are undismissed issues
+            const undismissedCount = suspiciousWithDismissed.filter(s => !s.isDismissed).length
+            if (undismissedCount > 0) {
+              toast.warning(`${undismissedCount} potentially suspicious transaction${undismissedCount !== 1 ? 's' : ''} found`)
+            }
+          }
 
           setIsLoading(false)
           toast.success(`Successfully imported ${categorized.length} transactions`)
-
-          // Show suspicious warning if there are undismissed issues
-          const undismissedCount = suspiciousWithDismissed.filter(s => !s.isDismissed).length
-          if (undismissedCount > 0) {
-            toast.warning(`${undismissedCount} potentially suspicious transaction${undismissedCount !== 1 ? 's' : ''} found`)
-          }
 
           if (detected.length > 0) {
             setDetectedSubscriptions(detected)
@@ -771,7 +773,7 @@ function App() {
             </div>
 
             {/* Suspicious Transactions Warning */}
-            {undismissedSuspiciousCount > 0 && (
+            {appSettings.enableSuspiciousDetection && undismissedSuspiciousCount > 0 && (
               <div className="mt-4 bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-800 rounded-lg p-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
