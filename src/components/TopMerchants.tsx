@@ -259,12 +259,12 @@ export function TopMerchants({ transactions, maxMerchants = 10 }: TopMerchantsPr
                     </div>
 
                     {/* Sub-stats */}
-                    <div className="flex items-center gap-3 mt-1 text-xs text-gray-500 dark:text-gray-400">
-                      <span>{merchant.transactionCount} {merchant.transactionCount === 1 ? 'transaction' : 'transactions'}</span>
-                      <span>•</span>
-                      <span>Avg {formatAmount(merchant.averageAmount)} kr</span>
-                      <span>•</span>
-                      <span>Last: {formatDate(merchant.lastTransaction)}</span>
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 sm:gap-3 mt-1 text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
+                      <span>{merchant.transactionCount} txn{merchant.transactionCount !== 1 ? 's' : ''}</span>
+                      <span className="hidden sm:inline">•</span>
+                      <span>Avg {formatAmount(merchant.averageAmount)}</span>
+                      <span className="hidden sm:inline">•</span>
+                      <span className="hidden sm:inline">Last: {formatDate(merchant.lastTransaction)}</span>
                     </div>
                   </div>
                 </div>
@@ -285,18 +285,18 @@ export function TopMerchants({ transactions, maxMerchants = 10 }: TopMerchantsPr
 
         {/* Summary */}
         <div className="mt-4 pt-4 border-t border-gray-200 dark:border-slate-700">
-          <div className="grid grid-cols-3 gap-3 text-center">
-            <div className="bg-gray-50 dark:bg-slate-700/50 rounded-lg p-3">
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Total merchants</p>
-              <p className="text-lg font-semibold text-gray-900 dark:text-white">{merchantData.length}</p>
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 text-center">
+            <div className="bg-gray-50 dark:bg-slate-700/50 rounded-lg p-2 sm:p-3">
+              <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mb-0.5 sm:mb-1">Merchants</p>
+              <p className="text-sm sm:text-lg font-semibold text-gray-900 dark:text-white">{merchantData.length}</p>
             </div>
-            <div className="bg-gray-50 dark:bg-slate-700/50 rounded-lg p-3">
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Total spent</p>
-              <p className="text-lg font-semibold text-gray-900 dark:text-white">{formatAmount(totalSpent)} kr</p>
+            <div className="bg-gray-50 dark:bg-slate-700/50 rounded-lg p-2 sm:p-3">
+              <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mb-0.5 sm:mb-1">Total spent</p>
+              <p className="text-sm sm:text-lg font-semibold text-gray-900 dark:text-white">{formatAmount(totalSpent)}</p>
             </div>
-            <div className="bg-gray-50 dark:bg-slate-700/50 rounded-lg p-3">
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Avg per merchant</p>
-              <p className="text-lg font-semibold text-gray-900 dark:text-white">
+            <div className="bg-gray-50 dark:bg-slate-700/50 rounded-lg p-2 sm:p-3">
+              <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mb-0.5 sm:mb-1">Avg/merchant</p>
+              <p className="text-sm sm:text-lg font-semibold text-gray-900 dark:text-white">
                 {formatAmount(merchantData.length > 0 ? totalSpent / merchantData.length : 0)} kr
               </p>
             </div>

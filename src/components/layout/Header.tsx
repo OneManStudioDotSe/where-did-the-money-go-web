@@ -35,7 +35,7 @@ export function Header({ isDark, onToggleDark, onOpenSettings, currentRoute, onN
     <>
       <header className="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-gray-200 dark:border-slate-800">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center justify-between h-24">
+          <div className="flex items-center justify-between h-16 sm:h-20 md:h-24">
             {/* Logo */}
             <a
               href="#/"

@@ -81,10 +81,10 @@ export function FilterPanel({
   return (
     <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 mb-6">
       {/* Search Bar + Toggle */}
-      <div className="p-4">
-        <div className="flex items-center gap-4">
+      <div className="p-3 sm:p-4">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-4">
           {/* Search Input */}
-          <div className="flex-1 relative">
+          <div className="flex-1 min-w-[200px] relative">
             <svg
               className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500"
               fill="none"
@@ -149,13 +149,12 @@ export function FilterPanel({
           </button>
 
           {/* Results Count */}
-          <div className="text-sm text-gray-500 dark:text-gray-400">
+          <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
             {filteredCount === totalCount ? (
-              <span>{totalCount} transactions</span>
+              <span>{totalCount} txns</span>
             ) : (
               <span>
-                <span className="font-medium text-gray-900 dark:text-white">{filteredCount}</span> of{' '}
-                {totalCount} transactions
+                <span className="font-medium text-gray-900 dark:text-white">{filteredCount}</span>/{totalCount}
               </span>
             )}
           </div>
@@ -164,8 +163,8 @@ export function FilterPanel({
 
       {/* Expanded Filters */}
       {isExpanded && (
-        <div className="border-t border-gray-200 dark:border-slate-700 p-4">
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="border-t border-gray-200 dark:border-slate-700 p-3 sm:p-4">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {/* Category Filter */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">

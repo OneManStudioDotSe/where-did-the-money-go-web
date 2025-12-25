@@ -3,6 +3,7 @@ import type { Transaction } from '../types/transaction';
 import type { TimePeriod } from './TimePeriodSelector';
 import { getCategoryName, getCategoryColor, getCategoryIcon, getSubcategoryName } from '../utils/category-service';
 import { ChartEmptyState } from './ui/EmptyState';
+import { MonthlyComparisonChart } from './MonthlyComparisonChart';
 
 interface SpendingVisualizationProps {
   transactions: Transaction[];
@@ -284,22 +285,23 @@ function BarChart({ categories, maxBars = 10 }: { categories: CategoryTotal[]; m
 
 function VerticalBarChart({ categories, maxBars = 8 }: { categories: CategoryTotal[]; maxBars?: number }) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  // Show fewer bars on mobile
   const displayCategories = categories.slice(0, maxBars);
   const maxValue = displayCategories.length > 0 ? Math.max(...displayCategories.map((c) => c.total)) : 0;
   const chartHeight = 180;
   const barAreaHeight = chartHeight - 20; // Leave room for icons
 
   return (
-    <div className="flex">
+    <div className="flex overflow-x-auto">
       {/* Y-axis labels - vertical on left */}
-      <div className="flex flex-col justify-between text-xs text-gray-400 dark:text-gray-500 text-right pr-2 py-1" style={{ height: barAreaHeight }}>
-        <span className="leading-none">{formatAmount(maxValue)} kr</span>
-        <span className="leading-none">{formatAmount(maxValue / 2)} kr</span>
+      <div className="flex flex-col justify-between text-[10px] sm:text-xs text-gray-400 dark:text-gray-500 text-right pr-1 sm:pr-2 py-1 flex-shrink-0" style={{ height: barAreaHeight }}>
+        <span className="leading-none">{formatAmount(maxValue)}</span>
+        <span className="leading-none">{formatAmount(maxValue / 2)}</span>
         <span className="leading-none">0</span>
       </div>
 
       {/* Chart area */}
-      <div className="flex-1">
+      <div className="flex-1 min-w-0">
         {/* Y-axis line */}
         <div className="relative border-l border-gray-200 dark:border-slate-600" style={{ height: barAreaHeight }}>
           {/* Horizontal grid lines */}
@@ -310,7 +312,7 @@ function VerticalBarChart({ categories, maxBars = 8 }: { categories: CategoryTot
           </div>
 
           {/* Bars */}
-          <div className="flex items-end justify-center gap-2 h-full px-2">
+          <div className="flex items-end justify-around gap-1 sm:gap-2 h-full px-1 sm:px-2">
             {displayCategories.map((category, index) => {
               const barHeight = maxValue > 0 ? (category.total / maxValue) * (barAreaHeight - 10) : 0;
               const isHovered = hoveredIndex === index;
@@ -318,19 +320,20 @@ function VerticalBarChart({ categories, maxBars = 8 }: { categories: CategoryTot
               return (
                 <div
                   key={category.categoryId || 'uncategorized'}
-                  className="flex flex-col items-center relative"
+                  className="flex flex-col items-center relative flex-1 max-w-[56px]"
                   onMouseEnter={() => setHoveredIndex(index)}
                   onMouseLeave={() => setHoveredIndex(null)}
+                  onClick={() => setHoveredIndex(isHovered ? null : index)}
                 >
-                  {/* Tooltip on hover */}
+                  {/* Tooltip on hover/tap */}
                   {isHovered && (
-                    <div className="absolute bottom-full mb-2 px-2 py-1 bg-gray-900 dark:bg-slate-700 text-white text-xs rounded shadow-lg whitespace-nowrap z-10">
+                    <div className="absolute bottom-full mb-2 px-2 py-1 bg-gray-900 dark:bg-slate-700 text-white text-xs rounded shadow-lg whitespace-nowrap z-10 max-w-[200px] truncate">
                       {category.name}: {formatAmount(category.total)} kr ({category.percentage.toFixed(1)}%)
                     </div>
                   )}
                   {/* Bar */}
                   <div
-                    className="w-14 rounded-t-md transition-all duration-300"
+                    className="w-full max-w-[40px] sm:max-w-[56px] rounded-t-md transition-all duration-300"
                     style={{
                       height: `${barHeight}px`,
                       backgroundColor: category.color,
@@ -346,12 +349,12 @@ function VerticalBarChart({ categories, maxBars = 8 }: { categories: CategoryTot
         </div>
 
         {/* X-axis icons with labels */}
-        <div className="flex justify-center gap-2 mt-2 px-2">
+        <div className="flex justify-around gap-1 sm:gap-2 mt-2 px-1 sm:px-2">
           {displayCategories.map((category) => (
-            <div key={category.categoryId || 'uncategorized-icon'} className="w-14 flex flex-col items-center">
-              <span className="text-lg">{category.icon}</span>
-              <span className="text-xs font-medium text-gray-600 dark:text-gray-300 truncate w-full text-center mt-1" title={category.name}>
-                {category.name.length > 8 ? category.name.slice(0, 7) + '…' : category.name}
+            <div key={category.categoryId || 'uncategorized-icon'} className="flex-1 max-w-[56px] flex flex-col items-center min-w-0">
+              <span className="text-base sm:text-lg">{category.icon}</span>
+              <span className="text-[10px] sm:text-xs font-medium text-gray-600 dark:text-gray-300 truncate w-full text-center mt-0.5 sm:mt-1" title={category.name}>
+                {category.name.length > 6 ? category.name.slice(0, 5) + '…' : category.name}
               </span>
             </div>
           ))}
@@ -752,23 +755,23 @@ export function SpendingVisualization({
         </div>
       </div>
 
-      <div className="p-4">
+      <div className="p-3 sm:p-4">
         {/* Quick Stats */}
-        <div className="grid grid-cols-3 gap-3 mb-6">
-          <div className="text-center p-3 bg-danger-50 dark:bg-danger-900/20 rounded-lg">
-            <p className="text-xs text-danger-600 dark:text-danger-400 mb-1">Expenses</p>
-            <p className="text-lg font-bold text-danger-700 dark:text-danger-400">-{formatAmount(totalExpenses)} kr</p>
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-4 sm:mb-6">
+          <div className="text-center p-2 sm:p-3 bg-danger-50 dark:bg-danger-900/20 rounded-lg">
+            <p className="text-[10px] sm:text-xs text-danger-600 dark:text-danger-400 mb-0.5 sm:mb-1">Expenses</p>
+            <p className="text-sm sm:text-lg font-bold text-danger-700 dark:text-danger-400">-{formatAmount(totalExpenses)}</p>
           </div>
-          <div className="text-center p-3 bg-success-50 dark:bg-success-900/20 rounded-lg">
-            <p className="text-xs text-success-600 dark:text-success-400 mb-1">Income</p>
-            <p className="text-lg font-bold text-success-700 dark:text-success-400">+{formatAmount(totalIncome)} kr</p>
+          <div className="text-center p-2 sm:p-3 bg-success-50 dark:bg-success-900/20 rounded-lg">
+            <p className="text-[10px] sm:text-xs text-success-600 dark:text-success-400 mb-0.5 sm:mb-1">Income</p>
+            <p className="text-sm sm:text-lg font-bold text-success-700 dark:text-success-400">+{formatAmount(totalIncome)}</p>
           </div>
-          <div className={`text-center p-3 rounded-lg ${totalIncome - totalExpenses >= 0 ? 'bg-success-50 dark:bg-success-900/20' : 'bg-danger-50 dark:bg-danger-900/20'}`}>
-            <p className={`text-xs mb-1 ${totalIncome - totalExpenses >= 0 ? 'text-success-600 dark:text-success-400' : 'text-danger-600 dark:text-danger-400'}`}>
+          <div className={`text-center p-2 sm:p-3 rounded-lg ${totalIncome - totalExpenses >= 0 ? 'bg-success-50 dark:bg-success-900/20' : 'bg-danger-50 dark:bg-danger-900/20'}`}>
+            <p className={`text-[10px] sm:text-xs mb-0.5 sm:mb-1 ${totalIncome - totalExpenses >= 0 ? 'text-success-600 dark:text-success-400' : 'text-danger-600 dark:text-danger-400'}`}>
               Net
             </p>
-            <p className={`text-lg font-bold ${totalIncome - totalExpenses >= 0 ? 'text-success-700 dark:text-success-400' : 'text-danger-700 dark:text-danger-400'}`}>
-              {totalIncome - totalExpenses >= 0 ? '+' : ''}{formatAmount(totalIncome - totalExpenses)} kr
+            <p className={`text-sm sm:text-lg font-bold ${totalIncome - totalExpenses >= 0 ? 'text-success-700 dark:text-success-400' : 'text-danger-700 dark:text-danger-400'}`}>
+              {totalIncome - totalExpenses >= 0 ? '+' : ''}{formatAmount(totalIncome - totalExpenses)}
             </p>
           </div>
         </div>
@@ -812,6 +815,11 @@ export function SpendingVisualization({
             selectedPeriod={selectedPeriod}
             allTransactions={allTransactions}
           />
+        </div>
+
+        {/* Monthly Comparison Chart */}
+        <div className="border-t border-gray-200 dark:border-slate-700 pt-4 mb-4">
+          <MonthlyComparisonChart transactions={allTransactions} maxMonths={6} />
         </div>
 
         {/* Category Totals Table */}

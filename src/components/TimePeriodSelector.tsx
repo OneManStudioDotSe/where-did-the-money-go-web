@@ -473,27 +473,27 @@ export function TimePeriodSelector({
             </div>
 
             {/* Large Period Stats */}
-            <div className="grid grid-cols-4 gap-4">
-              <div className="bg-white/60 dark:bg-slate-800/60 rounded-lg p-3 text-center">
-                <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Transactions</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{periodTotals.count}</p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
+              <div className="bg-white/60 dark:bg-slate-800/60 rounded-lg p-2 sm:p-3 text-center">
+                <p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 mb-0.5 sm:mb-1">Transactions</p>
+                <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">{periodTotals.count}</p>
               </div>
-              <div className="bg-white/60 dark:bg-slate-800/60 rounded-lg p-3 text-center">
-                <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Expenses</p>
-                <p className="text-2xl font-bold text-danger-600 dark:text-danger-400">
-                  -{periodTotals.expenses.toLocaleString('sv-SE', { maximumFractionDigits: 0 })} kr
+              <div className="bg-white/60 dark:bg-slate-800/60 rounded-lg p-2 sm:p-3 text-center">
+                <p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 mb-0.5 sm:mb-1">Expenses</p>
+                <p className="text-lg sm:text-2xl font-bold text-danger-600 dark:text-danger-400">
+                  -{periodTotals.expenses.toLocaleString('sv-SE', { maximumFractionDigits: 0 })}
                 </p>
               </div>
-              <div className="bg-white/60 dark:bg-slate-800/60 rounded-lg p-3 text-center">
-                <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Income</p>
-                <p className="text-2xl font-bold text-success-600 dark:text-success-400">
-                  +{periodTotals.income.toLocaleString('sv-SE', { maximumFractionDigits: 0 })} kr
+              <div className="bg-white/60 dark:bg-slate-800/60 rounded-lg p-2 sm:p-3 text-center">
+                <p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 mb-0.5 sm:mb-1">Income</p>
+                <p className="text-lg sm:text-2xl font-bold text-success-600 dark:text-success-400">
+                  +{periodTotals.income.toLocaleString('sv-SE', { maximumFractionDigits: 0 })}
                 </p>
               </div>
-              <div className="bg-white/60 dark:bg-slate-800/60 rounded-lg p-3 text-center">
-                <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Net</p>
-                <p className={`text-2xl font-bold ${periodTotals.net >= 0 ? 'text-success-600 dark:text-success-400' : 'text-danger-600 dark:text-danger-400'}`}>
-                  {periodTotals.net >= 0 ? '+' : ''}{periodTotals.net.toLocaleString('sv-SE', { maximumFractionDigits: 0 })} kr
+              <div className="bg-white/60 dark:bg-slate-800/60 rounded-lg p-2 sm:p-3 text-center">
+                <p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 mb-0.5 sm:mb-1">Net</p>
+                <p className={`text-lg sm:text-2xl font-bold ${periodTotals.net >= 0 ? 'text-success-600 dark:text-success-400' : 'text-danger-600 dark:text-danger-400'}`}>
+                  {periodTotals.net >= 0 ? '+' : ''}{periodTotals.net.toLocaleString('sv-SE', { maximumFractionDigits: 0 })}
                 </p>
               </div>
             </div>
