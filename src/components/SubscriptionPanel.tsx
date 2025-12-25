@@ -69,15 +69,37 @@ function getUpcomingPayments(subscriptions: Subscription[], daysAhead: number = 
 
 type ViewMode = 'list' | 'grid';
 
+/**
+ * Props for the SubscriptionPanel component.
+ */
 interface SubscriptionPanelProps {
+  /**
+   * Array of confirmed subscriptions to display.
+   */
   subscriptions: Subscription[];
+  /**
+   * Transaction history used to determine next billing dates.
+   */
   transactions: Transaction[];
+  /**
+   * Callback fired when a subscription is clicked.
+   * @param subscription - The clicked subscription
+   */
   onSubscriptionClick?: (subscription: Subscription) => void;
-  /** Callback when user wants to edit a subscription */
+  /**
+   * Callback fired when user wants to edit a subscription.
+   * @param subscription - The subscription to edit
+   */
   onEditSubscription?: (subscription: Subscription) => void;
-  /** Whether to show in compact mode (for card placement in overview) */
+  /**
+   * Whether to show in compact mode (for card placement in overview).
+   * @default false
+   */
   compact?: boolean;
-  /** View mode from settings - when provided, hides the toggle and uses this mode */
+  /**
+   * View mode from settings - when provided, hides the toggle and uses this mode.
+   * Options: 'list' | 'grid'
+   */
   viewMode?: ViewMode;
 }
 

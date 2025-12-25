@@ -5,18 +5,41 @@ import { TransactionBadges } from './ui/Badge';
 import { toTitleCase } from '../utils/text-utils';
 import { TransactionsEmptyState } from './ui/EmptyState';
 
+/**
+ * Props for the TransactionList component.
+ */
 interface TransactionListProps {
+  /**
+   * Array of transactions to display.
+   */
   transactions: Transaction[];
+  /**
+   * Callback fired when a transaction row is clicked.
+   * @param transaction - The clicked transaction
+   */
   onTransactionClick?: (transaction: Transaction) => void;
-  /** Number of transactions per page (default: 100) */
+  /**
+   * Number of transactions per page.
+   * @default 100
+   */
   pageSize?: number;
-  /** Whether bulk editing mode is enabled */
+  /**
+   * Whether bulk editing mode is enabled.
+   * When true, checkboxes are shown for multi-select.
+   */
   bulkEditEnabled?: boolean;
-  /** Selected transaction IDs for bulk editing */
+  /**
+   * Set of selected transaction IDs for bulk editing.
+   */
   selectedIds?: Set<string>;
-  /** Callback when selection changes */
+  /**
+   * Callback fired when selection changes in bulk edit mode.
+   * @param selectedIds - Updated set of selected transaction IDs
+   */
   onSelectionChange?: (selectedIds: Set<string>) => void;
-  /** Callback when bulk categorize is clicked */
+  /**
+   * Callback fired when the bulk categorize button is clicked.
+   */
   onBulkCategorize?: () => void;
 }
 

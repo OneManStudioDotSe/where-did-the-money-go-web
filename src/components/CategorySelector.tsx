@@ -2,13 +2,46 @@ import { useState, useMemo } from 'react';
 import { getAllCategoriesWithCustomSubcategories } from '../utils/category-service';
 import type { Category } from '../types/category';
 
+/**
+ * Props for the CategorySelector component.
+ */
 interface CategorySelectorProps {
+  /**
+   * Currently selected category ID, or null if none selected.
+   */
   selectedCategoryId: string | null;
+  /**
+   * Currently selected subcategory ID, or null if none selected.
+   */
   selectedSubcategoryId: string | null;
+  /**
+   * Callback fired when a category/subcategory is selected.
+   * @param categoryId - The selected category ID
+   * @param subcategoryId - The selected subcategory ID
+   */
   onSelect: (categoryId: string, subcategoryId: string) => void;
+  /**
+   * Whether to use compact styling for space-constrained layouts.
+   * @default false
+   */
   compact?: boolean;
 }
 
+/**
+ * A hierarchical category picker with search functionality.
+ *
+ * Displays categories with expandable subcategories, and supports
+ * filtering via search. Includes both built-in and custom subcategories.
+ *
+ * @example
+ * ```tsx
+ * <CategorySelector
+ *   selectedCategoryId="food_dining"
+ *   selectedSubcategoryId="restaurant"
+ *   onSelect={(catId, subId) => handleSelect(catId, subId)}
+ * />
+ * ```
+ */
 export function CategorySelector({
   selectedCategoryId,
   selectedSubcategoryId,

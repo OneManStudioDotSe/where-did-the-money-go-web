@@ -1,12 +1,43 @@
 import { useState, useCallback, useRef } from 'react';
 import type { CsvParseError } from '../types/csv';
 
+/**
+ * Props for the FileUpload component.
+ */
 interface FileUploadProps {
+  /**
+   * Callback fired when a file is successfully loaded.
+   * @param content - The raw text content of the CSV file
+   * @param fileName - The name of the uploaded file
+   */
   onFileLoaded: (content: string, fileName: string) => void;
+  /**
+   * Callback fired when an error occurs during file upload or parsing.
+   * @param error - The error object containing type, message, and details
+   */
   onError: (error: CsvParseError) => void;
+  /**
+   * Whether the component is in a loading state.
+   * When true, the upload area is disabled.
+   * @default false
+   */
   isLoading?: boolean;
 }
 
+/**
+ * A drag-and-drop file upload component for CSV files.
+ *
+ * Supports both drag-and-drop and click-to-browse file selection.
+ * Validates that the uploaded file is a CSV before processing.
+ *
+ * @example
+ * ```tsx
+ * <FileUpload
+ *   onFileLoaded={(content, name) => console.log('Loaded:', name)}
+ *   onError={(error) => console.error(error.message)}
+ * />
+ * ```
+ */
 export function FileUpload({ onFileLoaded, onError, isLoading = false }: FileUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);

@@ -35,28 +35,18 @@
 
 ## Future Phases
 
-### Phase 5: AI & Smart Features (Planned)
+### Phase 5: AI & Smart Features
 - [ ] AI-powered spending insights and recommendations
 - [ ] Anomaly detection for unusual spending patterns
-- [ ] Budget recommendations based on historical spending
-- [ ] Savings goal tracking and suggestions
 - [ ] Natural language search ("show me all coffee purchases last month")
 
-### Phase 6: Multi-Bank & Data Management (Planned)
+### Phase 6: Multi-Bank & Data Management
 - [ ] Support for additional CSV formats (Swedbank, Handelsbanken, Nordea)
 - [ ] Multi-account support with account switching
 - [ ] Data import from previous sessions
-- [ ] Transaction history merging (avoid duplicates across imports)
-- [ ] Data export in multiple formats (CSV, JSON, Excel)
+- [x] Data export in multiple formats (CSV, JSON, Excel)
 
-### Phase 7: Advanced Analytics (Planned)
-- [ ] Year-over-year spending comparison
-- [ ] Category spending forecasting
-- [ ] Merchant spending trends over time
-- [ ] Budget vs actual comparison charts
-- [ ] Seasonal spending pattern detection
-
-### Phase 9: Platform Expansion (Planned)
+### Phase 8: Platform Expansion
 - [ ] Progressive Web App (PWA) with offline support
 - [ ] Browser extension for automatic CSV download detection
 - [ ] Desktop app (Electron)
@@ -66,20 +56,20 @@
 ## Known Issues & Technical Debt
 
 ### Performance ✅
-- [x] Implement virtualized transaction list with @tanstack/react-virtual for handling 10,000+ transactions
+- [x] Implement virtualized transaction list for handling 10,000+ transactions
 - [x] Add Web Workers for CSV parsing to avoid blocking the main thread
-- [x] Lazy load chart components using React.lazy() and Suspense with loading skeletons
+- [x] Lazy load chart components with loading skeletons
 
-### Testing
-- [ ] Unit tests for core utilities
-- [ ] Integration tests for main user flows
-- [ ] E2E tests with Playwright
+### Testing ✅
+- [x] Unit tests for core utilities (Vitest with 57 tests for csv-parser, category-service, subscription-detection)
+- [x] Integration tests for main user flows (using @testing-library/react)
+- [x] E2E tests with Playwright (basic smoke tests for app loading, navigation, responsive design)
 
-### Code Quality
-- [ ] Add ESLint with strict rules
-- [ ] Add Prettier for consistent formatting
-- [ ] Document component props with JSDoc/TSDoc
-- [ ] Create Storybook for component library
+### Code Quality ✅
+- [x] Add ESLint with strict rules (typescript-eslint with consistent-type-imports, no-explicit-any, max-lines-per-function)
+- [x] Add Prettier for consistent formatting (semi, singleQuote, tabWidth: 2)
+- [x] Document component props with JSDoc/TSDoc (FileUpload, TransactionList, CategorySelector, SubscriptionPanel)
+- [x] Create Storybook for component library (v10.1 with autodocs, a11y addon)
 
 ---
 
@@ -90,6 +80,7 @@
 - [ ] Add "Copy to clipboard" for export data
 - [ ] Keyboard shortcut for common actions (Ctrl+F for search)
 - [ ] Remember last used tab (Overview/Transactions/Subscriptions)
+- [ ] Change the way you show the settings from being a modal dialog to being a sliding side panel that is locked at the far right side of the screen
 
 ---
 
