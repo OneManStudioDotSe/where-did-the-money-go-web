@@ -12,7 +12,7 @@
 - [x] Expand category mappings - 72+ new Swedish merchant mappings added (coffee shops, restaurants, convenience stores, entertainment, shopping, subscriptions, parking, income)
 - [ ] Improve category matching accuracy - Add fuzzy matching, handle Swedish characters better
 - [x] Add manual category mapping rules - Let users create their own merchant → category mappings (toggle in Settings)
-- [ ] Subscription detection refinement - Better handling of varying amounts, detect annual subscriptions
+- [x] Subscription detection refinement - Enhanced algorithm with frequency detection (weekly, bi-weekly, monthly, quarterly, annual), confidence scoring (70% threshold), custom naming/aliases, and next payment prediction
 - [ ] Data validation - Warn about suspicious transactions (duplicates, unusual amounts)
 
 ## Phase 3: Enhanced Insights & Visualizations ✅

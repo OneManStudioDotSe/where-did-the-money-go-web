@@ -1,25 +1,45 @@
-import type { Transaction, DetectedSubscription, Subscription, RecurringType } from '../types/transaction';
+import type {
+  Transaction,
+  DetectedSubscription,
+  Subscription,
+  RecurringType,
+  BillingFrequency,
+  ConfidenceLevel,
+  AmountType,
+  ConfidenceScoreBreakdown,
+} from '../types/transaction';
 
-/**
- * Configuration for subscription detection
- */
-interface DetectionConfig {
-  /** Minimum occurrences to be considered a subscription (default: 2) */
+// =============================================================================
+// CONFIGURATION
+// =============================================================================
+
+interface FrequencyConfig {
+  name: BillingFrequency;
+  expectedGap: number;
+  tolerance: number;
   minOccurrences: number;
-  /** Day tolerance for monthly recurrence (default: 3 days) */
-  dayTolerance: number;
-  /** Amount tolerance as percentage (default: 0.05 = 5%) */
-  amountTolerance: number;
-  /** Maximum gap between occurrences in days (default: 45) */
-  maxGapDays: number;
 }
 
-const DEFAULT_CONFIG: DetectionConfig = {
-  minOccurrences: 4,
-  dayTolerance: 5,
-  amountTolerance: 0.15,
-  maxGapDays: 45,
+const FREQUENCIES: FrequencyConfig[] = [
+  { name: 'weekly', expectedGap: 7, tolerance: 2, minOccurrences: 4 },
+  { name: 'biweekly', expectedGap: 14, tolerance: 3, minOccurrences: 3 },
+  { name: 'monthly', expectedGap: 30, tolerance: 5, minOccurrences: 3 },
+  { name: 'quarterly', expectedGap: 90, tolerance: 10, minOccurrences: 2 },
+  { name: 'annual', expectedGap: 365, tolerance: 15, minOccurrences: 2 },
+];
+
+const AMOUNT_TOLERANCES = {
+  strict: 0.05,   // 5% for fixed subscriptions
+  normal: 0.15,   // 15% for general recurring
+  loose: 0.25,    // 25% for variable amounts
 };
+
+/** Minimum confidence score to be detected (70% based on user validation) */
+const MIN_CONFIDENCE = 70;
+
+// =============================================================================
+// UTILITY FUNCTIONS
+// =============================================================================
 
 /**
  * Normalize a transaction description to extract recipient name
@@ -92,94 +112,264 @@ function toSwedishTitleCase(str: string): string {
 }
 
 /**
- * Check if two amounts are within the tolerance percentage
+ * Calculate median of an array of numbers
  */
-function amountsMatch(amount1: number, amount2: number, tolerance: number): boolean {
-  const avg = (Math.abs(amount1) + Math.abs(amount2)) / 2;
-  if (avg === 0) return true;
-  const diff = Math.abs(Math.abs(amount1) - Math.abs(amount2));
-  return diff / avg <= tolerance;
+function median(values: number[]): number {
+  if (values.length === 0) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 0
+    ? (sorted[mid - 1] + sorted[mid]) / 2
+    : sorted[mid];
 }
 
 /**
- * Check if amounts are consistent, allowing for a few outliers
- * Returns the "core" amount (median) and whether enough transactions match
- *
- * Rule: At least half of the transactions must have matching amounts
+ * Calculate variance relative to a reference value
  */
-function checkAmountConsistency(
-  amounts: number[],
-  tolerance: number,
-  minRequired: number
-): { isConsistent: boolean; coreAmount: number; matchingCount: number } {
-  if (amounts.length === 0) {
-    return { isConsistent: false, coreAmount: 0, matchingCount: 0 };
-  }
-
-  // Use median instead of average to be resistant to outliers
-  const sortedAmounts = [...amounts].map(a => Math.abs(a)).sort((a, b) => a - b);
-  const mid = Math.floor(sortedAmounts.length / 2);
-  const coreAmount = sortedAmounts.length % 2 === 0
-    ? (sortedAmounts[mid - 1] + sortedAmounts[mid]) / 2
-    : sortedAmounts[mid];
-
-  // Count how many amounts match the core amount within tolerance
-  const matchingCount = amounts.filter(a => amountsMatch(a, -coreAmount, tolerance)).length;
-
-  // Need at least half of the transactions to have matching amounts
-  const minMatches = Math.max(minRequired, Math.ceil(amounts.length / 2));
-  const isConsistent = matchingCount >= minMatches;
-
-  return { isConsistent, coreAmount, matchingCount };
+function calculateVariance(values: number[], reference: number): number {
+  if (reference === 0 || values.length === 0) return 0;
+  const deviations = values.map(v => Math.abs(v - reference) / reference);
+  return median(deviations);
 }
 
 /**
- * Check if two days are within the tolerance range (considering month wrapping)
+ * Calculate days between two dates
  */
-function daysMatch(day1: number, day2: number, tolerance: number): boolean {
-  const diff = Math.abs(day1 - day2);
-  // Handle month boundary wrapping (e.g., day 28 and day 2)
-  const wrappedDiff = Math.min(diff, 31 - diff);
-  return wrappedDiff <= tolerance;
-}
-
-/**
- * Calculate the most common day of month from a set of dates
- */
-function getMostCommonDay(dates: Date[]): number {
-  const dayCounts = new Map<number, number>();
-
-  for (const date of dates) {
-    const day = date.getDate();
-    dayCounts.set(day, (dayCounts.get(day) || 0) + 1);
-  }
-
-  let maxCount = 0;
-  let mostCommonDay = 1;
-
-  for (const [day, count] of dayCounts) {
-    if (count > maxCount) {
-      maxCount = count;
-      mostCommonDay = day;
-    }
-  }
-
-  return mostCommonDay;
+function daysBetween(date1: Date, date2: Date): number {
+  return Math.abs((date2.getTime() - date1.getTime()) / (1000 * 60 * 60 * 24));
 }
 
 /**
  * Generate a unique ID for a detected subscription
  */
 function generateSubscriptionId(recipientName: string, amount: number): string {
-  // Include both name and amount to reduce collisions
   const input = `${recipientName}-${Math.abs(amount).toFixed(2)}`;
   const hash = input.split('').reduce((acc, char) => {
     return ((acc << 5) - acc + char.charCodeAt(0)) & 0xffffffff;
   }, 0);
-  // Add timestamp component for uniqueness
   const timeComponent = Date.now().toString(36).slice(-4);
   return `sub-${Math.abs(hash).toString(36)}-${timeComponent}`;
 }
+
+// =============================================================================
+// FREQUENCY DETECTION
+// =============================================================================
+
+interface FrequencyAnalysis {
+  frequency: FrequencyConfig | null;
+  gapConsistency: number;
+}
+
+/**
+ * Detect the billing frequency from transaction gaps
+ */
+function detectFrequency(gaps: number[]): FrequencyAnalysis {
+  if (gaps.length === 0) return { frequency: null, gapConsistency: 0 };
+
+  const medianGap = median(gaps);
+
+  // Find the closest matching frequency
+  let bestMatch: FrequencyConfig | null = null;
+  let bestDistance = Infinity;
+
+  for (const freq of FREQUENCIES) {
+    const distance = Math.abs(medianGap - freq.expectedGap);
+    if (distance < bestDistance && distance <= freq.tolerance * 2) {
+      bestDistance = distance;
+      bestMatch = freq;
+    }
+  }
+
+  if (!bestMatch) return { frequency: null, gapConsistency: 0 };
+
+  // Calculate how many gaps fall within tolerance
+  const matchingGaps = gaps.filter(gap =>
+    Math.abs(gap - bestMatch!.expectedGap) <= bestMatch!.tolerance
+  );
+  const gapConsistency = matchingGaps.length / gaps.length;
+
+  return { frequency: bestMatch, gapConsistency };
+}
+
+// =============================================================================
+// AMOUNT ANALYSIS
+// =============================================================================
+
+interface AmountAnalysis {
+  coreAmount: number;
+  variance: number;
+  amountType: AmountType;
+  matchingCount: number;
+  tolerance: number;
+}
+
+/**
+ * Analyze amounts to determine core amount and variance
+ */
+function analyzeAmounts(amounts: number[]): AmountAnalysis {
+  const absAmounts = amounts.map(a => Math.abs(a));
+  const coreAmount = median(absAmounts);
+  const variance = calculateVariance(absAmounts, coreAmount);
+
+  // Determine amount type based on variance
+  let tolerance: number;
+  let amountType: AmountType;
+
+  if (variance <= AMOUNT_TOLERANCES.strict) {
+    tolerance = AMOUNT_TOLERANCES.strict;
+    amountType = 'fixed';
+  } else if (variance <= AMOUNT_TOLERANCES.normal) {
+    tolerance = AMOUNT_TOLERANCES.normal;
+    amountType = 'fixed';
+  } else {
+    tolerance = AMOUNT_TOLERANCES.loose;
+    amountType = 'variable';
+  }
+
+  // Count matching amounts
+  const matchingCount = absAmounts.filter(a =>
+    Math.abs(a - coreAmount) / coreAmount <= tolerance
+  ).length;
+
+  return { coreAmount, variance, amountType, matchingCount, tolerance };
+}
+
+// =============================================================================
+// CONFIDENCE SCORING
+// =============================================================================
+
+interface ConfidenceResult {
+  score: number;
+  breakdown: ConfidenceScoreBreakdown;
+}
+
+/**
+ * Calculate confidence score for a detected subscription
+ */
+function calculateConfidenceScore(
+  amountAnalysis: AmountAnalysis,
+  frequencyAnalysis: FrequencyAnalysis,
+  occurrenceCount: number,
+  totalTransactions: number
+): ConfidenceResult {
+  // Amount Score (0-30)
+  let amountScore: number;
+  if (amountAnalysis.variance <= 0.02) amountScore = 30;
+  else if (amountAnalysis.variance <= 0.05) amountScore = 25;
+  else if (amountAnalysis.variance <= 0.10) amountScore = 20;
+  else if (amountAnalysis.variance <= 0.15) amountScore = 15;
+  else if (amountAnalysis.variance <= 0.25) amountScore = 10;
+  else amountScore = 5;
+
+  // Timing Score (0-30)
+  let timingScore: number;
+  const gapConsistency = frequencyAnalysis.gapConsistency;
+  if (gapConsistency >= 0.95) timingScore = 30;
+  else if (gapConsistency >= 0.90) timingScore = 25;
+  else if (gapConsistency >= 0.80) timingScore = 20;
+  else if (gapConsistency >= 0.70) timingScore = 15;
+  else if (gapConsistency >= 0.60) timingScore = 10;
+  else timingScore = 5;
+
+  // Occurrence Score (0-20)
+  let occurrenceScore: number;
+  if (occurrenceCount >= 10) occurrenceScore = 20;
+  else if (occurrenceCount >= 6) occurrenceScore = 15;
+  else if (occurrenceCount >= 4) occurrenceScore = 10;
+  else if (occurrenceCount >= 3) occurrenceScore = 7;
+  else occurrenceScore = 4;
+
+  // Pattern Clarity Score (0-20)
+  let clarityScore: number;
+  const amountMatchRatio = amountAnalysis.matchingCount / totalTransactions;
+  if (frequencyAnalysis.frequency && gapConsistency >= 0.8 && amountMatchRatio >= 0.8) {
+    clarityScore = 20;
+  } else if (frequencyAnalysis.frequency && gapConsistency >= 0.6 && amountMatchRatio >= 0.6) {
+    clarityScore = 15;
+  } else if (frequencyAnalysis.frequency) {
+    clarityScore = 10;
+  } else {
+    clarityScore = 5;
+  }
+
+  const score = amountScore + timingScore + occurrenceScore + clarityScore;
+
+  return {
+    score,
+    breakdown: { amountScore, timingScore, occurrenceScore, clarityScore }
+  };
+}
+
+/**
+ * Get confidence level from score
+ */
+function getConfidenceLevel(score: number): ConfidenceLevel {
+  if (score >= 75) return 'high';
+  if (score >= 50) return 'medium';
+  return 'low';
+}
+
+// =============================================================================
+// PREDICTION
+// =============================================================================
+
+/**
+ * Predict the next expected payment date
+ */
+function predictNextDate(lastDate: Date, frequency: BillingFrequency): Date {
+  const next = new Date(lastDate);
+
+  switch (frequency) {
+    case 'weekly':
+      next.setDate(next.getDate() + 7);
+      break;
+    case 'biweekly':
+      next.setDate(next.getDate() + 14);
+      break;
+    case 'monthly':
+      next.setMonth(next.getMonth() + 1);
+      break;
+    case 'quarterly':
+      next.setMonth(next.getMonth() + 3);
+      break;
+    case 'annual':
+      next.setFullYear(next.getFullYear() + 1);
+      break;
+  }
+
+  return next;
+}
+
+/**
+ * Get the expected billing day (day of week for weekly/biweekly, day of month otherwise)
+ */
+function getExpectedBillingDay(dates: Date[], frequency: BillingFrequency): number {
+  if (frequency === 'weekly' || frequency === 'biweekly') {
+    // Return day of week (0-6)
+    const days = dates.map(d => d.getDay());
+    const counts = new Map<number, number>();
+    days.forEach(d => counts.set(d, (counts.get(d) || 0) + 1));
+    let maxDay = 0, maxCount = 0;
+    counts.forEach((count, day) => {
+      if (count > maxCount) { maxCount = count; maxDay = day; }
+    });
+    return maxDay;
+  } else {
+    // Return day of month
+    const days = dates.map(d => d.getDate());
+    const counts = new Map<number, number>();
+    days.forEach(d => counts.set(d, (counts.get(d) || 0) + 1));
+    let maxDay = 1, maxCount = 0;
+    counts.forEach((count, day) => {
+      if (count > maxCount) { maxCount = count; maxDay = day; }
+    });
+    return maxDay;
+  }
+}
+
+// =============================================================================
+// MAIN DETECTION FUNCTION
+// =============================================================================
 
 /**
  * Group transactions by normalized recipient name
@@ -195,7 +385,6 @@ function groupByRecipient(transactions: Transaction[]): Map<string, Transaction[
     if (!recipientName) continue;
 
     const existing = groups.get(recipientName) || [];
-    // Use spread to avoid direct mutation
     groups.set(recipientName, [...existing, transaction]);
   }
 
@@ -203,92 +392,89 @@ function groupByRecipient(transactions: Transaction[]): Map<string, Transaction[
 }
 
 /**
- * Check if a group of transactions represents a recurring subscription
- */
-function isRecurringPattern(
-  transactions: Transaction[],
-  config: DetectionConfig
-): boolean {
-  if (transactions.length < config.minOccurrences) return false;
-
-  // Sort by date
-  const sorted = [...transactions].sort((a, b) => a.date.getTime() - b.date.getTime());
-
-  // Check amount consistency (allows 1-2 outliers)
-  const amounts = sorted.map(t => t.amount);
-  const amountCheck = checkAmountConsistency(amounts, config.amountTolerance, config.minOccurrences);
-  if (!amountCheck.isConsistent) return false;
-
-  // Check day of month consistency
-  const days = sorted.map(t => t.date.getDate());
-  const mostCommonDay = getMostCommonDay(sorted.map(t => t.date));
-
-  const dayConsistent = days.filter(d =>
-    daysMatch(d, mostCommonDay, config.dayTolerance)
-  ).length >= config.minOccurrences;
-  if (!dayConsistent) return false;
-
-  // Check for monthly gaps (not too far apart)
-  for (let i = 1; i < sorted.length; i++) {
-    const gap = (sorted[i].date.getTime() - sorted[i - 1].date.getTime()) / (1000 * 60 * 60 * 24);
-    if (gap > config.maxGapDays) return false;
-  }
-
-  return true;
-}
-
-/**
  * Detect potential subscriptions from a list of transactions
+ * Uses enhanced algorithm with frequency detection and confidence scoring
  */
 export function detectSubscriptions(
   transactions: Transaction[],
-  config: Partial<DetectionConfig> = {}
+  minConfidence: number = MIN_CONFIDENCE
 ): DetectedSubscription[] {
-  const fullConfig = { ...DEFAULT_CONFIG, ...config };
   const groups = groupByRecipient(transactions);
   const detected: DetectedSubscription[] = [];
 
   for (const [recipientName, txns] of groups) {
-    if (!isRecurringPattern(txns, fullConfig)) continue;
-
-    // Sort transactions by date
+    // Sort by date
     const sorted = [...txns].sort((a, b) => a.date.getTime() - b.date.getTime());
 
-    // Calculate statistics using median (core amount) to ignore outliers
-    const amounts = sorted.map(t => t.amount);
-    const amountCheck = checkAmountConsistency(amounts, fullConfig.amountTolerance, fullConfig.minOccurrences);
-    const coreAmount = amountCheck.coreAmount;
-    const commonDay = getMostCommonDay(sorted.map(t => t.date));
+    // Calculate gaps between transactions
+    const gaps: number[] = [];
+    for (let i = 1; i < sorted.length; i++) {
+      gaps.push(daysBetween(sorted[i - 1].date, sorted[i].date));
+    }
 
-    // Calculate min and max amounts (absolute values since amounts are negative)
+    // Detect frequency
+    const frequencyAnalysis = detectFrequency(gaps);
+    if (!frequencyAnalysis.frequency) continue;
+
+    // Check minimum occurrences for detected frequency
+    if (sorted.length < frequencyAnalysis.frequency.minOccurrences) continue;
+
+    // Analyze amounts
+    const amounts = sorted.map(t => t.amount);
+    const amountAnalysis = analyzeAmounts(amounts);
+
+    // Check if enough amounts match
+    const minMatches = Math.ceil(sorted.length / 2);
+    if (amountAnalysis.matchingCount < minMatches) continue;
+
+    // Calculate confidence
+    const { score, breakdown } = calculateConfidenceScore(
+      amountAnalysis,
+      frequencyAnalysis,
+      sorted.length,
+      sorted.length
+    );
+
+    // Skip if below minimum confidence
+    if (score < minConfidence) continue;
+
     const absAmounts = amounts.map(a => Math.abs(a));
-    const minAmount = Math.min(...absAmounts);
-    const maxAmount = Math.max(...absAmounts);
+    const dates = sorted.map(t => t.date);
 
     // Check if all transactions share the same category
     const categoryIds = new Set(sorted.map(t => t.categoryId));
     const subcategoryIds = new Set(sorted.map(t => t.subcategoryId));
 
     detected.push({
-      id: generateSubscriptionId(recipientName, coreAmount),
+      id: generateSubscriptionId(recipientName, amountAnalysis.coreAmount),
       recipientName,
-      averageAmount: Math.round(coreAmount * 100) / 100,
-      minAmount: Math.round(minAmount * 100) / 100,
-      maxAmount: Math.round(maxAmount * 100) / 100,
-      commonDayOfMonth: commonDay,
+      averageAmount: Math.round(amountAnalysis.coreAmount * 100) / 100,
+      minAmount: Math.round(Math.min(...absAmounts) * 100) / 100,
+      maxAmount: Math.round(Math.max(...absAmounts) * 100) / 100,
+      commonDayOfMonth: getExpectedBillingDay(dates, frequencyAnalysis.frequency.name),
       transactionIds: sorted.map(t => t.id),
       occurrenceCount: sorted.length,
       isConfirmed: null,
-      recurringType: null, // User will choose: 'subscription', 'recurring_expense', or 'fixed_expense'
+      recurringType: null,
       categoryId: categoryIds.size === 1 ? sorted[0].categoryId : null,
       subcategoryId: subcategoryIds.size === 1 ? sorted[0].subcategoryId : null,
       firstSeen: sorted[0].date,
       lastSeen: sorted[sorted.length - 1].date,
+
+      // Enhanced fields
+      confidence: score,
+      confidenceLevel: getConfidenceLevel(score),
+      billingFrequency: frequencyAnalysis.frequency.name,
+      expectedBillingDay: getExpectedBillingDay(dates, frequencyAnalysis.frequency.name),
+      amountVariance: Math.round(amountAnalysis.variance * 10000) / 100, // As percentage
+      amountType: amountAnalysis.amountType,
+      nextExpectedDate: predictNextDate(sorted[sorted.length - 1].date, frequencyAnalysis.frequency.name),
+      scoreBreakdown: breakdown,
     });
   }
 
-  // Sort by occurrence count (most frequent first)
-  detected.sort((a, b) => b.occurrenceCount - a.occurrenceCount);
+  // Sort by confidence (highest first)
+  detected.sort((a, b) => b.confidence - a.confidence);
 
   return detected;
 }
@@ -302,12 +488,17 @@ export function createSubscription(detected: DetectedSubscription): Subscription
     name: detected.recipientName,
     amount: detected.averageAmount,
     billingDay: detected.commonDayOfMonth,
-    recurringType: detected.recurringType || 'subscription', // Default to subscription if not set
+    recurringType: detected.recurringType || 'subscription',
     categoryId: detected.categoryId,
     subcategoryId: detected.subcategoryId,
     transactionIds: detected.transactionIds,
     createdAt: new Date(),
     isActive: true,
+    // Enhanced fields
+    confidence: detected.confidence,
+    billingFrequency: detected.billingFrequency,
+    amountType: detected.amountType,
+    nextExpectedDate: detected.nextExpectedDate,
   };
 }
 
@@ -397,6 +588,7 @@ export function saveSubscriptions(subscriptions: Subscription[]): void {
     const serializable = subscriptions.map(s => ({
       ...s,
       createdAt: s.createdAt.toISOString(),
+      nextExpectedDate: s.nextExpectedDate?.toISOString(),
     }));
     localStorage.setItem(SUBSCRIPTIONS_STORAGE_KEY, JSON.stringify(serializable));
   } catch (e) {
@@ -413,14 +605,40 @@ export function loadSubscriptions(): Subscription[] {
     if (!stored) return [];
 
     const parsed = JSON.parse(stored);
-    return parsed.map((s: Subscription & { createdAt: string }) => ({
+    return parsed.map((s: Subscription & { createdAt: string; nextExpectedDate?: string }) => ({
       ...s,
       createdAt: new Date(s.createdAt),
+      nextExpectedDate: s.nextExpectedDate ? new Date(s.nextExpectedDate) : undefined,
     }));
   } catch (e) {
     console.error('Failed to load subscriptions:', e);
     return [];
   }
+}
+
+/**
+ * Get billing frequency label for display
+ */
+export function getBillingFrequencyLabel(frequency: BillingFrequency): string {
+  const labels: Record<BillingFrequency, string> = {
+    weekly: 'Weekly',
+    biweekly: 'Bi-weekly',
+    monthly: 'Monthly',
+    quarterly: 'Quarterly',
+    annual: 'Annual',
+  };
+  return labels[frequency];
+}
+
+/**
+ * Get expected billing day label for display
+ */
+export function getBillingDayLabel(day: number, frequency: BillingFrequency): string {
+  if (frequency === 'weekly' || frequency === 'biweekly') {
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    return dayNames[day] || `Day ${day}`;
+  }
+  return `Day ${day}`;
 }
 
 /**
@@ -431,8 +649,6 @@ export function debugSubscriptionDetection(
   transactions: Transaction[],
   searchTerm: string
 ): void {
-  const config = DEFAULT_CONFIG;
-
   // Find matching transactions
   const matching = transactions.filter(t =>
     t.description.toLowerCase().includes(searchTerm.toLowerCase())
@@ -464,62 +680,62 @@ export function debugSubscriptionDetection(
   for (const [name, txns] of normalizedGroups) {
     console.group(`Group: "${name}" (${txns.length} transactions)`);
 
-    // Check 1: Min occurrences
-    if (txns.length < config.minOccurrences) {
-      console.log(`❌ FAIL: Only ${txns.length} occurrences (need ${config.minOccurrences})`);
-      console.groupEnd();
-      continue;
-    }
-    console.log(`✅ Occurrences: ${txns.length} >= ${config.minOccurrences}`);
-
-    // Check 2: Only expenses
-    const expenses = txns.filter(t => t.amount < 0);
-    if (expenses.length < config.minOccurrences) {
-      console.log(`❌ FAIL: Only ${expenses.length} are expenses (negative amounts)`);
-      console.groupEnd();
-      continue;
-    }
-    console.log(`✅ Expenses: ${expenses.length} negative amounts`);
-
-    // Check 3: Amount consistency (using median, allows outliers)
-    const amounts = expenses.map(t => t.amount);
-    const amountCheck = checkAmountConsistency(amounts, config.amountTolerance, config.minOccurrences);
-    if (!amountCheck.isConsistent) {
-      const minMatches = Math.max(config.minOccurrences, Math.ceil(amounts.length / 2));
-      console.log(`❌ FAIL: Not enough amounts match (need ${minMatches} = half of ${amounts.length}, got ${amountCheck.matchingCount})`);
-      console.log(`   Median amount: ${amountCheck.coreAmount.toFixed(2)}, Amounts: ${amounts.map(a => a.toFixed(2)).join(', ')}`);
-      console.groupEnd();
-      continue;
-    }
-    console.log(`✅ Amount consistency: ${amountCheck.matchingCount}/${amounts.length} match median ${amountCheck.coreAmount.toFixed(2)} (±${config.amountTolerance * 100}%)`);
-
-    // Check 4: Day consistency
-    const sorted = [...expenses].sort((a, b) => a.date.getTime() - b.date.getTime());
-    const days = sorted.map(t => t.date.getDate());
-    const mostCommonDay = getMostCommonDay(sorted.map(t => t.date));
-    const dayMatches = days.filter(d => daysMatch(d, mostCommonDay, config.dayTolerance)).length;
-    if (dayMatches < config.minOccurrences) {
-      console.log(`❌ FAIL: Day of month varies too much (>${config.dayTolerance} days tolerance)`);
-      console.log(`   Days: ${days.join(', ')}, Most common: ${mostCommonDay}`);
-      console.groupEnd();
-      continue;
-    }
-    console.log(`✅ Day consistency: ${dayMatches} match day ${mostCommonDay} (±${config.dayTolerance})`);
-
-    // Check 5: Gap between transactions
-    let gapFailed = false;
+    // Sort by date and calculate gaps
+    const sorted = [...txns].sort((a, b) => a.date.getTime() - b.date.getTime());
+    const gaps: number[] = [];
     for (let i = 1; i < sorted.length; i++) {
-      const gap = (sorted[i].date.getTime() - sorted[i - 1].date.getTime()) / (1000 * 60 * 60 * 24);
-      if (gap > config.maxGapDays) {
-        console.log(`❌ FAIL: Gap of ${Math.round(gap)} days between ${sorted[i-1].date.toISOString().slice(0, 10)} and ${sorted[i].date.toISOString().slice(0, 10)} (max: ${config.maxGapDays})`);
-        gapFailed = true;
-        break;
-      }
+      gaps.push(daysBetween(sorted[i - 1].date, sorted[i].date));
     }
-    if (!gapFailed) {
-      console.log(`✅ Gap check: All gaps <= ${config.maxGapDays} days`);
-      console.log(`🎉 This group SHOULD be detected as a subscription!`);
+
+    // Detect frequency
+    const frequencyAnalysis = detectFrequency(gaps);
+    if (!frequencyAnalysis.frequency) {
+      console.log(`❌ FAIL: No matching frequency pattern found`);
+      console.log(`   Gaps: ${gaps.map(g => Math.round(g)).join(', ')} days`);
+      console.groupEnd();
+      continue;
     }
+    console.log(`✅ Frequency: ${frequencyAnalysis.frequency.name} (gap consistency: ${(frequencyAnalysis.gapConsistency * 100).toFixed(1)}%)`);
+
+    // Check min occurrences
+    if (sorted.length < frequencyAnalysis.frequency.minOccurrences) {
+      console.log(`❌ FAIL: Only ${sorted.length} occurrences (need ${frequencyAnalysis.frequency.minOccurrences} for ${frequencyAnalysis.frequency.name})`);
+      console.groupEnd();
+      continue;
+    }
+    console.log(`✅ Occurrences: ${sorted.length} >= ${frequencyAnalysis.frequency.minOccurrences}`);
+
+    // Analyze amounts
+    const amounts = sorted.map(t => t.amount);
+    const amountAnalysis = analyzeAmounts(amounts);
+    const minMatches = Math.ceil(sorted.length / 2);
+
+    if (amountAnalysis.matchingCount < minMatches) {
+      console.log(`❌ FAIL: Only ${amountAnalysis.matchingCount} amounts match (need ${minMatches})`);
+      console.log(`   Core amount: ${amountAnalysis.coreAmount.toFixed(2)}, Variance: ${(amountAnalysis.variance * 100).toFixed(1)}%`);
+      console.groupEnd();
+      continue;
+    }
+    console.log(`✅ Amounts: ${amountAnalysis.matchingCount}/${sorted.length} match (variance: ${(amountAnalysis.variance * 100).toFixed(1)}%)`);
+
+    // Calculate confidence
+    const { score, breakdown } = calculateConfidenceScore(
+      amountAnalysis,
+      frequencyAnalysis,
+      sorted.length,
+      sorted.length
+    );
+
+    if (score < MIN_CONFIDENCE) {
+      console.log(`❌ FAIL: Confidence ${score} < ${MIN_CONFIDENCE}`);
+      console.log(`   Breakdown: Amount=${breakdown.amountScore}/30, Timing=${breakdown.timingScore}/30, Count=${breakdown.occurrenceScore}/20, Clarity=${breakdown.clarityScore}/20`);
+      console.groupEnd();
+      continue;
+    }
+
+    console.log(`✅ Confidence: ${score}/100 (${getConfidenceLevel(score)})`);
+    console.log(`   Breakdown: Amount=${breakdown.amountScore}/30, Timing=${breakdown.timingScore}/30, Count=${breakdown.occurrenceScore}/20, Clarity=${breakdown.clarityScore}/20`);
+    console.log(`🎉 This group SHOULD be detected as a subscription!`);
 
     console.groupEnd();
   }

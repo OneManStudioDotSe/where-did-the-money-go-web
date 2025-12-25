@@ -37,6 +37,35 @@ export type RecurringType =
   | 'fixed_expense';    // Fixed expenses (loan, rent, insurance)
 
 /**
+ * Billing frequency for subscriptions
+ */
+export type BillingFrequency = 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'annual';
+
+/**
+ * Confidence level for detected subscriptions
+ */
+export type ConfidenceLevel = 'high' | 'medium' | 'low';
+
+/**
+ * Amount type for subscriptions
+ */
+export type AmountType = 'fixed' | 'variable';
+
+/**
+ * Breakdown of confidence score components
+ */
+export interface ConfidenceScoreBreakdown {
+  /** Amount consistency score (0-30) */
+  amountScore: number;
+  /** Timing consistency score (0-30) */
+  timingScore: number;
+  /** Occurrence count score (0-20) */
+  occurrenceScore: number;
+  /** Pattern clarity score (0-20) */
+  clarityScore: number;
+}
+
+/**
  * Badge types for visual indicators on transactions
  */
 export type TransactionBadgeType =
@@ -144,6 +173,24 @@ export interface DetectedSubscription {
   firstSeen: Date;
   /** Last occurrence date */
   lastSeen: Date;
+
+  // Enhanced detection fields
+  /** Confidence score (0-100) */
+  confidence: number;
+  /** Confidence level category */
+  confidenceLevel: ConfidenceLevel;
+  /** Detected billing frequency */
+  billingFrequency: BillingFrequency;
+  /** Expected billing day (day of week for weekly/biweekly, day of month otherwise) */
+  expectedBillingDay: number;
+  /** Amount variance as percentage */
+  amountVariance: number;
+  /** Whether amount is fixed or variable */
+  amountType: AmountType;
+  /** Predicted next payment date */
+  nextExpectedDate: Date;
+  /** Breakdown of confidence score components */
+  scoreBreakdown: ConfidenceScoreBreakdown;
 }
 
 /**
@@ -154,6 +201,8 @@ export interface Subscription {
   id: string;
   /** Display name (recipient) */
   name: string;
+  /** Custom name/alias set by user */
+  customName?: string;
   /** Monthly amount */
   amount: number;
   /** Common billing day of month */
@@ -170,4 +219,14 @@ export interface Subscription {
   createdAt: Date;
   /** Whether subscription is currently active */
   isActive: boolean;
+
+  // Enhanced fields
+  /** Confidence score (0-100) when detected */
+  confidence?: number;
+  /** Billing frequency */
+  billingFrequency?: BillingFrequency;
+  /** Amount type (fixed or variable) */
+  amountType?: AmountType;
+  /** Next expected payment date */
+  nextExpectedDate?: Date;
 }

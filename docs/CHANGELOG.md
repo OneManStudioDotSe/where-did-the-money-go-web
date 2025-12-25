@@ -11,6 +11,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### New Features
 
+#### Enhanced Subscription Detection Algorithm
+- **Frequency Detection**: Automatically detects billing frequency (weekly, bi-weekly, monthly, quarterly, annual) based on transaction gap analysis
+- **Confidence Scoring**: Each detected subscription now has a confidence score (0-100) with breakdown:
+  - Amount consistency (0-30): How consistent are the payment amounts
+  - Timing consistency (0-30): How regular are the payment intervals
+  - Occurrence count (0-20): More occurrences = higher confidence
+  - Pattern clarity (0-20): Overall pattern strength
+- **70% Confidence Threshold**: Only subscriptions with 70%+ confidence are shown (validated against real bank data)
+- **Custom Names/Aliases**: Users can assign custom names to subscriptions for better recognition (e.g., rename "Bergnäs" to "House Rent")
+- **Next Payment Prediction**: Shows predicted date of next payment based on detected frequency
+- **Amount Variance Display**: Shows how much payment amounts vary (fixed vs variable amounts)
+- **UI Enhancements**:
+  - Confidence badge shown in subscription confirmation dialog
+  - Frequency badge shown in subscription list
+  - Billing day now context-aware (shows day of week for weekly/bi-weekly, day of month otherwise)
+  - Edit modal shows original name + custom name fields separately
+  - Detection info section shows frequency, confidence, and next expected date
+
 #### Monthly Comparison Chart
 - **New MonthlyComparisonChart Component**: Compare spending across multiple months at a glance
 - **Side-by-Side Bars**: Visualize expenses (and optionally income) for each month

@@ -1,6 +1,7 @@
 import { useState, useEffect, useId } from 'react';
 import type { Subscription } from '../types/transaction';
 import { getCategoryName, getSubcategoryName, getCategoryIcon, getCategoryColor } from '../utils/category-service';
+import { getBillingFrequencyLabel, getBillingDayLabel } from '../utils/subscription-detection';
 import { useFocusTrap } from '../hooks';
 
 interface SubscriptionEditModalProps {
@@ -25,7 +26,7 @@ export function SubscriptionEditModal({
   onSave,
   onDelete,
 }: SubscriptionEditModalProps) {
-  const [name, setName] = useState('');
+  const [customName, setCustomName] = useState('');
   const [amount, setAmount] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -37,7 +38,7 @@ export function SubscriptionEditModal({
   // Sync form state when subscription changes
   useEffect(() => {
     if (subscription) {
-      setName(subscription.name);
+      setCustomName(subscription.customName || '');
       setAmount(subscription.amount.toFixed(2));
       setIsActive(subscription.isActive);
       setShowDeleteConfirm(false);
@@ -59,7 +60,7 @@ export function SubscriptionEditModal({
 
     onSave({
       ...subscription,
-      name: name.trim() || subscription.name,
+      customName: customName.trim() || undefined,
       amount: parsedAmount,
       isActive,
     });
@@ -78,7 +79,7 @@ export function SubscriptionEditModal({
   };
 
   const hasChanges =
-    name !== subscription.name ||
+    customName !== (subscription.customName || '') ||
     parseFloat(amount.replace(',', '.')) !== subscription.amount ||
     isActive !== subscription.isActive;
 
@@ -131,18 +132,31 @@ export function SubscriptionEditModal({
 
         {/* Form */}
         <div className="px-6 py-4 space-y-4">
-          {/* Name Field */}
+          {/* Original Name (read-only) */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Name
+              Original Name
+            </label>
+            <div className="w-full px-3 py-2 border border-gray-200 dark:border-slate-700 rounded-lg bg-gray-50 dark:bg-slate-800 text-gray-600 dark:text-gray-400">
+              {subscription.name}
+            </div>
+          </div>
+
+          {/* Custom Name/Alias Field */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Custom Name (alias)
             </label>
             <input
               type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              value={customName}
+              onChange={(e) => setCustomName(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
-              placeholder="Subscription name"
+              placeholder={`e.g., "Netflix" or "Monthly Rent"`}
             />
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Give this subscription a friendly name you'll recognize
+            </p>
           </div>
 
           {/* Amount Field */}
@@ -198,14 +212,52 @@ export function SubscriptionEditModal({
 
           {/* Info */}
           <div className="bg-gray-50 dark:bg-slate-700/50 rounded-lg p-3 space-y-2 text-sm">
+            {subscription.billingFrequency && (
+              <div className="flex justify-between">
+                <span className="text-gray-500 dark:text-gray-400">Billing frequency</span>
+                <span className="text-gray-900 dark:text-white">
+                  {getBillingFrequencyLabel(subscription.billingFrequency)}
+                </span>
+              </div>
+            )}
             <div className="flex justify-between">
-              <span className="text-gray-500 dark:text-gray-400">Billing day</span>
-              <span className="text-gray-900 dark:text-white">{subscription.billingDay}th of month</span>
+              <span className="text-gray-500 dark:text-gray-400">
+                {subscription.billingFrequency === 'weekly' || subscription.billingFrequency === 'biweekly'
+                  ? 'Billing day'
+                  : 'Billing day'}
+              </span>
+              <span className="text-gray-900 dark:text-white">
+                {subscription.billingFrequency
+                  ? getBillingDayLabel(subscription.billingDay, subscription.billingFrequency)
+                  : `${subscription.billingDay}th of month`}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-500 dark:text-gray-400">Total payments</span>
               <span className="text-gray-900 dark:text-white">{subscription.transactionIds.length}</span>
             </div>
+            {subscription.confidence !== undefined && (
+              <div className="flex justify-between">
+                <span className="text-gray-500 dark:text-gray-400">Detection confidence</span>
+                <span className={`font-medium ${
+                  subscription.confidence >= 75
+                    ? 'text-success-600 dark:text-success-400'
+                    : subscription.confidence >= 50
+                    ? 'text-warning-600 dark:text-warning-400'
+                    : 'text-danger-600 dark:text-danger-400'
+                }`}>
+                  {subscription.confidence}%
+                </span>
+              </div>
+            )}
+            {subscription.nextExpectedDate && (
+              <div className="flex justify-between">
+                <span className="text-gray-500 dark:text-gray-400">Next expected</span>
+                <span className="text-gray-900 dark:text-white">
+                  {subscription.nextExpectedDate.toLocaleDateString('sv-SE')}
+                </span>
+              </div>
+            )}
           </div>
         </div>
 

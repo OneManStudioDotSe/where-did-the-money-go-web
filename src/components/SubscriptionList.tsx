@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import type { Subscription, Transaction } from '../types/transaction';
 import { getCategoryName, getSubcategoryName, getCategoryIcon, getCategoryColor } from '../utils/category-service';
-import { calculateMonthlySubscriptionCost } from '../utils/subscription-detection';
+import { calculateMonthlySubscriptionCost, getBillingFrequencyLabel, getBillingDayLabel } from '../utils/subscription-detection';
 import { toTitleCase } from '../utils/text-utils';
 import { RecurringEmptyState } from './ui/EmptyState';
 
@@ -225,9 +225,16 @@ export function SubscriptionList({
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <span className="font-medium text-gray-900 dark:text-white">
-                              {toTitleCase(sub.name)}
-                            </span>
+                            <div className="flex flex-col">
+                              <span className="font-medium text-gray-900 dark:text-white">
+                                {toTitleCase(sub.customName || sub.name)}
+                              </span>
+                              {sub.customName && (
+                                <span className="text-xs text-gray-400 dark:text-gray-500">
+                                  {toTitleCase(sub.name)}
+                                </span>
+                              )}
+                            </div>
                             <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
                               sub.recurringType === 'subscription'
                                 ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400'
@@ -237,6 +244,11 @@ export function SubscriptionList({
                             }`}>
                               {sub.recurringType === 'subscription' ? 'Sub' : sub.recurringType === 'fixed_expense' ? 'Fixed' : 'Recurring'}
                             </span>
+                            {sub.billingFrequency && sub.billingFrequency !== 'monthly' && (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 dark:bg-slate-600 text-gray-600 dark:text-gray-300">
+                                {getBillingFrequencyLabel(sub.billingFrequency)}
+                              </span>
+                            )}
                           </div>
                           <span className="font-semibold text-gray-900 dark:text-white">
                             {formatAmount(sub.amount)}
@@ -258,10 +270,20 @@ export function SubscriptionList({
                                 {sub.recurringType === 'subscription' ? 'Subscription' : sub.recurringType === 'fixed_expense' ? 'Fixed expense' : 'Recurring expense'}
                               </span>
                             </div>
+                            {sub.billingFrequency && (
+                              <div className="flex justify-between text-gray-600 dark:text-gray-400">
+                                <span>Frequency</span>
+                                <span className="text-gray-900 dark:text-white">
+                                  {getBillingFrequencyLabel(sub.billingFrequency)}
+                                </span>
+                              </div>
+                            )}
                             <div className="flex justify-between text-gray-600 dark:text-gray-400">
                               <span>Billing day</span>
                               <span className="text-gray-900 dark:text-white">
-                                {sub.billingDay}{getOrdinalSuffix(sub.billingDay)} of month
+                                {sub.billingFrequency
+                                  ? getBillingDayLabel(sub.billingDay, sub.billingFrequency)
+                                  : `${sub.billingDay}${getOrdinalSuffix(sub.billingDay)} of month`}
                               </span>
                             </div>
                             <div className="flex justify-between text-gray-600 dark:text-gray-400">
@@ -275,6 +297,28 @@ export function SubscriptionList({
                                 <span>Last payment</span>
                                 <span className="text-gray-900 dark:text-white">
                                   {lastPayment.date.toLocaleDateString('sv-SE')}
+                                </span>
+                              </div>
+                            )}
+                            {sub.nextExpectedDate && (
+                              <div className="flex justify-between text-gray-600 dark:text-gray-400">
+                                <span>Next expected</span>
+                                <span className="text-gray-900 dark:text-white">
+                                  {sub.nextExpectedDate.toLocaleDateString('sv-SE')}
+                                </span>
+                              </div>
+                            )}
+                            {sub.confidence !== undefined && (
+                              <div className="flex justify-between text-gray-600 dark:text-gray-400">
+                                <span>Confidence</span>
+                                <span className={`font-medium ${
+                                  sub.confidence >= 75
+                                    ? 'text-success-600 dark:text-success-400'
+                                    : sub.confidence >= 50
+                                    ? 'text-warning-600 dark:text-warning-400'
+                                    : 'text-danger-600 dark:text-danger-400'
+                                }`}>
+                                  {sub.confidence}%
                                 </span>
                               </div>
                             )}

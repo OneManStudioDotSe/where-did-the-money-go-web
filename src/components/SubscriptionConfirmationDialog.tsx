@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { DetectedSubscription, RecurringType, Transaction } from '../types/transaction';
 import { getCategoryName, getSubcategoryName, getCategoryIcon, getCategoryColor } from '../utils/category-service';
+import { getBillingFrequencyLabel, getBillingDayLabel } from '../utils/subscription-detection';
 import { toTitleCase } from '../utils/text-utils';
 
 interface SubscriptionConfirmationDialogProps {
@@ -16,12 +17,6 @@ function formatAmount(amount: number): string {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }) + ' kr';
-}
-
-function getOrdinalSuffix(n: number): string {
-  const s = ['th', 'st', 'nd', 'rd'];
-  const v = n % 100;
-  return s[(v - 20) % 10] || s[v] || s[0];
 }
 
 type DecisionType = RecurringType | 'skip' | null;
@@ -245,11 +240,25 @@ export function SubscriptionConfirmationDialog({
 
                       {/* Details */}
                       <div className="flex flex-wrap items-center gap-3 mt-3 text-xs text-gray-500 dark:text-gray-400">
+                        {/* Confidence badge */}
+                        <span className={`px-1.5 py-0.5 rounded-full font-medium ${
+                          subscription.confidence >= 75
+                            ? 'bg-success-100 dark:bg-success-900/30 text-success-700 dark:text-success-400'
+                            : subscription.confidence >= 50
+                            ? 'bg-warning-100 dark:bg-warning-900/30 text-warning-700 dark:text-warning-400'
+                            : 'bg-gray-100 dark:bg-slate-600 text-gray-600 dark:text-gray-400'
+                        }`}>
+                          {subscription.confidence}% confidence
+                        </span>
+                        {/* Frequency badge */}
+                        <span className="px-1.5 py-0.5 rounded-full bg-gray-100 dark:bg-slate-600 text-gray-600 dark:text-gray-300">
+                          {getBillingFrequencyLabel(subscription.billingFrequency)}
+                        </span>
                         <span className="flex items-center gap-1">
                           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                           </svg>
-                          {subscription.commonDayOfMonth}{getOrdinalSuffix(subscription.commonDayOfMonth)} of month
+                          {getBillingDayLabel(subscription.expectedBillingDay, subscription.billingFrequency)}
                         </span>
                         <button
                           onClick={() => togglePreview(subscription.id)}
