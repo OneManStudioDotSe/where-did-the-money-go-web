@@ -13,7 +13,7 @@
 - [ ] Improve category matching accuracy - Add fuzzy matching, handle Swedish characters better
 - [x] Add manual category mapping rules - Let users create their own merchant → category mappings (toggle in Settings)
 - [x] Subscription detection refinement - Enhanced algorithm with frequency detection (weekly, bi-weekly, monthly, quarterly, annual), confidence scoring (70% threshold), custom naming/aliases, and next payment prediction
-- [ ] Data validation - Warn about suspicious transactions (duplicates, unusual amounts)
+- [x] Data validation - Suspicious transaction detection with exact/near duplicates, large transactions, and unusual merchant amounts; review dialog with dismiss functionality
 
 ## Phase 3: Enhanced Insights & Visualizations ✅
 - [x] Monthly comparison charts - Compare spending across months

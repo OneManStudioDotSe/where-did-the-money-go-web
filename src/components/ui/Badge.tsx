@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-export type BadgeType = 'uncategorized' | 'subscription' | 'recurring_expense' | 'high-value';
+export type BadgeType = 'uncategorized' | 'subscription' | 'recurring_expense' | 'high-value' | 'suspicious';
 
 interface BadgeConfig {
   label: string;
@@ -55,6 +55,17 @@ const badgeConfigs: Record<BadgeType, BadgeConfig> = {
     textColor: 'text-blue-700 dark:text-blue-400',
     tooltip: 'Transaction above threshold amount',
   },
+  suspicious: {
+    label: 'Review',
+    icon: (
+      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      </svg>
+    ),
+    bgColor: 'bg-orange-100 dark:bg-orange-900/30',
+    textColor: 'text-orange-700 dark:text-orange-400',
+    tooltip: 'Potentially suspicious - duplicate, unusual amount, or pattern anomaly',
+  },
 };
 
 interface BadgeProps {
@@ -67,7 +78,7 @@ export function Badge({ type, showLabel = true, className = '' }: BadgeProps) {
   const [showTooltip, setShowTooltip] = useState(false);
   const config = badgeConfigs[type];
 
-  const isPulsing = type === 'uncategorized';
+  const isPulsing = type === 'uncategorized' || type === 'suspicious';
 
   return (
     <div className="relative inline-block">
@@ -113,13 +124,15 @@ export function getTransactionBadges(
     badges.push('uncategorized');
   }
 
-  // Check for subscription or recurring expense from transaction badges
+  // Check for subscription, recurring expense, or suspicious from transaction badges
   if (transaction.badges) {
     for (const badge of transaction.badges) {
       if (badge.type === 'subscription' && !badges.includes('subscription')) {
         badges.push('subscription');
       } else if (badge.type === 'recurring_expense' && !badges.includes('recurring_expense')) {
         badges.push('recurring_expense');
+      } else if (badge.type === 'suspicious' && !badges.includes('suspicious')) {
+        badges.push('suspicious');
       }
     }
   }

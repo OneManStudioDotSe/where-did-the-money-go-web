@@ -11,6 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### New Features
 
+#### Suspicious Transaction Detection
+- **Duplicate Detection**: Identifies exact duplicates (same amount, description, date) and near duplicates (same amount within 3 days)
+- **Large Transaction Alerts**: Flags transactions above 5,000 kr threshold
+- **Unusual Merchant Amounts**: Detects transactions significantly higher than your typical spend at a merchant (3x standard deviation)
+- **Review Dialog**: Dedicated modal to review all suspicious transactions at once with filtering by type
+- **Inline Badges**: Suspicious transactions display an orange "Review" badge in the transaction list
+- **Dismiss Functionality**: Mark warnings as reviewed (persisted to localStorage)
+- **Warning Banner**: Shows count of suspicious transactions in the summary header with quick link to review
+- **Severity Levels**: High (exact duplicates), Medium (near duplicates, unusual amounts), Low (large transactions)
+
 #### Enhanced Subscription Detection Algorithm
 - **Frequency Detection**: Automatically detects billing frequency (weekly, bi-weekly, monthly, quarterly, annual) based on transaction gap analysis
 - **Confidence Scoring**: Each detected subscription now has a confidence score (0-100) with breakdown:

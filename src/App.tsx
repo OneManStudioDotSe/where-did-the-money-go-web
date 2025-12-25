@@ -2,7 +2,7 @@ import { useState, useEffect, useTransition, useMemo, useCallback } from 'react'
 import './index.css'
 import { defaultCategories } from './data/categories'
 import { defaultCategoryMappings } from './data/category-mappings'
-import { FileUpload, TransactionList, FilterPanel, defaultFilters, ProjectRoadmap, TimePeriodSelector, SpendingVisualization, SettingsPanel, loadSettings, TransactionEditModal, UncategorizedCarousel, CsvConfirmationDialog, ExportDialog, SubscriptionConfirmationDialog, SubscriptionPanel, SubscriptionCard, SubscriptionEditModal, ErrorBoundary, LoadingOverlay, TopMerchants, MappingRulesModal, AddMappingRuleModal, BulkCategoryModal } from './components'
+import { FileUpload, TransactionList, FilterPanel, defaultFilters, ProjectRoadmap, TimePeriodSelector, SpendingVisualization, SettingsPanel, loadSettings, TransactionEditModal, UncategorizedCarousel, CsvConfirmationDialog, ExportDialog, SubscriptionConfirmationDialog, SubscriptionPanel, SubscriptionCard, SubscriptionEditModal, ErrorBoundary, LoadingOverlay, TopMerchants, MappingRulesModal, AddMappingRuleModal, BulkCategoryModal, SuspiciousTransactionsDialog } from './components'
 import { SectionErrorBoundary } from './components/SectionErrorBoundary'
 import { AddSubcategoryModal } from './components/AddSubcategoryModal'
 import { CategorySystemModal } from './components/CategorySystemModal'
@@ -21,7 +21,8 @@ import { AdPlaceholder } from './components/ui/AdPlaceholder'
 import { FeaturesPage, HowItWorksPage, AboutPage, PrivacyPage, DisclaimerPage } from './pages'
 import { preloadIconSet } from './config/icon-sets'
 import { detectSubscriptions, createSubscription, markTransactionsAsRecurring, loadSubscriptions, saveSubscriptions, debugSubscriptionDetection } from './utils/subscription-detection'
-import type { RecurringType } from './types/transaction'
+import { validateTransactions, applyDismissedStatus, saveDismissedWarnings, getDismissedWarnings, getSuspiciousWarningId, markSuspiciousTransactions, removeSuspiciousBadge } from './utils/transaction-validation'
+import type { RecurringType, SuspiciousTransaction } from './types/transaction'
 import { AIInsightsPanel } from './components/AIInsightsPanel'
 import { useToast } from './context/ToastContext'
 import { saveTransactions, loadTransactions, clearTransactions } from './utils/transaction-persistence'
@@ -51,7 +52,9 @@ function App() {
   const [showAddMappingRuleModal, setShowAddMappingRuleModal] = useState(false)
   const [customMappingsVersion, setCustomMappingsVersion] = useState(0)
   const [showBulkCategoryModal, setShowBulkCategoryModal] = useState(false)
+  const [showSuspiciousDialog, setShowSuspiciousDialog] = useState(false)
   const [bulkSelectedIds, setBulkSelectedIds] = useState<Set<string>>(new Set())
+  const [suspiciousTransactions, setSuspiciousTransactions] = useState<SuspiciousTransaction[]>([])
   const [pendingFileContent, setPendingFileContent] = useState<string | null>(null)
   const [pendingFileName, setPendingFileName] = useState<string | null>(null)
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null)
@@ -207,11 +210,28 @@ function App() {
         setPendingFileContent(null)
         setPendingFileName(null)
 
-        // Detect subscriptions (with a small delay for UI to update)
+        // Detect subscriptions and validate transactions (with a small delay for UI to update)
         setTimeout(() => {
           const detected = detectSubscriptions(categorized)
+
+          // Validate transactions for suspicious patterns
+          const validation = validateTransactions(categorized)
+          const suspiciousWithDismissed = applyDismissedStatus(validation.suspicious)
+          setSuspiciousTransactions(suspiciousWithDismissed)
+
+          // Mark suspicious transactions with badges
+          const withSuspiciousBadges = markSuspiciousTransactions(categorized, suspiciousWithDismissed)
+          setTransactions(withSuspiciousBadges)
+
           setIsLoading(false)
           toast.success(`Successfully imported ${categorized.length} transactions`)
+
+          // Show suspicious warning if there are undismissed issues
+          const undismissedCount = suspiciousWithDismissed.filter(s => !s.isDismissed).length
+          if (undismissedCount > 0) {
+            toast.warning(`${undismissedCount} potentially suspicious transaction${undismissedCount !== 1 ? 's' : ''} found`)
+          }
+
           if (detected.length > 0) {
             setDetectedSubscriptions(detected)
             setShowSubscriptionConfirmation(true)
@@ -436,6 +456,67 @@ function App() {
   const handleTransactionClick = (transaction: Transaction) => {
     setEditingTransaction(transaction)
   }
+
+  // Suspicious transaction handlers
+  const handleDismissSuspicious = (warningId: string) => {
+    // Update state
+    setSuspiciousTransactions(prev => {
+      const updated = prev.map(s =>
+        getSuspiciousWarningId(s) === warningId ? { ...s, isDismissed: true } : s
+      )
+      // Save to localStorage
+      const dismissed = getDismissedWarnings()
+      dismissed.add(warningId)
+      saveDismissedWarnings(dismissed)
+      return updated
+    })
+
+    // Remove suspicious badge from the transaction
+    const [transactionId] = warningId.split('|')
+    setTransactions(prev => prev.map(t => {
+      if (t.id === transactionId) {
+        // Check if there are other undismissed warnings for this transaction
+        const otherWarnings = suspiciousTransactions.filter(
+          s => s.transactionId === transactionId && getSuspiciousWarningId(s) !== warningId && !s.isDismissed
+        )
+        if (otherWarnings.length === 0) {
+          return removeSuspiciousBadge(t)
+        }
+      }
+      return t
+    }))
+  }
+
+  const handleDismissAllSuspicious = () => {
+    const dismissed = getDismissedWarnings()
+    suspiciousTransactions.forEach(s => {
+      if (!s.isDismissed) {
+        dismissed.add(getSuspiciousWarningId(s))
+      }
+    })
+    saveDismissedWarnings(dismissed)
+
+    setSuspiciousTransactions(prev => prev.map(s => ({ ...s, isDismissed: true })))
+
+    // Remove all suspicious badges
+    setTransactions(prev => prev.map(t => removeSuspiciousBadge(t)))
+
+    toast.success('All suspicious transactions marked as reviewed')
+    setShowSuspiciousDialog(false)
+  }
+
+  const handleViewSuspiciousTransaction = (transactionId: string) => {
+    const transaction = transactions.find(t => t.id === transactionId)
+    if (transaction) {
+      setEditingTransaction(transaction)
+    }
+  }
+
+  // Count undismissed suspicious transactions
+  const undismissedSuspiciousCount = useMemo(() =>
+    suspiciousTransactions.filter(s => !s.isDismissed).length,
+    [suspiciousTransactions]
+  )
 
   // Bulk editing handlers
   const handleBulkCategorize = (categoryId: string, subcategoryId: string) => {
@@ -688,6 +769,35 @@ function App() {
                 </div>
               </div>
             </div>
+
+            {/* Suspicious Transactions Warning */}
+            {undismissedSuspiciousCount > 0 && (
+              <div className="mt-4 bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-800 rounded-lg p-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-warning-100 dark:bg-warning-900/40 flex items-center justify-center">
+                      <svg className="w-4 h-4 text-warning-600 dark:text-warning-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-warning-800 dark:text-warning-300">
+                        {undismissedSuspiciousCount} potentially suspicious transaction{undismissedSuspiciousCount !== 1 ? 's' : ''} detected
+                      </p>
+                      <p className="text-xs text-warning-600 dark:text-warning-400">
+                        Possible duplicates, large amounts, or unusual spending patterns
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowSuspiciousDialog(true)}
+                    className="px-3 py-1.5 text-sm font-medium text-warning-700 dark:text-warning-300 hover:text-warning-900 dark:hover:text-warning-100 bg-warning-100 dark:bg-warning-900/40 hover:bg-warning-200 dark:hover:bg-warning-900/60 rounded-lg transition-colors"
+                  >
+                    Review →
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Tab Navigation */}
@@ -1205,6 +1315,17 @@ function App() {
         onClose={() => setShowBulkCategoryModal(false)}
         selectedCount={bulkSelectedIds.size}
         onApply={handleBulkCategorize}
+      />
+
+      {/* Suspicious Transactions Dialog */}
+      <SuspiciousTransactionsDialog
+        isOpen={showSuspiciousDialog}
+        onClose={() => setShowSuspiciousDialog(false)}
+        suspiciousTransactions={suspiciousTransactions}
+        transactions={transactions}
+        onDismiss={handleDismissSuspicious}
+        onDismissAll={handleDismissAllSuspicious}
+        onViewTransaction={handleViewSuspiciousTransaction}
       />
 
       {/* Loading Overlay */}

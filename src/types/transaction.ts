@@ -75,11 +75,39 @@ export type TransactionBadgeType =
   | 'fixed_expense'      // Fixed expense (loan, rent, insurance)
   | 'high_value'         // Above threshold amount
   | 'refund'             // Money returned
-  | 'income';            // Positive amount
+  | 'income'             // Positive amount
+  | 'suspicious';        // Potentially suspicious transaction
 
 export interface TransactionBadge {
   type: TransactionBadgeType;
   label: string;
+}
+
+/**
+ * Types of suspicious transaction warnings
+ */
+export type SuspiciousType =
+  | 'exact_duplicate'       // Same amount, description, and date
+  | 'near_duplicate'        // Same amount and similar description within days
+  | 'large_transaction'     // Above large transaction threshold
+  | 'unusual_for_merchant'; // Significantly higher than usual for this merchant
+
+/**
+ * A flagged suspicious transaction with reason
+ */
+export interface SuspiciousTransaction {
+  /** The transaction ID */
+  transactionId: string;
+  /** Type of suspicious activity detected */
+  type: SuspiciousType;
+  /** Human-readable reason */
+  reason: string;
+  /** Related transaction ID (for duplicates) */
+  relatedTransactionId?: string;
+  /** Severity: how confident we are this is suspicious */
+  severity: 'high' | 'medium' | 'low';
+  /** Whether user has reviewed and dismissed this warning */
+  isDismissed: boolean;
 }
 
 /**
