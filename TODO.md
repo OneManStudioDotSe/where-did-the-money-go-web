@@ -21,7 +21,7 @@
 - [x] Vertical bar chart improvements - Now default view with wider bars and larger labels
 
 ## Phase 4: User Experience & Polish
-- [ ] Bulk transaction editing - Select multiple transactions to recategorize
+- [x] Bulk transaction editing - Select multiple transactions to recategorize (toggle in Settings)
 - [x] Export enhancements - PDF reports, filtered exports, custom date ranges
 - [x] Hide ad placeholders toggle in settings
 - [ ] Onboarding tour - First-time user walkthrough

@@ -32,6 +32,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Live Preview**: See how your rule will categorize transactions before saving
 - **Persistent Storage**: Rules are saved to localStorage and persist across sessions
 
+#### Bulk Transaction Editing
+- **Settings Toggle**: Enable bulk editing from Settings → Categorization section
+- **Multi-Selection**: When enabled, checkboxes appear on each transaction row
+- **Select Page/Deselect Page**: Quickly select or deselect all transactions on the current page
+- **Clear All**: Button to clear entire selection across all pages
+- **Selection Counter**: Shows how many transactions are currently selected
+- **Bulk Categorize Button**: Apply a category to all selected transactions at once
+- **BulkCategoryModal**: Category selector modal for applying category to selected transactions
+- **Visual Feedback**: Selected rows are highlighted with a primary color background
+- **Toast Notifications**: Success message confirms how many transactions were updated
+
 ---
 
 ## [Unreleased] - 2025-12-24

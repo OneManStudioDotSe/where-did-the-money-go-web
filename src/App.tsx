@@ -2,7 +2,7 @@ import { useState, useEffect, useTransition, useMemo, useCallback } from 'react'
 import './index.css'
 import { defaultCategories } from './data/categories'
 import { defaultCategoryMappings } from './data/category-mappings'
-import { FileUpload, TransactionList, FilterPanel, defaultFilters, ProjectRoadmap, TimePeriodSelector, SpendingVisualization, SettingsPanel, loadSettings, TransactionEditModal, UncategorizedCarousel, CsvConfirmationDialog, ExportDialog, SubscriptionConfirmationDialog, SubscriptionPanel, SubscriptionCard, SubscriptionEditModal, ErrorBoundary, LoadingOverlay, TopMerchants, MappingRulesModal, AddMappingRuleModal } from './components'
+import { FileUpload, TransactionList, FilterPanel, defaultFilters, ProjectRoadmap, TimePeriodSelector, SpendingVisualization, SettingsPanel, loadSettings, TransactionEditModal, UncategorizedCarousel, CsvConfirmationDialog, ExportDialog, SubscriptionConfirmationDialog, SubscriptionPanel, SubscriptionCard, SubscriptionEditModal, ErrorBoundary, LoadingOverlay, TopMerchants, MappingRulesModal, AddMappingRuleModal, BulkCategoryModal } from './components'
 import { SectionErrorBoundary } from './components/SectionErrorBoundary'
 import { AddSubcategoryModal } from './components/AddSubcategoryModal'
 import { CategorySystemModal } from './components/CategorySystemModal'
@@ -50,6 +50,8 @@ function App() {
   const [showMappingRulesModal, setShowMappingRulesModal] = useState(false)
   const [showAddMappingRuleModal, setShowAddMappingRuleModal] = useState(false)
   const [customMappingsVersion, setCustomMappingsVersion] = useState(0)
+  const [showBulkCategoryModal, setShowBulkCategoryModal] = useState(false)
+  const [bulkSelectedIds, setBulkSelectedIds] = useState<Set<string>>(new Set())
   const [pendingFileContent, setPendingFileContent] = useState<string | null>(null)
   const [pendingFileName, setPendingFileName] = useState<string | null>(null)
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null)
@@ -434,6 +436,19 @@ function App() {
   const handleTransactionClick = (transaction: Transaction) => {
     setEditingTransaction(transaction)
   }
+
+  // Bulk editing handlers
+  const handleBulkCategorize = (categoryId: string, subcategoryId: string) => {
+    const idsArray = Array.from(bulkSelectedIds)
+    handleBatchCategoryChange(idsArray, categoryId, subcategoryId)
+    setBulkSelectedIds(new Set())
+    setShowBulkCategoryModal(false)
+    toast.success(`Updated ${idsArray.length} transaction${idsArray.length !== 1 ? 's' : ''}`)}
+
+  // Clear bulk selection when data changes
+  useEffect(() => {
+    setBulkSelectedIds(new Set())
+  }, [transactions.length])
 
   const stats = getCategorizedStats(periodFilteredTransactions)
 
@@ -842,6 +857,10 @@ function App() {
                   transactions={filteredTransactions}
                   onTransactionClick={handleTransactionClick}
                   pageSize={appSettings.transactionPageSize}
+                  bulkEditEnabled={appSettings.enableBulkEditing}
+                  selectedIds={bulkSelectedIds}
+                  onSelectionChange={setBulkSelectedIds}
+                  onBulkCategorize={() => setShowBulkCategoryModal(true)}
                 />
               </SectionErrorBoundary>
             </div>
@@ -1178,6 +1197,14 @@ function App() {
             toast.success('Transactions re-categorized with new rule')
           }
         }}
+      />
+
+      {/* Bulk Category Modal */}
+      <BulkCategoryModal
+        isOpen={showBulkCategoryModal}
+        onClose={() => setShowBulkCategoryModal(false)}
+        selectedCount={bulkSelectedIds.size}
+        onApply={handleBulkCategorize}
       />
 
       {/* Loading Overlay */}

@@ -10,6 +10,14 @@ interface TransactionListProps {
   onTransactionClick?: (transaction: Transaction) => void;
   /** Number of transactions per page (default: 100) */
   pageSize?: number;
+  /** Whether bulk editing mode is enabled */
+  bulkEditEnabled?: boolean;
+  /** Selected transaction IDs for bulk editing */
+  selectedIds?: Set<string>;
+  /** Callback when selection changes */
+  onSelectionChange?: (selectedIds: Set<string>) => void;
+  /** Callback when bulk categorize is clicked */
+  onBulkCategorize?: () => void;
 }
 
 interface SortState {
@@ -86,7 +94,15 @@ function InfoTooltip({ content }: { content: string }) {
 
 const DEFAULT_PAGE_SIZE = 100;
 
-export function TransactionList({ transactions, onTransactionClick, pageSize = DEFAULT_PAGE_SIZE }: TransactionListProps) {
+export function TransactionList({
+  transactions,
+  onTransactionClick,
+  pageSize = DEFAULT_PAGE_SIZE,
+  bulkEditEnabled = false,
+  selectedIds = new Set(),
+  onSelectionChange,
+  onBulkCategorize,
+}: TransactionListProps) {
   const [sort, setSort] = useState<SortState>({ field: 'date', direction: 'desc' });
   const [isCondensed, setIsCondensed] = useState(false);
   const [isSorting, setIsSorting] = useState(false);
@@ -172,6 +188,43 @@ export function TransactionList({ transactions, onTransactionClick, pageSize = D
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // Bulk selection handlers
+  const handleToggleSelect = (transactionId: string) => {
+    if (!onSelectionChange) return;
+    const newSelected = new Set(selectedIds);
+    if (newSelected.has(transactionId)) {
+      newSelected.delete(transactionId);
+    } else {
+      newSelected.add(transactionId);
+    }
+    onSelectionChange(newSelected);
+  };
+
+  const handleSelectAll = () => {
+    if (!onSelectionChange) return;
+    // Select all transactions on the current page
+    const newSelected = new Set(selectedIds);
+    paginatedTransactions.forEach(t => newSelected.add(t.id));
+    onSelectionChange(newSelected);
+  };
+
+  const handleSelectNone = () => {
+    if (!onSelectionChange) return;
+    // Deselect all transactions on the current page
+    const newSelected = new Set(selectedIds);
+    paginatedTransactions.forEach(t => newSelected.delete(t.id));
+    onSelectionChange(newSelected);
+  };
+
+  const handleClearAll = () => {
+    if (!onSelectionChange) return;
+    onSelectionChange(new Set());
+  };
+
+  // Count how many on current page are selected
+  const selectedOnPage = paginatedTransactions.filter(t => selectedIds.has(t.id)).length;
+  const allOnPageSelected = paginatedTransactions.length > 0 && selectedOnPage === paginatedTransactions.length;
+
   if (transactions.length === 0) {
     return (
       <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700">
@@ -194,38 +247,90 @@ export function TransactionList({ transactions, onTransactionClick, pageSize = D
 
       {/* Toolbar */}
       <div className="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-slate-800/50 border-b border-gray-200 dark:border-slate-700">
-        <div className="text-sm text-gray-600 dark:text-gray-400">
-          {totalPages > 1 ? (
-            <>
-              Showing {currentPage * pageSize + 1}-{Math.min((currentPage + 1) * pageSize, sortedTransactions.length)} of {sortedTransactions.length} transaction{sortedTransactions.length !== 1 ? 's' : ''}
-            </>
-          ) : (
-            <>
-              {sortedTransactions.length} transaction{sortedTransactions.length !== 1 ? 's' : ''}
-            </>
+        <div className="flex items-center gap-4">
+          {/* Bulk selection controls */}
+          {bulkEditEnabled && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={allOnPageSelected ? handleSelectNone : handleSelectAll}
+                className="flex items-center gap-1.5 px-2 py-1 text-xs rounded border border-gray-300 dark:border-slate-600 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+              >
+                <input
+                  type="checkbox"
+                  checked={allOnPageSelected}
+                  onChange={() => {}}
+                  className="w-3.5 h-3.5 rounded border-gray-300 dark:border-slate-500 text-primary-600 focus:ring-primary-500 cursor-pointer"
+                />
+                <span className="text-gray-600 dark:text-gray-400">
+                  {allOnPageSelected ? 'Deselect page' : 'Select page'}
+                </span>
+              </button>
+              {selectedIds.size > 0 && (
+                <button
+                  onClick={handleClearAll}
+                  className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+                >
+                  Clear all ({selectedIds.size})
+                </button>
+              )}
+            </div>
           )}
-        </div>
-        <button
-          onClick={() => setIsCondensed(!isCondensed)}
-          className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg border transition-colors ${
-            isCondensed
-              ? 'border-primary-300 dark:border-primary-600 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
-              : 'border-gray-200 dark:border-slate-600 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700'
-          }`}
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            {isCondensed ? (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            {bulkEditEnabled && selectedIds.size > 0 ? (
+              <span className="font-medium text-primary-600 dark:text-primary-400">
+                {selectedIds.size} selected
+              </span>
+            ) : totalPages > 1 ? (
+              <>
+                Showing {currentPage * pageSize + 1}-{Math.min((currentPage + 1) * pageSize, sortedTransactions.length)} of {sortedTransactions.length} transaction{sortedTransactions.length !== 1 ? 's' : ''}
+              </>
             ) : (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+              <>
+                {sortedTransactions.length} transaction{sortedTransactions.length !== 1 ? 's' : ''}
+              </>
             )}
-          </svg>
-          {isCondensed ? 'Condensed' : 'Expanded'}
-        </button>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          {/* Bulk categorize button */}
+          {bulkEditEnabled && selectedIds.size > 0 && onBulkCategorize && (
+            <button
+              onClick={onBulkCategorize}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg bg-primary-600 text-white hover:bg-primary-700 transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+              </svg>
+              Categorize ({selectedIds.size})
+            </button>
+          )}
+          <button
+            onClick={() => setIsCondensed(!isCondensed)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg border transition-colors ${
+              isCondensed
+                ? 'border-primary-300 dark:border-primary-600 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
+                : 'border-gray-200 dark:border-slate-600 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700'
+            }`}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {isCondensed ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+              )}
+            </svg>
+            {isCondensed ? 'Condensed' : 'Expanded'}
+          </button>
+        </div>
       </div>
 
       {/* Header */}
-      <div className={`grid ${isCondensed ? 'grid-cols-12' : 'grid-cols-12'} gap-4 px-4 py-3 bg-gray-50 dark:bg-slate-800/50 border-b border-gray-200 dark:border-slate-700 text-sm font-medium text-gray-600 dark:text-gray-400`}>
+      <div className={`grid ${bulkEditEnabled ? 'grid-cols-13' : 'grid-cols-12'} gap-4 px-4 py-3 bg-gray-50 dark:bg-slate-800/50 border-b border-gray-200 dark:border-slate-700 text-sm font-medium text-gray-600 dark:text-gray-400`}>
+        {bulkEditEnabled && (
+          <div className="col-span-1 flex items-center">
+            {/* Header checkbox space */}
+          </div>
+        )}
         <button
           onClick={() => handleSort('date')}
           className={`${isCondensed ? 'col-span-2' : 'col-span-2'} flex items-center text-left hover:text-gray-900 dark:hover:text-white transition-colors`}
@@ -235,7 +340,7 @@ export function TransactionList({ transactions, onTransactionClick, pageSize = D
         </button>
         <button
           onClick={() => handleSort('description')}
-          className={`${isCondensed ? 'col-span-5' : 'col-span-4'} flex items-center text-left hover:text-gray-900 dark:hover:text-white transition-colors`}
+          className={`${bulkEditEnabled ? (isCondensed ? 'col-span-4' : 'col-span-3') : (isCondensed ? 'col-span-5' : 'col-span-4')} flex items-center text-left hover:text-gray-900 dark:hover:text-white transition-colors`}
         >
           <SortIcon field="description" currentSort={sort} />
           <span className="ml-1">Description</span>
@@ -269,22 +374,37 @@ export function TransactionList({ transactions, onTransactionClick, pageSize = D
 
           const tooltipContent = `${formatDate(transaction.date)} | ${transaction.description} | ${categoryName || 'Uncategorized'}${subcategoryName ? ` > ${subcategoryName}` : ''} | ${formatAmount(transaction.amount)}`;
 
+          const isSelected = selectedIds.has(transaction.id);
+
           if (isCondensed) {
             return (
               <div
                 key={transaction.id}
-                onClick={() => onTransactionClick?.(transaction)}
-                className={`grid grid-cols-12 gap-2 px-4 py-1.5 items-center hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors animate-bounce-hover ${
-                  onTransactionClick ? 'cursor-pointer' : ''
-                }`}
+                onClick={() => bulkEditEnabled ? handleToggleSelect(transaction.id) : onTransactionClick?.(transaction)}
+                className={`grid ${bulkEditEnabled ? 'grid-cols-13' : 'grid-cols-12'} gap-2 px-4 py-1.5 items-center hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors animate-bounce-hover ${
+                  onTransactionClick || bulkEditEnabled ? 'cursor-pointer' : ''
+                } ${isSelected ? 'bg-primary-50 dark:bg-primary-900/20' : ''}`}
               >
+                {/* Checkbox */}
+                {bulkEditEnabled && (
+                  <div className="col-span-1 flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => handleToggleSelect(transaction.id)}
+                      onClick={(e) => e.stopPropagation()}
+                      className="w-4 h-4 rounded border-gray-300 dark:border-slate-500 text-primary-600 focus:ring-primary-500 cursor-pointer"
+                    />
+                  </div>
+                )}
+
                 {/* Date */}
                 <div className="col-span-2 text-xs text-gray-500 dark:text-gray-400">
                   {formatDateCondensed(transaction.date)}
                 </div>
 
                 {/* Description */}
-                <div className="col-span-4 flex items-center gap-2">
+                <div className={`${bulkEditEnabled ? 'col-span-4' : 'col-span-4'} flex items-center gap-2`}>
                   <span className="text-sm text-gray-900 dark:text-white truncate">
                     {toTitleCase(transaction.description)}
                   </span>
@@ -331,18 +451,31 @@ export function TransactionList({ transactions, onTransactionClick, pageSize = D
           return (
             <div
               key={transaction.id}
-              onClick={() => onTransactionClick?.(transaction)}
-              className={`grid grid-cols-12 gap-2 px-4 py-3 items-center hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors animate-bounce-hover ${
-                onTransactionClick ? 'cursor-pointer' : ''
-              }`}
+              onClick={() => bulkEditEnabled ? handleToggleSelect(transaction.id) : onTransactionClick?.(transaction)}
+              className={`grid ${bulkEditEnabled ? 'grid-cols-13' : 'grid-cols-12'} gap-2 px-4 py-3 items-center hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors animate-bounce-hover ${
+                onTransactionClick || bulkEditEnabled ? 'cursor-pointer' : ''
+              } ${isSelected ? 'bg-primary-50 dark:bg-primary-900/20' : ''}`}
             >
+              {/* Checkbox */}
+              {bulkEditEnabled && (
+                <div className="col-span-1 flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={() => handleToggleSelect(transaction.id)}
+                    onClick={(e) => e.stopPropagation()}
+                    className="w-4 h-4 rounded border-gray-300 dark:border-slate-500 text-primary-600 focus:ring-primary-500 cursor-pointer"
+                  />
+                </div>
+              )}
+
               {/* Date */}
               <div className="col-span-2 text-sm text-gray-600 dark:text-gray-400">
                 {formatDate(transaction.date)}
               </div>
 
               {/* Description */}
-              <div className="col-span-4">
+              <div className={bulkEditEnabled ? 'col-span-3' : 'col-span-4'}>
                 <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
                   {toTitleCase(transaction.description)}
                 </p>

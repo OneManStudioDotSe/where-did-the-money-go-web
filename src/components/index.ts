@@ -22,6 +22,7 @@ export { TopMerchants } from './TopMerchants';
 export { MonthlyComparisonChart } from './MonthlyComparisonChart';
 export { MappingRulesModal } from './MappingRulesModal';
 export { AddMappingRuleModal } from './AddMappingRuleModal';
+export { BulkCategoryModal } from './BulkCategoryModal';
 export type { TimePeriod } from './TimePeriodSelector';
 export type { AppSettings, SubscriptionViewVariation, SubscriptionPlacement } from './SettingsPanel';
 
