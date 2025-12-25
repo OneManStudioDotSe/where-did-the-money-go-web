@@ -7,6 +7,106 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased] - 2025-12-25
+
+### New Features
+
+#### Monthly Comparison Chart
+- **New MonthlyComparisonChart Component**: Compare spending across multiple months at a glance
+- **Side-by-Side Bars**: Visualize expenses (and optionally income) for each month
+- **Toggle Income Display**: Button to show/hide income bars alongside expenses
+- **Average Line**: Dashed line showing average monthly expenses
+- **Above-Average Highlighting**: Months exceeding the average are highlighted in red
+- **Interactive Tooltips**: Hover/tap to see detailed breakdown (expenses, income, net, transaction count)
+- **Summary Stats**: Shows average monthly spending, highest month, and lowest month
+- **Mobile Responsive**: Compact labels, flexible bar widths, touch-friendly interactions
+- **Integration**: Added to SpendingVisualization component below Trends section
+
+#### Custom Mapping Rules
+- **Settings Toggle**: Enable custom mapping rules from Settings → Categorization section
+- **MappingRulesModal**: View, manage, and delete your custom mapping rules
+- **AddMappingRuleModal**: Create new rules with pattern, match type (contains, starts with, exact, regex), category, subcategory, and priority
+- **Match Types**: Supports 4 matching strategies - Contains, Starts with, Exact match, and Regex patterns
+- **Priority System**: Higher priority rules are checked first; custom rules always take precedence over defaults
+- **Auto Re-categorization**: When a new rule is added, existing transactions are automatically re-categorized
+- **Live Preview**: See how your rule will categorize transactions before saving
+- **Persistent Storage**: Rules are saved to localStorage and persist across sessions
+
+---
+
+## [Unreleased] - 2025-12-24
+
+### New Features
+
+#### Extended Category Mappings
+- **72+ New Swedish Merchant Mappings**: Comprehensive analysis of bank transaction patterns to improve auto-categorization
+  - **Cafés & Coffee Shops** (9): ESPRESSO HOUSE, CAFE, KAFÉ, KONDITORI, STARBUCKS, WAYNES, BARISTA, SIBYLLA, 7-ELEVEN
+  - **Restaurants** (25): O LEARYS, MCDONALDS, MAX HAMBURGARE, PIZZA, BURGER, SUSHI, KEBAB, WOK, ASIAN, RESTAURANG, GRILL, BISTRO, EATERY, DELI, KITCHEN, FOOD COURT, STREET FOOD, and more
+  - **Convenience Stores** (4): MYWAY, MY WAY, PRESSBYRÅN, PRESSBYR
+  - **Entertainment Events** (5): KULTURBILJET, BILJETT, TICKET, EVENT, KONSERT
+  - **Entertainment Activities** (3): BOWLING, MINIGOLF, ESCAPE
+  - **Shopping Online** (7): LUXEMBOURG (Amazon), PAYPAL, KLARNA, ZETTLE, SWISH HANDEL, IZETTLE, TICTAIL
+  - **Shopping Clothing** (6): KÖK (IKEA), STADIUM, INTERSPORT, XXL, JULA, BYGGMAX
+  - **Shopping Hardware** (2): BAUHAUS, HORNBACH
+  - **Subscriptions - Gaming** (2): GOOGLE GOOG, GOOGLE ROBLO
+  - **Subscriptions - Insurance** (3): HEDVIG, T HEDVIG, BLIWA
+  - **Subscriptions - Other** (2): ENKLA VARDAG, BILLMATE
+  - **Parking Services** (2): EASYPARK, PARKERING
+  - **Income - Salary** (2): LÖN, LON
+
+#### Vertical Bar Chart Improvements
+- **Default Chart Type**: Vertical bar chart is now the default view for Spending Analysis
+- **Wider Bars**: Bar width increased from 32px to 56px for better visibility
+- **Taller Chart**: Chart height increased from 150px to 180px
+- **Larger Labels**: Category name labels increased from 9px to 12px with bolder font weight
+- **Larger Icons**: Category emoji icons increased from base to large size
+- **Better Truncation**: Category names now show up to 7 characters before truncation (was 5)
+
+### Stability Improvements
+
+#### Section-Level Error Boundaries
+- **New SectionErrorBoundary Component**: Granular error handling for individual UI sections
+- **Section-Specific Fallbacks**: Each section shows a contextual error message with its own icon and description
+- **Isolated Failures**: If one section crashes, others continue working normally
+- **Retry Functionality**: Users can attempt to recover individual sections without reloading the page
+- **Covered Sections**:
+  - Time Period Selector (📅)
+  - Filter Panel (🔍)
+  - Spending Visualization (📊)
+  - Transaction List (📋)
+  - Recurring Expenses (🔄)
+  - Top Merchants (🏪)
+  - AI Insights (💡)
+
+### Mobile Responsiveness Fixes
+
+#### Comprehensive Mobile Audit & Fixes
+- **SpendingVisualization**: Responsive bar chart with flexible widths, touch-friendly tap interactions, responsive text sizing
+- **TimePeriodSelector**: Grid collapses from 4 to 2 columns on mobile, responsive text and padding
+- **TopMerchants**: Responsive summary grid, condensed stats on mobile, hidden non-essential info on small screens
+- **Header**: Responsive height (64px mobile → 80px tablet → 96px desktop)
+- **FilterPanel**: Flexible search layout, responsive filter grid (1 col mobile → 2 col tablet → 4 col desktop)
+
+#### Key Mobile Improvements
+- Reduced font sizes with responsive scaling (text-[10px] sm:text-xs patterns)
+- Smaller padding/gaps on mobile (p-2 sm:p-3, gap-2 sm:gap-4)
+- Touch-friendly bar chart with click-to-toggle tooltips
+- Removed "kr" suffix on mobile for space savings
+- Hidden less important stats (e.g., "Last transaction" date) on mobile
+- Flexible widths instead of fixed (flex-1 min-w-0 max-w-[56px] instead of w-14)
+
+### Files Modified
+- `src/data/category-mappings.ts` - 72+ new merchant pattern mappings
+- `src/components/SpendingVisualization.tsx` - Chart improvements + mobile responsiveness
+- `src/components/SectionErrorBoundary.tsx` - New section-level error boundary component
+- `src/components/TimePeriodSelector.tsx` - Mobile responsive grid and typography
+- `src/components/TopMerchants.tsx` - Mobile responsive stats and merchant list
+- `src/components/FilterPanel.tsx` - Mobile responsive search and filter layout
+- `src/components/layout/Header.tsx` - Responsive header height
+- `src/App.tsx` - Wrapped major sections with SectionErrorBoundary
+- `src/components/index.ts` - Export SectionErrorBoundary
+
+---
 
 ## [Unreleased] - 2025-12-21
 
