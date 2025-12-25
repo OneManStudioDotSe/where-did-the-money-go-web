@@ -2,14 +2,14 @@ import { useState, useEffect, useTransition, useMemo, useCallback } from 'react'
 import './index.css'
 import { defaultCategories } from './data/categories'
 import { defaultCategoryMappings } from './data/category-mappings'
-import { FileUpload, TransactionList, FilterPanel, defaultFilters, ProjectRoadmap, TimePeriodSelector, SpendingVisualization, SettingsPanel, loadSettings, TransactionEditModal, UncategorizedCarousel, CsvConfirmationDialog, ExportDialog, SubscriptionConfirmationDialog, SubscriptionPanel, SubscriptionCard, SubscriptionEditModal, ErrorBoundary, LoadingOverlay, TopMerchants, MappingRulesModal, AddMappingRuleModal, BulkCategoryModal, SuspiciousTransactionsDialog } from './components'
+import { FileUpload, TransactionList, FilterPanel, defaultFilters, ProjectRoadmap, TimePeriodSelector, SpendingVisualization, SettingsPanel, loadSettings, TransactionEditModal, UncategorizedCarousel, CsvConfirmationDialog, ExportDialog, SubscriptionConfirmationDialog, SubscriptionPanel, SubscriptionCard, SubscriptionEditModal, ErrorBoundary, LoadingOverlay, TopMerchants, MappingRulesModal, AddMappingRuleModal, BulkCategoryModal, SuspiciousTransactionsDialog, OnboardingModal } from './components'
 import { SectionErrorBoundary } from './components/SectionErrorBoundary'
 import { AddSubcategoryModal } from './components/AddSubcategoryModal'
 import { CategorySystemModal } from './components/CategorySystemModal'
 import { getAllCategoriesWithCustomSubcategories, getCustomSubcategories, removeCustomSubcategory, getCustomMappings } from './utils/category-service'
 import type { TimePeriod, AppSettings } from './components'
 import { parseTransactionsFromCSV, categorizeTransactions, getCategorizedStats } from './utils'
-import { useTransactionFilters, useTimePeriodFilter } from './hooks'
+import { useTransactionFilters, useTimePeriodFilter, useOnboarding } from './hooks'
 import { useDarkMode } from './hooks/useDarkMode'
 import { useHashRouter } from './hooks/useHashRouter'
 import type { Transaction, TransactionFilters, DetectedSubscription, Subscription } from './types/transaction'
@@ -76,6 +76,13 @@ function App() {
   const { isDark, toggleDark, setMode } = useDarkMode()
   const { route, navigate } = useHashRouter()
   const toast = useToast()
+  const {
+    isOnboardingOpen,
+    hasCompletedOnboarding,
+    completeOnboarding,
+    skipOnboarding,
+    resetOnboarding,
+  } = useOnboarding()
 
   // Sync theme with settings
   useEffect(() => {
@@ -1171,6 +1178,8 @@ function App() {
           setShowSettingsPanel(false)
           setShowMappingRulesModal(true)
         }}
+        onResetOnboarding={resetOnboarding}
+        hasCompletedOnboarding={hasCompletedOnboarding}
       />
 
       {/* Transaction Edit Modal */}
@@ -1328,6 +1337,13 @@ function App() {
         onDismiss={handleDismissSuspicious}
         onDismissAll={handleDismissAllSuspicious}
         onViewTransaction={handleViewSuspiciousTransaction}
+      />
+
+      {/* Onboarding Modal */}
+      <OnboardingModal
+        isOpen={isOnboardingOpen}
+        onComplete={completeOnboarding}
+        onSkip={skipOnboarding}
       />
 
       {/* Loading Overlay */}

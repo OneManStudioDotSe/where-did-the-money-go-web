@@ -103,6 +103,10 @@ interface SettingsPanelProps {
   customMappingRulesCount?: number;
   /** Callback to open the mapping rules modal */
   onOpenMappingRules?: () => void;
+  /** Callback to reset onboarding tour */
+  onResetOnboarding?: () => void;
+  /** Whether onboarding has been completed */
+  hasCompletedOnboarding?: boolean;
 }
 
 function IconPreview({ iconSet, categoryId }: { iconSet: IconSetId; categoryId: string }) {
@@ -134,7 +138,7 @@ function IconPreview({ iconSet, categoryId }: { iconSet: IconSetId; categoryId: 
   );
 }
 
-export function SettingsPanel({ isOpen, onClose, settings, onSettingsChange, subscriptionCount = 0, onClearSubscriptions, customMappingRulesCount = 0, onOpenMappingRules }: SettingsPanelProps) {
+export function SettingsPanel({ isOpen, onClose, settings, onSettingsChange, subscriptionCount = 0, onClearSubscriptions, customMappingRulesCount = 0, onOpenMappingRules, onResetOnboarding, hasCompletedOnboarding = true }: SettingsPanelProps) {
   const [localSettings, setLocalSettings] = useState<AppSettings>(settings);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [showApiKey, setShowApiKey] = useState(false);
@@ -888,6 +892,42 @@ export function SettingsPanel({ isOpen, onClose, settings, onSettingsChange, sub
                     Select an AI provider to enable spending insights. Your data is processed directly with the provider - nothing is stored on external servers.
                   </p>
                 </div>
+              )}
+            </div>
+
+            {/* Help & Support Section */}
+            <div className="border-t border-gray-200 dark:border-slate-700 pt-6">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Help & support
+              </h3>
+
+              {/* Restart Onboarding Tour */}
+              {onResetOnboarding && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onResetOnboarding();
+                    handleSave();
+                  }}
+                  className="w-full p-3 rounded-lg border-2 border-gray-200 dark:border-slate-600 hover:border-primary-300 dark:hover:border-primary-700 hover:bg-primary-50 dark:hover:bg-primary-900/20 text-left transition-all"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-lg">🎓</span>
+                    <div>
+                      <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Restart onboarding tour
+                      </p>
+                      <p className="text-xs text-gray-400 dark:text-gray-500">
+                        {hasCompletedOnboarding
+                          ? 'View the welcome tour again'
+                          : 'Tour will show on next page load'}
+                      </p>
+                    </div>
+                  </div>
+                </button>
               )}
             </div>
           </div>

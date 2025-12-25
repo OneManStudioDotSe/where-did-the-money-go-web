@@ -24,7 +24,7 @@
 - [x] Bulk transaction editing - Select multiple transactions to recategorize (toggle in Settings)
 - [x] Export enhancements - PDF reports, filtered exports, custom date ranges
 - [x] Hide ad placeholders toggle in settings
-- [ ] Onboarding tour - First-time user walkthrough
+- [x] Onboarding tour - First-time user walkthrough
 
 ## Critical Fixes (High Priority) ✅
 - [x] Error boundaries for each major section (not just one global)
