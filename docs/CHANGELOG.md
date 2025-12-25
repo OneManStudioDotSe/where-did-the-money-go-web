@@ -7,9 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased] - 2025-12-25
+## [Unreleased]
 
-### New Features
+### 2025-12-25 - Onboarding & Smarter Matching
+
+#### Onboarding Tour
+- **Step-by-Step Modal Tour**: New first-time user walkthrough introducing key features
+- **6 Steps**: Welcome, Upload Data, Categories, Subscriptions, Insights, Settings
+- **Progress Indicators**: Visual progress bar and step dots showing current position
+- **Navigation**: Next/Back buttons with Skip option to dismiss tour early
+- **Automatic Trigger**: Shows automatically for new users on first visit (after 500ms delay)
+- **LocalStorage Persistence**: Completion state stored with version tracking for future tour updates
+- **Reset Option**: "Restart onboarding tour" button in Settings → Help & Support section
+- **Isolated Implementation**: Hook-based architecture allows easy swapping of onboarding UI variations
+
+#### Improved Category Matching
+- **Swedish Character Normalization**: Matching now handles Swedish character variations (å/ä/ö) - "HEMKÖP" matches pattern "HEMKOP" and vice versa
+- **Token-Based Matching**: Multi-word patterns now use token matching - pattern "MAX HAMBURGER" will match "MAX HAMBURGERRESTAURANGER AB STOCKHOLM"
+- **Accent Handling**: Common accented characters are normalized (é→e, ñ→n, ç→c) for better international merchant matching
+- **Performance**: Uses fast-path exact matching first, only falls back to normalized matching when needed
+- **Display Unchanged**: Transaction descriptions remain exactly as received from the bank - normalization is only used internally for matching
 
 #### Suspicious Transaction Detection
 - **Duplicate Detection**: Identifies exact duplicates (same amount, description, date) and near duplicates (same amount within 3 days)
@@ -71,26 +88,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Visual Feedback**: Selected rows are highlighted with a primary color background
 - **Toast Notifications**: Success message confirms how many transactions were updated
 
-#### Improved Category Matching
-- **Swedish Character Normalization**: Matching now handles Swedish character variations (å/ä/ö) - "HEMKÖP" matches pattern "HEMKOP" and vice versa
-- **Token-Based Matching**: Multi-word patterns now use token matching - pattern "MAX HAMBURGER" will match "MAX HAMBURGERRESTAURANGER AB STOCKHOLM"
-- **Accent Handling**: Common accented characters are normalized (é→e, ñ→n, ç→c) for better international merchant matching
-- **Performance**: Uses fast-path exact matching first, only falls back to normalized matching when needed
-- **Display Unchanged**: Transaction descriptions remain exactly as received from the bank - normalization is only used internally for matching
-
-#### Onboarding Tour
-- **Step-by-Step Modal Tour**: New first-time user walkthrough introducing key features
-- **6 Steps**: Welcome, Upload Data, Categories, Subscriptions, Insights, Settings
-- **Progress Indicators**: Visual progress bar and step dots showing current position
-- **Navigation**: Next/Back buttons with Skip option to dismiss tour early
-- **Automatic Trigger**: Shows automatically for new users on first visit (after 500ms delay)
-- **LocalStorage Persistence**: Completion state stored with version tracking for future tour updates
-- **Reset Option**: "Restart onboarding tour" button in Settings → Help & Support section
-- **Isolated Implementation**: Hook-based architecture allows easy swapping of onboarding UI variations
-
 ---
 
-## [Unreleased] - 2025-12-24
+### 2025-12-24 - Extended Mappings & Mobile Fixes
 
 ### New Features
 

@@ -659,6 +659,77 @@ npm run dev
 
 ---
 
+## Entry #013 - 2025-12-25
+
+### Phase 2-4 Complete - Data Quality, Insights & UX Polish
+
+**What was done:**
+- Completed all items from Phase 2 (Data Quality & Accuracy), Phase 3 (Enhanced Insights), and Phase 4 (User Experience & Polish) of the development roadmap
+- Implemented comprehensive feature set including:
+  - Enhanced subscription detection with multi-frequency support and confidence scoring
+  - Suspicious transaction detection (duplicates, large transactions, unusual amounts)
+  - Monthly comparison charts for spending visualization
+  - Bulk transaction editing with multi-select
+  - Custom mapping rules for user-defined categorization
+  - Smarter category matching with Swedish character normalization
+  - First-time user onboarding tour
+
+**Key Features Delivered:**
+
+1. **Enhanced Subscription Detection:**
+   - Multi-frequency detection (weekly, bi-weekly, monthly, quarterly, annual)
+   - Confidence scoring (0-100) with 70% threshold for display
+   - Custom naming/aliases for subscriptions
+   - Next payment date prediction
+   - Amount variance tracking (fixed vs variable)
+
+2. **Suspicious Transaction Detection:**
+   - Exact and near-duplicate detection
+   - Large transaction alerts (>5,000 kr)
+   - Unusual merchant amount detection (3x std deviation)
+   - Review dialog with filtering by type
+   - Dismiss functionality with persistence
+
+3. **Smarter Category Matching:**
+   - Swedish character normalization (å/ä/ö)
+   - Token-based multi-word pattern matching
+   - Accent handling for international merchants
+   - Performance-optimized with fast-path exact matching
+
+4. **User Experience Improvements:**
+   - Onboarding tour for new users (6 steps)
+   - Bulk transaction editing with page selection
+   - Custom mapping rules with live preview
+   - Monthly comparison charts with tooltips
+
+**Key Decisions:**
+
+1. **70% Confidence Threshold:** Validated against real Swedish bank data to minimize false positives while catching legitimate subscriptions
+
+2. **Onboarding Architecture:** Hook-based implementation (`useOnboarding`) allows easy swapping of onboarding UI without touching core logic
+
+3. **Character Normalization Strategy:** Normalize only for matching, preserve original display - keeps transaction descriptions authentic
+
+4. **Suspicious Transaction Severity:** Three-tier system (High/Medium/Low) helps users prioritize what to review first
+
+**Challenges Faced:**
+- Balancing subscription detection sensitivity vs false positives
+- Handling variable-amount subscriptions (usage-based services)
+- Ensuring onboarding doesn't disrupt returning users
+
+**Solutions Applied:**
+- Confidence scoring with breakdown gives transparency into detection quality
+- Amount tolerance tiers (5%/15%/25%) adapt to subscription type
+- localStorage persistence with version tracking for onboarding state
+
+**Technical Highlights:**
+- No new npm dependencies added
+- All features use existing React patterns (hooks, context)
+- localStorage for persistence (subscriptions, settings, dismissed warnings)
+- Responsive design tested on mobile
+
+---
+
 ## Entry Template
 
 ```markdown

@@ -117,6 +117,24 @@ This document defines the category hierarchy and mapping rules for automatic tra
 3. **Starts With** - Text begins with pattern
 4. **Regex** - Regular expression match
 
+### Enhanced Pattern Matching
+
+The category matching system now includes:
+
+1. **Swedish Character Normalization**: Handles Swedish character variations (å/ä/ö) automatically
+   - "HEMKÖP" matches pattern "HEMKOP" and vice versa
+   - "PRESSBYRÅN" matches "PRESSBYRAN"
+   - Normalization is only used for matching - display remains unchanged
+
+2. **Token-Based Matching**: Multi-word patterns use intelligent token matching
+   - Pattern "MAX HAMBURGER" will match "MAX HAMBURGERRESTAURANGER AB STOCKHOLM"
+   - Each word in the pattern must appear in the description
+
+3. **Accent Handling**: Common accented characters are normalized
+   - é → e, ñ → n, ç → c for international merchant matching
+
+4. **Performance Optimization**: Uses fast-path exact matching first, only falls back to normalized matching when needed
+
 ### Mapping Priority
 
 1. User-defined custom mappings (highest priority)
@@ -252,25 +270,28 @@ const categoryMappings: CategoryMapping[] = [
 
 ## Subscription Detection
 
-### Criteria for Subscription Detection
+For detailed subscription detection documentation, see [SUBSCRIPTION_DETECTION.md](./SUBSCRIPTION_DETECTION.md).
 
-A transaction is marked as a subscription if:
+### Quick Reference
 
-1. **Recurring Pattern**: Same or similar merchant appears monthly
-2. **Amount Consistency**: Amount varies by less than 10%
-3. **Minimum Occurrences**: At least 2 occurrences
-4. **Time Pattern**: Roughly monthly interval (25-35 days apart)
+The enhanced subscription detection system uses:
+
+1. **Multi-Frequency Detection**: Weekly, bi-weekly, monthly, quarterly, and annual patterns
+2. **Confidence Scoring**: 0-100 score based on amount consistency, timing regularity, occurrence count, and pattern clarity
+3. **70% Confidence Threshold**: Only shows subscriptions meeting this threshold
+4. **Adaptive Thresholds**: Stricter for fixed amounts, looser for variable/usage-based services
+5. **Next Payment Prediction**: Based on detected frequency and billing day
 
 ### Known Subscription Patterns
 
-| Merchant | Typical Day | Typical Amount (SEK) |
-|----------|-------------|---------------------|
-| NETFLIX | ~18th | 149 |
-| SPOTIFY | ~2nd | 169-189 |
-| GOOGLE ONE | ~4th | 249 |
-| TRYGG-HANSA | ~1st | 633 + 638 |
-| SECTOR ALARM | ~27th | 547 |
-| APPLE COM/BI | ~21st | 40 |
+| Merchant | Typical Day | Typical Amount (SEK) | Frequency |
+|----------|-------------|---------------------|-----------|
+| NETFLIX | ~18th | 149 | Monthly |
+| SPOTIFY | ~2nd | 169-189 | Monthly |
+| GOOGLE ONE | ~4th | 249 | Monthly |
+| TRYGG-HANSA | ~1st | 633 + 638 | Monthly |
+| SECTOR ALARM | ~27th | 547 | Monthly |
+| APPLE COM/BI | ~21st | 40 | Monthly |
 
 ---
 
@@ -278,13 +299,28 @@ A transaction is marked as a subscription if:
 
 Users can:
 
-1. **Create Custom Mappings**: Define new pattern → category rules
-2. **Override Default Mappings**: Custom rules take priority
-3. **Manually Categorize**: Assign category to specific transactions
-4. **Learn from Behavior**: When user categorizes, offer to create rule
+1. **Create Custom Mappings**: Define new pattern → category rules via Settings → Categorization → Custom Mapping Rules
+2. **Override Default Mappings**: Custom rules always take priority over built-in mappings
+3. **Manually Categorize**: Click any transaction to assign a different category
+4. **Bulk Categorization**: Select multiple transactions and recategorize them at once (enable in Settings)
+5. **Create Custom Subcategories**: Add custom subcategories to any of the 13 default categories
+
+### Custom Mapping Rules
+
+When enabled in Settings, users can:
+- Create rules with pattern, match type (contains, starts with, exact, regex)
+- Assign to any category and subcategory
+- Set priority (higher priority rules are checked first)
+- View and manage all rules via the Mapping Rules modal
+- Rules are automatically applied when new transactions are imported
 
 ### Persistence
 
-All custom mappings stored in `localStorage`:
+All custom data stored in `localStorage`:
 - `custom_category_mappings`: User-defined pattern rules
-- `manual_assignments`: Specific transaction → category overrides
+- `custom_subcategories`: User-created subcategories
+- `app_settings`: Application settings including feature toggles
+
+---
+
+*Last updated: 2025-12-25*
