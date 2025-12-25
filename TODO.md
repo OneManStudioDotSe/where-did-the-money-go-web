@@ -8,9 +8,9 @@
 
 ---
 
-## Phase 2: Data Quality & Accuracy
+## Phase 2: Data Quality & Accuracy ✅
 - [x] Expand category mappings - 72+ new Swedish merchant mappings added (coffee shops, restaurants, convenience stores, entertainment, shopping, subscriptions, parking, income)
-- [ ] Improve category matching accuracy - Add fuzzy matching, handle Swedish characters better
+- [x] Improve category matching accuracy - Swedish character normalization (å/ä/ö → a/a/o for matching) and token-based matching for multi-word patterns
 - [x] Add manual category mapping rules - Let users create their own merchant → category mappings (toggle in Settings)
 - [x] Subscription detection refinement - Enhanced algorithm with frequency detection (weekly, bi-weekly, monthly, quarterly, annual), confidence scoring (70% threshold), custom naming/aliases, and next payment prediction
 - [x] Data validation - Suspicious transaction detection with exact/near duplicates, large transactions, and unusual merchant amounts; review dialog with dismiss functionality

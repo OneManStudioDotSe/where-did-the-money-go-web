@@ -2,6 +2,12 @@ import type { Transaction } from '../types/transaction';
 import type { CategoryMapping, Category, CategoryOption, Subcategory } from '../types/category';
 import { defaultCategoryMappings } from '../data/category-mappings';
 import { defaultCategories } from '../data/categories';
+import {
+  normalizedContains,
+  normalizedStartsWith,
+  normalizedExact,
+  tokenMatch,
+} from './text-normalization';
 
 // ============================================
 // Custom Subcategory Storage
@@ -161,6 +167,7 @@ export function getAllMappings(): CategoryMapping[] {
 
 /**
  * Check if a description matches a pattern
+ * Uses enhanced matching with Swedish character normalization and token matching
  */
 function matchesPattern(description: string, mapping: CategoryMapping): boolean {
   const upperDesc = description.toUpperCase();
@@ -168,11 +175,29 @@ function matchesPattern(description: string, mapping: CategoryMapping): boolean 
 
   switch (mapping.matchType) {
     case 'exact':
-      return upperDesc === upperPattern;
+      // Try exact match first (fast path)
+      if (upperDesc === upperPattern) return true;
+      // Fallback: normalized exact match (handles å/ä/ö variations)
+      return normalizedExact(description, mapping.pattern);
+
     case 'starts_with':
-      return upperDesc.startsWith(upperPattern);
+      // Try exact starts_with first (fast path)
+      if (upperDesc.startsWith(upperPattern)) return true;
+      // Fallback: normalized starts_with
+      return normalizedStartsWith(description, mapping.pattern);
+
     case 'contains':
-      return upperDesc.includes(upperPattern);
+      // Try exact contains first (fast path)
+      if (upperDesc.includes(upperPattern)) return true;
+      // Fallback 1: normalized contains (handles å/ä/ö)
+      if (normalizedContains(description, mapping.pattern)) return true;
+      // Fallback 2: token matching for multi-word patterns
+      // Only use if pattern has multiple words (e.g., "MAX HAMBURGER")
+      if (mapping.pattern.includes(' ')) {
+        return tokenMatch(description, mapping.pattern);
+      }
+      return false;
+
     case 'regex':
       try {
         const regex = new RegExp(mapping.pattern, 'i');
@@ -180,6 +205,7 @@ function matchesPattern(description: string, mapping: CategoryMapping): boolean 
       } catch {
         return false;
       }
+
     default:
       return false;
   }

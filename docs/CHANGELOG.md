@@ -71,6 +71,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Visual Feedback**: Selected rows are highlighted with a primary color background
 - **Toast Notifications**: Success message confirms how many transactions were updated
 
+#### Improved Category Matching
+- **Swedish Character Normalization**: Matching now handles Swedish character variations (å/ä/ö) - "HEMKÖP" matches pattern "HEMKOP" and vice versa
+- **Token-Based Matching**: Multi-word patterns now use token matching - pattern "MAX HAMBURGER" will match "MAX HAMBURGERRESTAURANGER AB STOCKHOLM"
+- **Accent Handling**: Common accented characters are normalized (é→e, ñ→n, ç→c) for better international merchant matching
+- **Performance**: Uses fast-path exact matching first, only falls back to normalized matching when needed
+- **Display Unchanged**: Transaction descriptions remain exactly as received from the bank - normalization is only used internally for matching
+
 ---
 
 ## [Unreleased] - 2025-12-24
