@@ -2,10 +2,11 @@ import { useState, useEffect, useTransition, useMemo, useCallback } from 'react'
 import './index.css'
 import { defaultCategories } from './data/categories'
 import { defaultCategoryMappings } from './data/category-mappings'
-import { FileUpload, TransactionList, FilterPanel, defaultFilters, ProjectRoadmap, TimePeriodSelector, SpendingVisualization, SettingsPanel, loadSettings, TransactionEditModal, UncategorizedCarousel, CsvConfirmationDialog, ExportDialog, SubscriptionConfirmationDialog, SubscriptionPanel, SubscriptionCard, SubscriptionEditModal, ErrorBoundary, LoadingOverlay, TopMerchants } from './components'
+import { FileUpload, TransactionList, FilterPanel, defaultFilters, ProjectRoadmap, TimePeriodSelector, SpendingVisualization, SettingsPanel, loadSettings, TransactionEditModal, UncategorizedCarousel, CsvConfirmationDialog, ExportDialog, SubscriptionConfirmationDialog, SubscriptionPanel, SubscriptionCard, SubscriptionEditModal, ErrorBoundary, LoadingOverlay, TopMerchants, MappingRulesModal, AddMappingRuleModal } from './components'
+import { SectionErrorBoundary } from './components/SectionErrorBoundary'
 import { AddSubcategoryModal } from './components/AddSubcategoryModal'
 import { CategorySystemModal } from './components/CategorySystemModal'
-import { getAllCategoriesWithCustomSubcategories, getCustomSubcategories, removeCustomSubcategory } from './utils/category-service'
+import { getAllCategoriesWithCustomSubcategories, getCustomSubcategories, removeCustomSubcategory, getCustomMappings } from './utils/category-service'
 import type { TimePeriod, AppSettings } from './components'
 import { parseTransactionsFromCSV, categorizeTransactions, getCategorizedStats } from './utils'
 import { useTransactionFilters, useTimePeriodFilter } from './hooks'
@@ -46,6 +47,9 @@ function App() {
   const [showResetConfirmation, setShowResetConfirmation] = useState(false)
   const [showAddSubcategoryModal, setShowAddSubcategoryModal] = useState(false)
   const [customSubcategoriesVersion, setCustomSubcategoriesVersion] = useState(0)
+  const [showMappingRulesModal, setShowMappingRulesModal] = useState(false)
+  const [showAddMappingRuleModal, setShowAddMappingRuleModal] = useState(false)
+  const [customMappingsVersion, setCustomMappingsVersion] = useState(0)
   const [pendingFileContent, setPendingFileContent] = useState<string | null>(null)
   const [pendingFileName, setPendingFileName] = useState<string | null>(null)
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null)
@@ -148,6 +152,12 @@ function App() {
   const customSubcategories = useMemo(() =>
     getCustomSubcategories(),
     [customSubcategoriesVersion]
+  )
+
+  // Get custom mapping rules count for display
+  const customMappingRulesCount = useMemo(() =>
+    getCustomMappings().length,
+    [customMappingsVersion]
   )
 
   // Handle custom subcategory deletion
@@ -730,19 +740,23 @@ function App() {
           {activeTab === 'overview' && (
             <div className="animate-tab-content">
               {/* Time Period Selector */}
-              <TimePeriodSelector
-                transactions={transactions}
-                selectedPeriod={selectedPeriod}
-                onPeriodChange={setSelectedPeriod}
-              />
+              <SectionErrorBoundary section="time-period">
+                <TimePeriodSelector
+                  transactions={transactions}
+                  selectedPeriod={selectedPeriod}
+                  onPeriodChange={setSelectedPeriod}
+                />
+              </SectionErrorBoundary>
 
               {/* Filter Panel */}
-              <FilterPanel
-                filters={filters}
-                onFiltersChange={setFilters}
-                totalCount={totalCount}
-                filteredCount={filteredCount}
-              />
+              <SectionErrorBoundary section="filters">
+                <FilterPanel
+                  filters={filters}
+                  onFiltersChange={setFilters}
+                  totalCount={totalCount}
+                  filteredCount={filteredCount}
+                />
+              </SectionErrorBoundary>
 
               {/* Main Content: Visualization + Subscription Card */}
               <div className={`grid gap-6 ${
@@ -756,39 +770,47 @@ function App() {
                     ? 'lg:col-span-3'
                     : ''
                 }>
-                  <SpendingVisualization
-                    transactions={filteredTransactions}
-                    selectedPeriod={selectedPeriod}
-                    allTransactions={transactions}
-                  />
+                  <SectionErrorBoundary section="visualization">
+                    <SpendingVisualization
+                      transactions={filteredTransactions}
+                      selectedPeriod={selectedPeriod}
+                      allTransactions={transactions}
+                    />
+                  </SectionErrorBoundary>
                 </div>
 
                 {/* Subscription Card (Option 3) - 2/5 width, shown based on placement setting */}
                 {(appSettings.subscriptionPlacement === 'overview' || appSettings.subscriptionPlacement === 'both') && (
                   <div className="lg:col-span-2">
-                    <SubscriptionCard
-                      subscriptions={subscriptions}
-                      transactions={transactions}
-                      onViewAll={() => setActiveTab('subscriptions')}
-                    />
+                    <SectionErrorBoundary section="subscriptions">
+                      <SubscriptionCard
+                        subscriptions={subscriptions}
+                        transactions={transactions}
+                        onViewAll={() => setActiveTab('subscriptions')}
+                      />
+                    </SectionErrorBoundary>
                   </div>
                 )}
               </div>
 
               {/* Top Merchants Analysis */}
               <div className="mt-6">
-                <TopMerchants transactions={filteredTransactions} />
+                <SectionErrorBoundary section="merchants">
+                  <TopMerchants transactions={filteredTransactions} />
+                </SectionErrorBoundary>
               </div>
 
               {/* AI Insights Panel */}
               <div className="mt-6">
-                <AIInsightsPanel
-                  transactions={periodFilteredTransactions}
-                  subscriptions={subscriptions}
-                  aiProvider={appSettings.aiProvider}
-                  aiApiKey={appSettings.aiApiKey}
-                  onOpenSettings={() => setShowSettingsPanel(true)}
-                />
+                <SectionErrorBoundary section="insights">
+                  <AIInsightsPanel
+                    transactions={periodFilteredTransactions}
+                    subscriptions={subscriptions}
+                    aiProvider={appSettings.aiProvider}
+                    aiApiKey={appSettings.aiApiKey}
+                    onOpenSettings={() => setShowSettingsPanel(true)}
+                  />
+                </SectionErrorBoundary>
               </div>
             </div>
           )}
@@ -796,49 +818,59 @@ function App() {
           {activeTab === 'transactions' && (
             <div className="animate-tab-content">
               {/* Time Period Selector */}
-              <TimePeriodSelector
-                transactions={transactions}
-                selectedPeriod={selectedPeriod}
-                onPeriodChange={setSelectedPeriod}
-              />
+              <SectionErrorBoundary section="time-period">
+                <TimePeriodSelector
+                  transactions={transactions}
+                  selectedPeriod={selectedPeriod}
+                  onPeriodChange={setSelectedPeriod}
+                />
+              </SectionErrorBoundary>
 
               {/* Filter Panel */}
-              <FilterPanel
-                filters={filters}
-                onFiltersChange={setFilters}
-                totalCount={totalCount}
-                filteredCount={filteredCount}
-              />
+              <SectionErrorBoundary section="filters">
+                <FilterPanel
+                  filters={filters}
+                  onFiltersChange={setFilters}
+                  totalCount={totalCount}
+                  filteredCount={filteredCount}
+                />
+              </SectionErrorBoundary>
 
               {/* Transaction List - Full width */}
-              <TransactionList
-                transactions={filteredTransactions}
-                onTransactionClick={handleTransactionClick}
-                pageSize={appSettings.transactionPageSize}
-              />
+              <SectionErrorBoundary section="transactions">
+                <TransactionList
+                  transactions={filteredTransactions}
+                  onTransactionClick={handleTransactionClick}
+                  pageSize={appSettings.transactionPageSize}
+                />
+              </SectionErrorBoundary>
             </div>
           )}
 
           {activeTab === 'subscriptions' && (appSettings.subscriptionPlacement === 'tab' || appSettings.subscriptionPlacement === 'both') && (
             <div className="animate-tab-content">
-              <SubscriptionPanel
-                subscriptions={subscriptions}
-                transactions={transactions}
-                viewMode={appSettings.subscriptionViewVariation}
-                onEditSubscription={handleEditSubscription}
-              />
+              <SectionErrorBoundary section="subscriptions">
+                <SubscriptionPanel
+                  subscriptions={subscriptions}
+                  transactions={transactions}
+                  viewMode={appSettings.subscriptionViewVariation}
+                  onEditSubscription={handleEditSubscription}
+                />
+              </SectionErrorBoundary>
             </div>
           )}
 
           {activeTab === 'insights' && (
             <div className="animate-tab-content">
-              <AIInsightsPanel
-                transactions={periodFilteredTransactions}
-                subscriptions={subscriptions}
-                aiProvider={appSettings.aiProvider}
-                aiApiKey={appSettings.aiApiKey}
-                onOpenSettings={() => setShowSettingsPanel(true)}
-              />
+              <SectionErrorBoundary section="insights">
+                <AIInsightsPanel
+                  transactions={periodFilteredTransactions}
+                  subscriptions={subscriptions}
+                  aiProvider={appSettings.aiProvider}
+                  aiApiKey={appSettings.aiApiKey}
+                  onOpenSettings={() => setShowSettingsPanel(true)}
+                />
+              </SectionErrorBoundary>
             </div>
           )}
           </div>
@@ -1003,6 +1035,11 @@ function App() {
         onSettingsChange={setAppSettings}
         subscriptionCount={subscriptions.length}
         onClearSubscriptions={handleClearSubscriptions}
+        customMappingRulesCount={customMappingRulesCount}
+        onOpenMappingRules={() => {
+          setShowSettingsPanel(false)
+          setShowMappingRulesModal(true)
+        }}
       />
 
       {/* Transaction Edit Modal */}
@@ -1118,6 +1155,29 @@ function App() {
         isOpen={showAddSubcategoryModal}
         onClose={() => setShowAddSubcategoryModal(false)}
         onSubcategoryAdded={() => setCustomSubcategoriesVersion(v => v + 1)}
+      />
+
+      {/* Mapping Rules Modal */}
+      <MappingRulesModal
+        isOpen={showMappingRulesModal}
+        onClose={() => setShowMappingRulesModal(false)}
+        onAddRule={() => setShowAddMappingRuleModal(true)}
+        onRulesChange={() => setCustomMappingsVersion(v => v + 1)}
+      />
+
+      {/* Add Mapping Rule Modal */}
+      <AddMappingRuleModal
+        isOpen={showAddMappingRuleModal}
+        onClose={() => setShowAddMappingRuleModal(false)}
+        onRuleAdded={() => {
+          setCustomMappingsVersion(v => v + 1)
+          // Re-categorize transactions with new rules if enabled
+          if (appSettings.enableCustomMappingRules && transactions.length > 0) {
+            const recategorized = categorizeTransactions(transactions)
+            setTransactions(recategorized)
+            toast.success('Transactions re-categorized with new rule')
+          }
+        }}
       />
 
       {/* Loading Overlay */}

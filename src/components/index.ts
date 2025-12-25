@@ -17,7 +17,11 @@ export { SubscriptionGrid } from './SubscriptionGrid';
 export { SubscriptionPanel, SubscriptionCard } from './SubscriptionPanel';
 export { SubscriptionEditModal } from './SubscriptionEditModal';
 export { ErrorBoundary } from './ErrorBoundary';
+export { SectionErrorBoundary } from './SectionErrorBoundary';
 export { TopMerchants } from './TopMerchants';
+export { MonthlyComparisonChart } from './MonthlyComparisonChart';
+export { MappingRulesModal } from './MappingRulesModal';
+export { AddMappingRuleModal } from './AddMappingRuleModal';
 export type { TimePeriod } from './TimePeriodSelector';
 export type { AppSettings, SubscriptionViewVariation, SubscriptionPlacement } from './SettingsPanel';
 

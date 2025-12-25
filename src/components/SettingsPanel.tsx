@@ -34,6 +34,10 @@ export interface AppSettings {
   aiApiKey: string;
   /** Whether to show ad placeholders (default: true) */
   showAds: boolean;
+  /** Whether custom mapping rules are enabled (default: false) */
+  enableCustomMappingRules: boolean;
+  /** Whether bulk transaction editing is enabled (default: false) */
+  enableBulkEditing: boolean;
 }
 
 const defaultSettings: AppSettings = {
@@ -49,6 +53,7 @@ const defaultSettings: AppSettings = {
   aiProvider: null,
   aiApiKey: '',
   showAds: true,
+  enableCustomMappingRules: false,
 };
 
 const STORAGE_KEY = 'app_settings';
@@ -90,6 +95,10 @@ interface SettingsPanelProps {
   subscriptionCount?: number;
   /** Callback to clear all subscriptions */
   onClearSubscriptions?: () => void;
+  /** Number of custom mapping rules */
+  customMappingRulesCount?: number;
+  /** Callback to open the mapping rules modal */
+  onOpenMappingRules?: () => void;
 }
 
 function IconPreview({ iconSet, categoryId }: { iconSet: IconSetId; categoryId: string }) {
@@ -121,7 +130,7 @@ function IconPreview({ iconSet, categoryId }: { iconSet: IconSetId; categoryId: 
   );
 }
 
-export function SettingsPanel({ isOpen, onClose, settings, onSettingsChange, subscriptionCount = 0, onClearSubscriptions }: SettingsPanelProps) {
+export function SettingsPanel({ isOpen, onClose, settings, onSettingsChange, subscriptionCount = 0, onClearSubscriptions, customMappingRulesCount = 0, onOpenMappingRules }: SettingsPanelProps) {
   const [localSettings, setLocalSettings] = useState<AppSettings>(settings);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [showApiKey, setShowApiKey] = useState(false);
@@ -628,6 +637,78 @@ export function SettingsPanel({ isOpen, onClose, settings, onSettingsChange, sub
                 When calculating monthly periods, start from this day instead of the 1st.
                 Useful if your salary arrives on a specific date.
               </p>
+            </div>
+
+            {/* Categorization Settings Section */}
+            <div className="border-t border-gray-200 dark:border-slate-700 pt-6">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                </svg>
+                Categorization
+              </h3>
+
+              {/* Enable Custom Mapping Rules Toggle */}
+              <div className="mb-4">
+                <label className="flex items-center justify-between cursor-pointer">
+                  <div>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Custom mapping rules
+                    </span>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                      Create your own merchant → category mappings
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={localSettings.enableCustomMappingRules}
+                    onClick={() => setLocalSettings({ ...localSettings, enableCustomMappingRules: !localSettings.enableCustomMappingRules })}
+                    className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800 ${
+                      localSettings.enableCustomMappingRules ? 'bg-primary-600' : 'bg-gray-200 dark:bg-slate-600'
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                        localSettings.enableCustomMappingRules ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </label>
+              </div>
+
+              {/* Manage Rules Button - Only shown when enabled */}
+              {localSettings.enableCustomMappingRules && onOpenMappingRules && (
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleSave();
+                      onOpenMappingRules();
+                    }}
+                    className="w-full p-3 rounded-lg border-2 border-primary-200 dark:border-primary-800 hover:border-primary-300 dark:hover:border-primary-700 hover:bg-primary-50 dark:hover:bg-primary-900/20 text-left transition-all"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span className="text-lg">📝</span>
+                        <div>
+                          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Manage mapping rules
+                          </p>
+                          <p className="text-xs text-gray-400 dark:text-gray-500">
+                            {customMappingRulesCount === 0
+                              ? 'No custom rules yet'
+                              : `${customMappingRulesCount} custom rule${customMappingRulesCount !== 1 ? 's' : ''}`}
+                          </p>
+                        </div>
+                      </div>
+                      <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* AI Insights Section */}
