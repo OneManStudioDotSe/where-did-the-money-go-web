@@ -7,6 +7,8 @@ interface FilterPanelProps {
   onFiltersChange: (filters: TransactionFilters) => void;
   totalCount: number;
   filteredCount: number;
+  /** Ref to the search input for keyboard shortcuts */
+  searchInputRef?: React.RefObject<HTMLInputElement | null>;
 }
 
 const defaultFilters: TransactionFilters = {
@@ -23,6 +25,7 @@ export function FilterPanel({
   onFiltersChange,
   totalCount,
   filteredCount,
+  searchInputRef,
 }: FilterPanelProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -99,8 +102,9 @@ export function FilterPanel({
               />
             </svg>
             <input
+              ref={searchInputRef}
               type="text"
-              placeholder="Search transactions..."
+              placeholder="Search transactions... (Ctrl+F)"
               value={filters.searchQuery}
               onChange={(e) => handleSearchChange(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors"

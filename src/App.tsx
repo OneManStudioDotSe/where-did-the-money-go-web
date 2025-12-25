@@ -1,4 +1,4 @@
-import { useState, useEffect, useTransition, useMemo, useCallback } from 'react'
+import { useState, useEffect, useTransition, useMemo, useCallback, useRef } from 'react'
 import './index.css'
 import { defaultCategories } from './data/categories'
 import { defaultCategoryMappings } from './data/category-mappings'
@@ -9,7 +9,7 @@ import { CategorySystemModal } from './components/CategorySystemModal'
 import { getAllCategoriesWithCustomSubcategories, getCustomSubcategories, removeCustomSubcategory, getCustomMappings } from './utils/category-service'
 import type { TimePeriod, AppSettings } from './components'
 import { parseTransactionsFromCSV, categorizeTransactions, getCategorizedStats } from './utils'
-import { useTransactionFilters, useTimePeriodFilter, useOnboarding } from './hooks'
+import { useTransactionFilters, useTimePeriodFilter, useOnboarding, useKeyboardShortcuts } from './hooks'
 import { useDarkMode } from './hooks/useDarkMode'
 import { useHashRouter } from './hooks/useHashRouter'
 import type { Transaction, TransactionFilters, DetectedSubscription, Subscription } from './types/transaction'
@@ -63,7 +63,13 @@ function App() {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>(() => loadSubscriptions())
   const [detectedSubscriptions, setDetectedSubscriptions] = useState<DetectedSubscription[]>([])
   const [editingSubscription, setEditingSubscription] = useState<Subscription | null>(null)
-  const [activeTab, setActiveTab] = useState<DashboardTab>('overview')
+  const [activeTab, setActiveTab] = useState<DashboardTab>(() => {
+    // Load last used tab from localStorage
+    const savedTab = localStorage.getItem('wdtmg_active_tab') as DashboardTab | null
+    return savedTab && ['overview', 'transactions', 'subscriptions', 'insights'].includes(savedTab)
+      ? savedTab
+      : 'overview'
+  })
   const [isPending, startTransition] = useTransition()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<CsvParseError | null>(null)
@@ -71,6 +77,7 @@ function App() {
   const [isDemoMode, setIsDemoMode] = useState(false)
   const [filters, setFilters] = useState<TransactionFilters>(defaultFilters)
   const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod | null>(null)
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null)
 
   // Hooks
   const { isDark, toggleDark, setMode } = useDarkMode()
@@ -84,6 +91,64 @@ function App() {
     resetOnboarding,
   } = useOnboarding()
 
+  // Ref for search input to focus with keyboard shortcut
+  const searchInputRef = useRef<HTMLInputElement>(null)
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts({
+    shortcuts: [
+      {
+        key: 'f',
+        ctrl: true,
+        action: () => {
+          // Switch to transactions tab and focus search
+          if (transactions.length > 0) {
+            setActiveTab('transactions')
+            // Small delay to allow tab switch before focusing
+            setTimeout(() => searchInputRef.current?.focus(), 100)
+          }
+        },
+        description: 'Search transactions',
+      },
+      {
+        key: 's',
+        ctrl: true,
+        shift: true,
+        action: () => setShowSettingsPanel(true),
+        description: 'Open settings',
+      },
+      {
+        key: 'e',
+        ctrl: true,
+        action: () => {
+          if (transactions.length > 0) {
+            setShowExportDialog(true)
+          }
+        },
+        description: 'Export data',
+      },
+      {
+        key: '1',
+        alt: true,
+        action: () => transactions.length > 0 && setActiveTab('overview'),
+        description: 'Go to Overview',
+      },
+      {
+        key: '2',
+        alt: true,
+        action: () => transactions.length > 0 && setActiveTab('transactions'),
+        description: 'Go to Transactions',
+      },
+      {
+        key: '3',
+        alt: true,
+        action: () => transactions.length > 0 && setActiveTab('subscriptions'),
+        description: 'Go to Subscriptions',
+      },
+    ],
+    enabled: route === 'home' && !showSettingsPanel && !showExportDialog && !editingTransaction,
+  })
+
   // Sync theme with settings
   useEffect(() => {
     setMode(appSettings.theme)
@@ -96,6 +161,7 @@ function App() {
       setTransactions(savedTransactions)
       setFileName(metadata.fileName)
       setIsDemoMode(metadata.isDemoMode)
+      setLastUpdated(metadata.savedAt)
       toast.info(`Restored ${savedTransactions.length} transactions from your last session`)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -105,6 +171,7 @@ function App() {
   useEffect(() => {
     if (transactions.length > 0) {
       saveTransactions(transactions, fileName, isDemoMode)
+      setLastUpdated(new Date().toISOString())
     }
   }, [transactions, fileName, isDemoMode])
 
@@ -121,6 +188,11 @@ function App() {
       setActiveTab('overview')
     }
   }, [activeTab, appSettings.subscriptionPlacement])
+
+  // Save active tab to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem('wdtmg_active_tab', activeTab)
+  }, [activeTab])
 
   // Expose debug functions globally for browser console access
   useEffect(() => {
@@ -967,6 +1039,7 @@ function App() {
                   onFiltersChange={setFilters}
                   totalCount={totalCount}
                   filteredCount={filteredCount}
+                  searchInputRef={searchInputRef}
                 />
               </SectionErrorBoundary>
 
@@ -980,6 +1053,7 @@ function App() {
                   selectedIds={bulkSelectedIds}
                   onSelectionChange={setBulkSelectedIds}
                   onBulkCategorize={() => setShowBulkCategoryModal(true)}
+                  lastUpdated={lastUpdated}
                 />
               </SectionErrorBoundary>
             </div>

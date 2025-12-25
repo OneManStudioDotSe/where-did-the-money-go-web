@@ -41,6 +41,10 @@ interface TransactionListProps {
    * Callback fired when the bulk categorize button is clicked.
    */
   onBulkCategorize?: () => void;
+  /**
+   * Timestamp when the data was last updated/saved.
+   */
+  lastUpdated?: string | null;
 }
 
 interface SortState {
@@ -117,6 +121,36 @@ function InfoTooltip({ content }: { content: string }) {
 
 const DEFAULT_PAGE_SIZE = 100;
 
+/**
+ * Formats a timestamp for display
+ */
+function formatLastUpdated(timestamp: string | null | undefined): string | null {
+  if (!timestamp) return null;
+  try {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} min${diffMins !== 1 ? 's' : ''} ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+    if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+
+    return date.toLocaleDateString('sv-SE', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch {
+    return null;
+  }
+}
+
 export function TransactionList({
   transactions,
   onTransactionClick,
@@ -125,6 +159,7 @@ export function TransactionList({
   selectedIds = new Set(),
   onSelectionChange,
   onBulkCategorize,
+  lastUpdated,
 }: TransactionListProps) {
   const [sort, setSort] = useState<SortState>({ field: 'date', direction: 'desc' });
   const [isCondensed, setIsCondensed] = useState(false);
@@ -298,19 +333,29 @@ export function TransactionList({
               )}
             </div>
           )}
-          <div className="text-sm text-gray-600 dark:text-gray-400">
-            {bulkEditEnabled && selectedIds.size > 0 ? (
-              <span className="font-medium text-primary-600 dark:text-primary-400">
-                {selectedIds.size} selected
+          <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-3 flex-wrap">
+            <span>
+              {bulkEditEnabled && selectedIds.size > 0 ? (
+                <span className="font-medium text-primary-600 dark:text-primary-400">
+                  {selectedIds.size} selected
+                </span>
+              ) : totalPages > 1 ? (
+                <>
+                  Showing {currentPage * pageSize + 1}-{Math.min((currentPage + 1) * pageSize, sortedTransactions.length)} of {sortedTransactions.length} transaction{sortedTransactions.length !== 1 ? 's' : ''}
+                </>
+              ) : (
+                <>
+                  {sortedTransactions.length} transaction{sortedTransactions.length !== 1 ? 's' : ''}
+                </>
+              )}
+            </span>
+            {lastUpdated && formatLastUpdated(lastUpdated) && (
+              <span className="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1">
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Updated {formatLastUpdated(lastUpdated)}
               </span>
-            ) : totalPages > 1 ? (
-              <>
-                Showing {currentPage * pageSize + 1}-{Math.min((currentPage + 1) * pageSize, sortedTransactions.length)} of {sortedTransactions.length} transaction{sortedTransactions.length !== 1 ? 's' : ''}
-              </>
-            ) : (
-              <>
-                {sortedTransactions.length} transaction{sortedTransactions.length !== 1 ? 's' : ''}
-              </>
             )}
           </div>
         </div>

@@ -169,23 +169,41 @@ export function SettingsPanel({ isOpen, onClose, settings, onSettingsChange, sub
 
   return (
     <div
-      className="fixed inset-0 z-50 overflow-y-auto"
+      className="fixed inset-0 z-50"
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
     >
       {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/50 animate-fade-in" onClick={handleCancel} aria-hidden="true" />
+      <div
+        className="fixed inset-0 bg-black/50 transition-opacity duration-300"
+        onClick={handleCancel}
+        aria-hidden="true"
+      />
 
-      {/* Panel */}
-      <div className="flex min-h-full items-center justify-center p-4">
-        <div ref={modalRef} className="relative bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-md w-full animate-slide-up">
+      {/* Sliding Side Panel from Right */}
+      <div className="fixed inset-y-0 right-0 flex max-w-full">
+        <div
+          ref={modalRef}
+          className="relative w-screen max-w-md bg-white dark:bg-slate-800 shadow-xl transform transition-transform duration-300 ease-in-out animate-slide-in-right flex flex-col"
+        >
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-5 border-b border-gray-200 dark:border-slate-700">
-            <h2 id={titleId} className="text-lg font-semibold text-gray-900 dark:text-white">Settings</h2>
+          <div className="flex items-center justify-between px-6 py-5 border-b border-gray-200 dark:border-slate-700 flex-shrink-0">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-slate-700 flex items-center justify-center">
+                <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </div>
+              <div>
+                <h2 id={titleId} className="text-lg font-semibold text-gray-900 dark:text-white">Settings</h2>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Ctrl+Shift+S</p>
+              </div>
+            </div>
             <button
               onClick={handleCancel}
-              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -193,8 +211,8 @@ export function SettingsPanel({ isOpen, onClose, settings, onSettingsChange, sub
             </button>
           </div>
 
-          {/* Content */}
-          <div className="px-6 py-4 space-y-6 max-h-[70vh] overflow-y-auto">
+          {/* Content - scrollable */}
+          <div className="px-6 py-4 space-y-6 overflow-y-auto flex-1">
             {/* Theme Mode */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -933,7 +951,7 @@ export function SettingsPanel({ isOpen, onClose, settings, onSettingsChange, sub
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/50 rounded-b-xl">
+          <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/50 flex-shrink-0">
             <button
               onClick={handleCancel}
               className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"

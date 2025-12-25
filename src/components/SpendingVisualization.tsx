@@ -169,6 +169,7 @@ function DonutChart({ categories, size = 200 }: { categories: CategoryTotal[]; s
               <p className="text-2xl">{hoveredCategory.icon}</p>
               <p className="text-sm font-medium text-gray-900 dark:text-white">{hoveredCategory.percentage.toFixed(1)}%</p>
               <p className="text-xs text-gray-500 dark:text-gray-400">{formatAmount(hoveredCategory.total)} kr</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500">{hoveredCategory.count} txn</p>
             </>
           ) : (
             <>
@@ -327,8 +328,10 @@ function VerticalBarChart({ categories, maxBars = 8 }: { categories: CategoryTot
                 >
                   {/* Tooltip on hover/tap */}
                   {isHovered && (
-                    <div className="absolute bottom-full mb-2 px-2 py-1 bg-gray-900 dark:bg-slate-700 text-white text-xs rounded shadow-lg whitespace-nowrap z-10 max-w-[200px] truncate">
-                      {category.name}: {formatAmount(category.total)} kr ({category.percentage.toFixed(1)}%)
+                    <div className="absolute bottom-full mb-2 px-2 py-1 bg-gray-900 dark:bg-slate-700 text-white text-xs rounded shadow-lg whitespace-nowrap z-10 max-w-[200px]">
+                      <div className="font-medium truncate">{category.name}</div>
+                      <div>{formatAmount(category.total)} kr ({category.percentage.toFixed(1)}%)</div>
+                      <div className="text-gray-300">{category.count} transaction{category.count !== 1 ? 's' : ''}</div>
                     </div>
                   )}
                   {/* Bar */}

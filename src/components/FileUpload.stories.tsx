@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { fn } from '@storybook/test';
 import { FileUpload } from './FileUpload';
 
 /**
@@ -21,8 +20,8 @@ const meta = {
     },
   },
   args: {
-    onFileLoaded: fn(),
-    onError: fn(),
+    onFileLoaded: () => {},
+    onError: () => {},
   },
 } satisfies Meta<typeof FileUpload>;
 
