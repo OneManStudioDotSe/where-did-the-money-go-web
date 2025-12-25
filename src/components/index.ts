@@ -41,3 +41,16 @@ export type { BadgeType } from './ui/Badge';
 export { Skeleton, TransactionListSkeleton, DashboardSkeleton, ChartSkeleton, StatCardSkeleton } from './ui/Skeleton';
 export { LoadingOverlay } from './ui/LoadingOverlay';
 export { EmptyState, TransactionsEmptyState, RecurringEmptyState, ChartEmptyState, SearchEmptyState, MerchantsEmptyState, InsightsEmptyState } from './ui/EmptyState';
+
+// Virtualized components for large datasets
+export { VirtualizedTransactionList } from './VirtualizedTransactionList';
+
+// Lazy-loaded components for code splitting
+export {
+  LazySpendingVisualization,
+  LazyMonthlyComparisonChart,
+  LazyTopMerchants,
+  LazyAIInsightsPanel,
+  LazySubscriptionPanel,
+  LazyVirtualizedTransactionList,
+} from './lazy';

@@ -43,7 +43,7 @@
 - [ ] Natural language search ("show me all coffee purchases last month")
 
 ### Phase 6: Multi-Bank & Data Management (Planned)
-- [ ] Support for additional Swedish bank CSV formats (Swedbank, Handelsbanken, Nordea)
+- [ ] Support for additional CSV formats (Swedbank, Handelsbanken, Nordea)
 - [ ] Multi-account support with account switching
 - [ ] Data import from previous sessions
 - [ ] Transaction history merging (avoid duplicates across imports)
@@ -56,15 +56,8 @@
 - [ ] Budget vs actual comparison charts
 - [ ] Seasonal spending pattern detection
 
-### Phase 8: Social & Sharing (Planned)
-- [ ] Generate shareable spending reports (anonymized)
-- [ ] Compare spending against anonymized benchmarks
-- [ ] Family/household expense sharing
-- [ ] Split expense tracking
-
 ### Phase 9: Platform Expansion (Planned)
 - [ ] Progressive Web App (PWA) with offline support
-- [ ] Mobile app (React Native)
 - [ ] Browser extension for automatic CSV download detection
 - [ ] Desktop app (Electron)
 
@@ -72,18 +65,13 @@
 
 ## Known Issues & Technical Debt
 
-### Performance
-- [ ] Optimize large dataset handling (10,000+ transactions)
-- [ ] Add virtual scrolling for transaction list
-- [ ] Lazy load chart components
-
-### Accessibility
-- [ ] Full WCAG 2.1 AA compliance audit
-- [ ] Screen reader testing
-- [ ] Keyboard navigation improvements
+### Performance ✅
+- [x] Implement virtualized transaction list with @tanstack/react-virtual for handling 10,000+ transactions
+- [x] Add Web Workers for CSV parsing to avoid blocking the main thread
+- [x] Lazy load chart components using React.lazy() and Suspense with loading skeletons
 
 ### Testing
-- [ ] Unit tests for core utilities (csv-parser, category-service, subscription-detection)
+- [ ] Unit tests for core utilities
 - [ ] Integration tests for main user flows
 - [ ] E2E tests with Playwright
 
@@ -102,14 +90,6 @@
 - [ ] Add "Copy to clipboard" for export data
 - [ ] Keyboard shortcut for common actions (Ctrl+F for search)
 - [ ] Remember last used tab (Overview/Transactions/Subscriptions)
-
----
-
-## Feature Requests (Community)
-
-*This section is for tracking user-requested features*
-
-- None yet - share feedback at [GitHub Issues](https://github.com/your-repo/issues)
 
 ---
 
