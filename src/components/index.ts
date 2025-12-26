@@ -28,6 +28,10 @@ export { OnboardingModal } from './OnboardingModal';
 export { DebugPanel, trackRender, trackMetric, setVerboseLogging, isVerboseLogging } from './DebugPanel';
 export { SpendingCalendar } from './SpendingCalendar';
 export { ReportsPanel } from './ReportsPanel';
+export { TipsCarousel } from './TipsCarousel';
+export { ResetConfirmationDialog } from './ResetConfirmationDialog';
+export { TabNavigation } from './TabNavigation';
+export type { DashboardTab } from './TabNavigation';
 export type { TimePeriod } from './TimePeriodSelector';
 export type { AppSettings, SubscriptionViewVariation, SubscriptionPlacement } from './SettingsPanel';
 

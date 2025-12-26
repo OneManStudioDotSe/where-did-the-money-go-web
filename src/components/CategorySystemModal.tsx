@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Category, CategoryMapping, Subcategory } from '../types';
 
 interface CustomSubcategory {
@@ -37,6 +37,16 @@ export function CategorySystemModal({
   onDeleteCustomSubcategory,
 }: CategorySystemModalProps) {
   const [activeTab, setActiveTab] = useState<TabType>('categories');
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 

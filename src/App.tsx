@@ -2,10 +2,12 @@ import { useState, useEffect, useTransition, useMemo, useCallback, useRef } from
 import './index.css'
 import { defaultCategories } from './data/categories'
 import { defaultCategoryMappings } from './data/category-mappings'
-import { FileUpload, TransactionList, FilterPanel, defaultFilters, ProjectRoadmap, TimePeriodSelector, SpendingVisualization, SettingsPanel, loadSettings, TransactionEditModal, UncategorizedCarousel, CsvConfirmationDialog, ExportDialog, SubscriptionConfirmationDialog, SubscriptionPanel, SubscriptionCard, SubscriptionEditModal, ErrorBoundary, LoadingOverlay, MappingRulesModal, AddMappingRuleModal, BulkCategoryModal, SuspiciousTransactionsDialog, OnboardingModal, DebugPanel, ReportsPanel } from './components'
+import { FileUpload, TransactionList, FilterPanel, defaultFilters, ProjectRoadmap, TimePeriodSelector, SpendingVisualization, SettingsPanel, loadSettings, TransactionEditModal, UncategorizedCarousel, CsvConfirmationDialog, ExportDialog, SubscriptionConfirmationDialog, SubscriptionPanel, SubscriptionCard, SubscriptionEditModal, ErrorBoundary, LoadingOverlay, MappingRulesModal, AddMappingRuleModal, BulkCategoryModal, SuspiciousTransactionsDialog, OnboardingModal, DebugPanel, ReportsPanel, TipsCarousel, ResetConfirmationDialog, TabNavigation } from './components'
+import type { DashboardTab } from './components'
 import { SectionErrorBoundary } from './components/SectionErrorBoundary'
 import { AddSubcategoryModal } from './components/AddSubcategoryModal'
 import { CategorySystemModal } from './components/CategorySystemModal'
+import { CsvParserSpecModal } from './components/CsvParserSpecModal'
 import { getAllCategoriesWithCustomSubcategories, getCustomSubcategories, removeCustomSubcategory, getCustomMappings } from './utils/category-service'
 import type { TimePeriod, AppSettings } from './components'
 import { parseTransactionsFromCSV, categorizeTransactions, getCategorizedStats } from './utils'
@@ -33,238 +35,6 @@ declare global {
     debugSubscription?: (searchTerm: string) => void;
     getTransactions?: () => Transaction[];
   }
-}
-
-type DashboardTab = 'overview' | 'transactions' | 'subscriptions' | 'reports' | 'insights'
-
-// Tips Carousel Component
-interface TipsCarouselProps {
-  stats: { categorized: number; uncategorized: number };
-  totalIncome: number;
-  totalExpenses: number;
-}
-
-interface Tip {
-  id: string;
-  icon: string;
-  title: string;
-  description: string;
-  gradient: string;
-  iconBg: string;
-}
-
-function TipsCarousel({ stats, totalIncome, totalExpenses }: TipsCarouselProps) {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
-  const carouselRef = useRef<HTMLDivElement>(null);
-
-  // Build tips array based on user data
-  const tips = useMemo<Tip[]>(() => {
-    const allTips: Tip[] = [];
-
-    // Dynamic tips based on data
-    if (stats.uncategorized > 0) {
-      allTips.push({
-        id: 'categorize',
-        icon: '🏷️',
-        title: 'Categorize Your Transactions',
-        description: `You have ${stats.uncategorized} uncategorized transaction${stats.uncategorized !== 1 ? 's' : ''}. Adding categories helps you understand your spending patterns better.`,
-        gradient: 'from-amber-400 to-orange-500',
-        iconBg: 'bg-amber-100 dark:bg-amber-900/40',
-      });
-    }
-
-    if (totalIncome - totalExpenses < 0) {
-      allTips.push({
-        id: 'overspend',
-        icon: '📉',
-        title: 'Watch Your Spending',
-        description: `Your expenses exceed your income by ${Math.abs(totalIncome - totalExpenses).toLocaleString('sv-SE', { maximumFractionDigits: 0 })} kr. Check the Overview tab to identify top expense categories.`,
-        gradient: 'from-rose-400 to-pink-500',
-        iconBg: 'bg-rose-100 dark:bg-rose-900/40',
-      });
-    } else if (totalIncome > 0) {
-      const savingsRate = ((totalIncome - totalExpenses) / totalIncome * 100);
-      allTips.push({
-        id: 'savings',
-        icon: '✨',
-        title: 'Great Savings Rate!',
-        description: `You're saving ${savingsRate.toFixed(0)}% of your income. Keep it up! Consider setting aside more for emergency funds or investments.`,
-        gradient: 'from-emerald-400 to-teal-500',
-        iconBg: 'bg-emerald-100 dark:bg-emerald-900/40',
-      });
-    }
-
-    // Static helpful tips
-    allTips.push(
-      {
-        id: 'timefilter',
-        icon: '📊',
-        title: 'Filter by Time Period',
-        description: 'Use the time period selector to analyze your finances by day, week, month, or quarter. Great for tracking monthly budgets!',
-        gradient: 'from-blue-400 to-indigo-500',
-        iconBg: 'bg-blue-100 dark:bg-blue-900/40',
-      },
-      {
-        id: 'subscriptions',
-        icon: '🔄',
-        title: 'Track Subscriptions',
-        description: 'We automatically detect recurring payments. Review them in the Subscriptions tab to stay on top of monthly costs.',
-        gradient: 'from-violet-400 to-purple-500',
-        iconBg: 'bg-violet-100 dark:bg-violet-900/40',
-      },
-      {
-        id: 'export',
-        icon: '📑',
-        title: 'Export Your Data',
-        description: 'Need your data elsewhere? Use the Reports tab to export your analysis in CSV format for spreadsheets or tax purposes.',
-        gradient: 'from-cyan-400 to-sky-500',
-        iconBg: 'bg-cyan-100 dark:bg-cyan-900/40',
-      },
-      {
-        id: 'insights',
-        icon: '💡',
-        title: 'AI-Powered Insights',
-        description: 'Check the Insights tab for AI-generated analysis of your spending habits and personalized recommendations.',
-        gradient: 'from-fuchsia-400 to-pink-500',
-        iconBg: 'bg-fuchsia-100 dark:bg-fuchsia-900/40',
-      }
-    );
-
-    return allTips;
-  }, [stats.uncategorized, totalIncome, totalExpenses]);
-
-  // Auto-advance carousel
-  useEffect(() => {
-    if (!isAutoPlaying || tips.length <= 1) return;
-
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % tips.length);
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [isAutoPlaying, tips.length]);
-
-  const goToSlide = (index: number) => {
-    setCurrentIndex(index);
-    setIsAutoPlaying(false);
-    // Resume auto-play after 10 seconds of inactivity
-    setTimeout(() => setIsAutoPlaying(true), 10000);
-  };
-
-  const goToPrev = () => {
-    setCurrentIndex((prev) => (prev - 1 + tips.length) % tips.length);
-    setIsAutoPlaying(false);
-    setTimeout(() => setIsAutoPlaying(true), 10000);
-  };
-
-  const goToNext = () => {
-    setCurrentIndex((prev) => (prev + 1) % tips.length);
-    setIsAutoPlaying(false);
-    setTimeout(() => setIsAutoPlaying(true), 10000);
-  };
-
-  const currentTip = tips[currentIndex];
-
-  return (
-    <div className="lg:col-span-2 relative overflow-hidden rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 h-fit">
-      {/* Animated gradient background */}
-      <div className={`absolute inset-0 bg-gradient-to-br ${currentTip.gradient} opacity-10 dark:opacity-20 transition-all duration-700`} />
-
-      {/* Decorative animated shapes */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-4 -right-4 w-24 h-24 bg-white/20 dark:bg-white/5 rounded-full blur-xl animate-pulse" style={{ animationDuration: '3s' }} />
-        <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-white/15 dark:bg-white/5 rounded-full blur-2xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '1s' }} />
-        <div className="absolute top-1/2 right-1/4 w-16 h-16 bg-white/10 dark:bg-white/5 rounded-full blur-lg animate-bounce" style={{ animationDuration: '6s' }} />
-      </div>
-
-      {/* Content */}
-      <div className="relative z-10 p-5 bg-white/80 dark:bg-slate-800/90 backdrop-blur-sm">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${currentTip.gradient} flex items-center justify-center shadow-lg`}>
-              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-              </svg>
-            </div>
-            <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tips & Insights</span>
-          </div>
-
-          {/* Navigation arrows */}
-          <div className="flex items-center gap-1">
-            <button
-              onClick={goToPrev}
-              className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
-              aria-label="Previous tip"
-            >
-              <svg className="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <button
-              onClick={goToNext}
-              className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
-              aria-label="Next tip"
-            >
-              <svg className="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        {/* Carousel content */}
-        <div ref={carouselRef} className="relative min-h-[140px]">
-          <div
-            key={currentTip.id}
-            className="animate-fade-in"
-          >
-            {/* Icon */}
-            <div className={`w-14 h-14 rounded-2xl ${currentTip.iconBg} flex items-center justify-center mb-4 shadow-sm`}>
-              <span className="text-3xl">{currentTip.icon}</span>
-            </div>
-
-            {/* Title */}
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2 leading-tight">
-              {currentTip.title}
-            </h3>
-
-            {/* Description */}
-            <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-              {currentTip.description}
-            </p>
-          </div>
-        </div>
-
-        {/* Dot indicators */}
-        <div className="flex items-center justify-center gap-2 mt-4 pt-4 border-t border-gray-100 dark:border-slate-700">
-          {tips.map((tip, index) => (
-            <button
-              key={tip.id}
-              onClick={() => goToSlide(index)}
-              className={`transition-all duration-300 ${
-                index === currentIndex
-                  ? `w-6 h-2 rounded-full bg-gradient-to-r ${currentTip.gradient}`
-                  : 'w-2 h-2 rounded-full bg-gray-300 dark:bg-slate-600 hover:bg-gray-400 dark:hover:bg-slate-500'
-              }`}
-              aria-label={`Go to tip ${index + 1}`}
-            />
-          ))}
-        </div>
-
-        {/* Progress bar for auto-play */}
-        {isAutoPlaying && (
-          <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-100 dark:bg-slate-700 overflow-hidden">
-            <div
-              className={`h-full bg-gradient-to-r ${currentTip.gradient} animate-progress`}
-              style={{ animationDuration: '5s' }}
-            />
-          </div>
-        )}
-      </div>
-    </div>
-  );
 }
 
 function App() {
@@ -474,7 +244,7 @@ function App() {
     [customSubcategoriesVersion]
   )
 
-  // Memoize subcategory count calculation
+  // Memorize subcategory count calculation
   const totalSubcategories = useMemo(() =>
     allCategories.reduce((sum, cat) => sum + cat.subcategories.length, 0),
     [allCategories]
@@ -1054,9 +824,6 @@ function App() {
             )}
           </div>
 
-          {/* Project Roadmap */}
-          <ProjectRoadmap />
-
           {/* Quick Info Cards */}
           <div className="grid md:grid-cols-2 gap-6 mb-8">
             {/* Categories Status - Clickable */}
@@ -1090,17 +857,8 @@ function App() {
             </button>
           </div>
 
-          {/* Tech Stack */}
-          <div className="bg-gray-100 dark:bg-slate-800/50 rounded-xl p-6 border border-gray-200 dark:border-slate-700">
-            <h3 className="font-medium text-gray-900 dark:text-white mb-2">Built with</h3>
-            <div className="flex flex-wrap gap-2">
-              {['React 19', 'TypeScript', 'Tailwind CSS 4', 'Vite 6'].map((tech) => (
-                <span key={tech} className="px-3 py-1.5 bg-white dark:bg-slate-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 shadow-sm">
-                  {tech}
-                </span>
-              ))}
-            </div>
-          </div>
+           {/* Project Roadmap */}
+          <ProjectRoadmap />
         </>
       ) : (
         <>
@@ -1241,77 +999,13 @@ function App() {
           </div>
 
           {/* Tab Navigation */}
-          <div className="flex items-center gap-1 mb-6 p-1 bg-gray-100 dark:bg-slate-800 rounded-lg w-fit">
-            <button
-              onClick={() => startTransition(() => setActiveTab('overview'))}
-              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                activeTab === 'overview'
-                  ? 'bg-white dark:bg-slate-700 text-gray-900 dark:text-white shadow-sm'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-              }`}
-            >
-              Overview
-            </button>
-            <button
-              onClick={() => startTransition(() => setActiveTab('transactions'))}
-              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                activeTab === 'transactions'
-                  ? 'bg-white dark:bg-slate-700 text-gray-900 dark:text-white shadow-sm'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-              }`}
-            >
-              Transactions
-            </button>
-            {(appSettings.subscriptionPlacement === 'tab' || appSettings.subscriptionPlacement === 'both') && (
-              <button
-                onClick={() => startTransition(() => setActiveTab('subscriptions'))}
-                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${
-                  activeTab === 'subscriptions'
-                    ? 'bg-white dark:bg-slate-700 text-gray-900 dark:text-white shadow-sm'
-                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-                }`}
-              >
-                Recurring
-                {subscriptions.length > 0 && (
-                  <span className="px-1.5 py-0.5 text-xs bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-300 rounded-full">
-                    {subscriptions.length}
-                  </span>
-                )}
-              </button>
-            )}
-            <button
-              onClick={() => startTransition(() => setActiveTab('reports'))}
-              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${
-                activeTab === 'reports'
-                  ? 'bg-white dark:bg-slate-700 text-gray-900 dark:text-white shadow-sm'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-              }`}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              Reports
-            </button>
-            <button
-              onClick={() => startTransition(() => setActiveTab('insights'))}
-              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${
-                activeTab === 'insights'
-                  ? 'bg-white dark:bg-slate-700 text-gray-900 dark:text-white shadow-sm'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-              }`}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-              </svg>
-              Insights
-            </button>
-            {/* Loading indicator for tab transitions */}
-            {isPending && (
-              <div className="ml-2 flex items-center">
-                <div className="w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
-              </div>
-            )}
-          </div>
+          <TabNavigation
+            activeTab={activeTab}
+            onTabChange={(tab) => startTransition(() => setActiveTab(tab))}
+            showSubscriptionsTab={appSettings.subscriptionPlacement === 'tab' || appSettings.subscriptionPlacement === 'both'}
+            subscriptionCount={subscriptions.length}
+            isPending={isPending}
+          />
 
           {/* Tab Content */}
           <div className={`relative ${isPending ? 'opacity-70 pointer-events-none' : ''}`}>
@@ -1508,104 +1202,10 @@ function App() {
       )}
 
       {/* CSV Parser Info Modal */}
-      {showCsvInfoModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-slate-700">
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">CSV parser specification</h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Swedish bank export format (Swedbank/SEB style)</p>
-              </div>
-              <button
-                onClick={() => setShowCsvInfoModal(false)}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
-              >
-                <svg className="w-5 h-5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <div className="p-6 overflow-y-auto max-h-[calc(80vh-120px)]">
-              {/* File Format */}
-              <div className="mb-6">
-                <h3 className="font-medium text-gray-900 dark:text-white mb-3">File format</h3>
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  {[
-                    { label: 'Encoding', value: 'UTF-8 (with BOM)' },
-                    { label: 'Delimiter', value: 'Semicolon (;)' },
-                    { label: 'Date Format', value: 'YYYY-MM-DD' },
-                    { label: 'Decimal', value: 'Period (.)' },
-                  ].map((item) => (
-                    <div key={item.label} className="bg-gray-50 dark:bg-slate-700/50 rounded-lg p-3">
-                      <span className="text-gray-500 dark:text-gray-400">{item.label}</span>
-                      <p className="font-medium text-gray-900 dark:text-white">{item.value}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Expected Columns */}
-              <div className="mb-6">
-                <h3 className="font-medium text-gray-900 dark:text-white mb-3">Expected columns</h3>
-                <div className="border border-gray-200 dark:border-slate-700 rounded-lg overflow-hidden">
-                  <table className="w-full text-sm">
-                    <thead className="bg-gray-50 dark:bg-slate-700/50">
-                      <tr>
-                        <th className="text-left px-4 py-2 font-medium text-gray-700 dark:text-gray-300">Swedish header</th>
-                        <th className="text-left px-4 py-2 font-medium text-gray-700 dark:text-gray-300">Description</th>
-                        <th className="text-center px-4 py-2 font-medium text-gray-700 dark:text-gray-300">Required</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200 dark:divide-slate-700">
-                      {[
-                        { header: 'Bokföringsdatum', desc: 'Booking Date', required: true },
-                        { header: 'Valutadatum', desc: 'Value Date', required: false },
-                        { header: 'Verifikationsnummer', desc: 'Transaction ID', required: false },
-                        { header: 'Text', desc: 'Description', required: true },
-                        { header: 'Belopp', desc: 'Amount', required: true },
-                        { header: 'Saldo', desc: 'Balance', required: false },
-                      ].map((col) => (
-                        <tr key={col.header}>
-                          <td className="px-4 py-2 font-mono text-gray-900 dark:text-white">{col.header}</td>
-                          <td className="px-4 py-2 text-gray-600 dark:text-gray-400">{col.desc}</td>
-                          <td className={`px-4 py-2 text-center ${col.required ? 'text-success-600 dark:text-success-400' : 'text-gray-400 dark:text-gray-500'}`}>
-                            {col.required ? '✓' : '-'}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* Amount Convention */}
-              <div className="mb-6">
-                <h3 className="font-medium text-gray-900 dark:text-white mb-3">Amount convention</h3>
-                <div className="flex gap-4">
-                  <div className="flex-1 bg-danger-50 dark:bg-danger-900/20 border border-danger-200 dark:border-danger-800 rounded-lg p-3">
-                    <p className="text-sm font-medium text-danger-600 dark:text-danger-400">Negative (-)</p>
-                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Expenses (money out)</p>
-                  </div>
-                  <div className="flex-1 bg-success-50 dark:bg-success-900/20 border border-success-200 dark:border-success-800 rounded-lg p-3">
-                    <p className="text-sm font-medium text-success-600 dark:text-success-400">Positive (+)</p>
-                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Income (money in)</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Example Row */}
-              <div>
-                <h3 className="font-medium text-gray-900 dark:text-white mb-3">Example row</h3>
-                <div className="bg-gray-900 rounded-lg p-4 overflow-x-auto">
-                  <code className="text-sm text-green-400 whitespace-nowrap">
-                    2025-12-18;2025-12-18;5484381424;NETFLIX COM /25-12-18;-149.000;8686.500
-                  </code>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <CsvParserSpecModal
+        isOpen={showCsvInfoModal}
+        onClose={() => setShowCsvInfoModal(false)}
+      />
 
       {/* Settings Panel */}
       <SettingsPanel
@@ -1687,52 +1287,13 @@ function App() {
       />
 
       {/* Reset Confirmation Dialog */}
-      {showResetConfirmation && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="fixed inset-0 bg-black/50 transition-opacity" onClick={() => setShowResetConfirmation(false)} />
-          <div className="flex min-h-full items-center justify-center p-4">
-            <div className="relative bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-md w-full p-6">
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-full bg-warning-100 dark:bg-warning-900/30 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-5 h-5 text-warning-600 dark:text-warning-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                  </svg>
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Start over?</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                    This will clear all transaction data from the current session.
-                  </p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                    You have <span className="font-medium text-primary-600 dark:text-primary-400">{subscriptions.length} saved subscription{subscriptions.length !== 1 ? 's' : ''}</span> that will be kept for your next import, unless you choose to reset them too.
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-6 flex flex-col gap-2">
-                <button
-                  onClick={() => performReset(false)}
-                  className="w-full px-4 py-2.5 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors"
-                >
-                  Keep subscriptions & start over
-                </button>
-                <button
-                  onClick={() => performReset(true)}
-                  className="w-full px-4 py-2.5 text-sm font-medium text-danger-600 dark:text-danger-400 hover:bg-danger-50 dark:hover:bg-danger-900/20 border border-danger-300 dark:border-danger-700 rounded-lg transition-colors"
-                >
-                  Reset everything (including subscriptions)
-                </button>
-                <button
-                  onClick={() => setShowResetConfirmation(false)}
-                  className="w-full px-4 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <ResetConfirmationDialog
+        isOpen={showResetConfirmation}
+        onClose={() => setShowResetConfirmation(false)}
+        onResetKeepSubscriptions={() => performReset(false)}
+        onResetEverything={() => performReset(true)}
+        subscriptionCount={subscriptions.length}
+      />
 
       {/* Add Subcategory Modal */}
       <AddSubcategoryModal
