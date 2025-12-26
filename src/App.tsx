@@ -37,6 +37,236 @@ declare global {
 
 type DashboardTab = 'overview' | 'transactions' | 'subscriptions' | 'reports' | 'insights'
 
+// Tips Carousel Component
+interface TipsCarouselProps {
+  stats: { categorized: number; uncategorized: number };
+  totalIncome: number;
+  totalExpenses: number;
+}
+
+interface Tip {
+  id: string;
+  icon: string;
+  title: string;
+  description: string;
+  gradient: string;
+  iconBg: string;
+}
+
+function TipsCarousel({ stats, totalIncome, totalExpenses }: TipsCarouselProps) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const carouselRef = useRef<HTMLDivElement>(null);
+
+  // Build tips array based on user data
+  const tips = useMemo<Tip[]>(() => {
+    const allTips: Tip[] = [];
+
+    // Dynamic tips based on data
+    if (stats.uncategorized > 0) {
+      allTips.push({
+        id: 'categorize',
+        icon: '🏷️',
+        title: 'Categorize Your Transactions',
+        description: `You have ${stats.uncategorized} uncategorized transaction${stats.uncategorized !== 1 ? 's' : ''}. Adding categories helps you understand your spending patterns better.`,
+        gradient: 'from-amber-400 to-orange-500',
+        iconBg: 'bg-amber-100 dark:bg-amber-900/40',
+      });
+    }
+
+    if (totalIncome - totalExpenses < 0) {
+      allTips.push({
+        id: 'overspend',
+        icon: '📉',
+        title: 'Watch Your Spending',
+        description: `Your expenses exceed your income by ${Math.abs(totalIncome - totalExpenses).toLocaleString('sv-SE', { maximumFractionDigits: 0 })} kr. Check the Overview tab to identify top expense categories.`,
+        gradient: 'from-rose-400 to-pink-500',
+        iconBg: 'bg-rose-100 dark:bg-rose-900/40',
+      });
+    } else if (totalIncome > 0) {
+      const savingsRate = ((totalIncome - totalExpenses) / totalIncome * 100);
+      allTips.push({
+        id: 'savings',
+        icon: '✨',
+        title: 'Great Savings Rate!',
+        description: `You're saving ${savingsRate.toFixed(0)}% of your income. Keep it up! Consider setting aside more for emergency funds or investments.`,
+        gradient: 'from-emerald-400 to-teal-500',
+        iconBg: 'bg-emerald-100 dark:bg-emerald-900/40',
+      });
+    }
+
+    // Static helpful tips
+    allTips.push(
+      {
+        id: 'timefilter',
+        icon: '📊',
+        title: 'Filter by Time Period',
+        description: 'Use the time period selector to analyze your finances by day, week, month, or quarter. Great for tracking monthly budgets!',
+        gradient: 'from-blue-400 to-indigo-500',
+        iconBg: 'bg-blue-100 dark:bg-blue-900/40',
+      },
+      {
+        id: 'subscriptions',
+        icon: '🔄',
+        title: 'Track Subscriptions',
+        description: 'We automatically detect recurring payments. Review them in the Subscriptions tab to stay on top of monthly costs.',
+        gradient: 'from-violet-400 to-purple-500',
+        iconBg: 'bg-violet-100 dark:bg-violet-900/40',
+      },
+      {
+        id: 'export',
+        icon: '📑',
+        title: 'Export Your Data',
+        description: 'Need your data elsewhere? Use the Reports tab to export your analysis in CSV format for spreadsheets or tax purposes.',
+        gradient: 'from-cyan-400 to-sky-500',
+        iconBg: 'bg-cyan-100 dark:bg-cyan-900/40',
+      },
+      {
+        id: 'insights',
+        icon: '💡',
+        title: 'AI-Powered Insights',
+        description: 'Check the Insights tab for AI-generated analysis of your spending habits and personalized recommendations.',
+        gradient: 'from-fuchsia-400 to-pink-500',
+        iconBg: 'bg-fuchsia-100 dark:bg-fuchsia-900/40',
+      }
+    );
+
+    return allTips;
+  }, [stats.uncategorized, totalIncome, totalExpenses]);
+
+  // Auto-advance carousel
+  useEffect(() => {
+    if (!isAutoPlaying || tips.length <= 1) return;
+
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % tips.length);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [isAutoPlaying, tips.length]);
+
+  const goToSlide = (index: number) => {
+    setCurrentIndex(index);
+    setIsAutoPlaying(false);
+    // Resume auto-play after 10 seconds of inactivity
+    setTimeout(() => setIsAutoPlaying(true), 10000);
+  };
+
+  const goToPrev = () => {
+    setCurrentIndex((prev) => (prev - 1 + tips.length) % tips.length);
+    setIsAutoPlaying(false);
+    setTimeout(() => setIsAutoPlaying(true), 10000);
+  };
+
+  const goToNext = () => {
+    setCurrentIndex((prev) => (prev + 1) % tips.length);
+    setIsAutoPlaying(false);
+    setTimeout(() => setIsAutoPlaying(true), 10000);
+  };
+
+  const currentTip = tips[currentIndex];
+
+  return (
+    <div className="lg:col-span-2 relative overflow-hidden rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 h-fit">
+      {/* Animated gradient background */}
+      <div className={`absolute inset-0 bg-gradient-to-br ${currentTip.gradient} opacity-10 dark:opacity-20 transition-all duration-700`} />
+
+      {/* Decorative animated shapes */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-4 -right-4 w-24 h-24 bg-white/20 dark:bg-white/5 rounded-full blur-xl animate-pulse" style={{ animationDuration: '3s' }} />
+        <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-white/15 dark:bg-white/5 rounded-full blur-2xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '1s' }} />
+        <div className="absolute top-1/2 right-1/4 w-16 h-16 bg-white/10 dark:bg-white/5 rounded-full blur-lg animate-bounce" style={{ animationDuration: '6s' }} />
+      </div>
+
+      {/* Content */}
+      <div className="relative z-10 p-5 bg-white/80 dark:bg-slate-800/90 backdrop-blur-sm">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${currentTip.gradient} flex items-center justify-center shadow-lg`}>
+              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
+            </div>
+            <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tips & Insights</span>
+          </div>
+
+          {/* Navigation arrows */}
+          <div className="flex items-center gap-1">
+            <button
+              onClick={goToPrev}
+              className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+              aria-label="Previous tip"
+            >
+              <svg className="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <button
+              onClick={goToNext}
+              className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+              aria-label="Next tip"
+            >
+              <svg className="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        {/* Carousel content */}
+        <div ref={carouselRef} className="relative min-h-[140px]">
+          <div
+            key={currentTip.id}
+            className="animate-fade-in"
+          >
+            {/* Icon */}
+            <div className={`w-14 h-14 rounded-2xl ${currentTip.iconBg} flex items-center justify-center mb-4 shadow-sm`}>
+              <span className="text-3xl">{currentTip.icon}</span>
+            </div>
+
+            {/* Title */}
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2 leading-tight">
+              {currentTip.title}
+            </h3>
+
+            {/* Description */}
+            <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+              {currentTip.description}
+            </p>
+          </div>
+        </div>
+
+        {/* Dot indicators */}
+        <div className="flex items-center justify-center gap-2 mt-4 pt-4 border-t border-gray-100 dark:border-slate-700">
+          {tips.map((tip, index) => (
+            <button
+              key={tip.id}
+              onClick={() => goToSlide(index)}
+              className={`transition-all duration-300 ${
+                index === currentIndex
+                  ? `w-6 h-2 rounded-full bg-gradient-to-r ${currentTip.gradient}`
+                  : 'w-2 h-2 rounded-full bg-gray-300 dark:bg-slate-600 hover:bg-gray-400 dark:hover:bg-slate-500'
+              }`}
+              aria-label={`Go to tip ${index + 1}`}
+            />
+          ))}
+        </div>
+
+        {/* Progress bar for auto-play */}
+        {isAutoPlaying && (
+          <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-100 dark:bg-slate-700 overflow-hidden">
+            <div
+              className={`h-full bg-gradient-to-r ${currentTip.gradient} animate-progress`}
+              style={{ animationDuration: '5s' }}
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function App() {
   const [showCategoriesModal, setShowCategoriesModal] = useState(false)
   const [showCsvInfoModal, setShowCsvInfoModal] = useState(false)
@@ -894,110 +1124,120 @@ function App() {
             </div>
           )}
 
-          {/* Summary Header */}
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-6 mb-6 hover:shadow-md transition-shadow">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                  Transaction analysis
-                  {isDemoMode && (
-                    <span className="px-2 py-0.5 bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-300 text-xs font-semibold rounded-full">
-                      DEMO
-                    </span>
-                  )}
-                </h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                  {fileName} • {selectedPeriod ? `${periodFilteredTransactions.length} of ${transactions.length}` : transactions.length} transactions
-                  {selectedPeriod && (
-                    <span className="ml-2 text-primary-600 dark:text-primary-400">({selectedPeriod.label})</span>
-                  )}
-                </p>
+          {/* Summary Header with Tips Panel - 3:2 ratio */}
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 lg:gap-6 mb-6">
+            {/* Transaction Analysis - 3/5 width */}
+            <div className="lg:col-span-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-6 hover:shadow-md transition-shadow">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                    Transaction analysis
+                    {isDemoMode && (
+                      <span className="px-2 py-0.5 bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-300 text-xs font-semibold rounded-full">
+                        DEMO
+                      </span>
+                    )}
+                  </h2>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    {fileName} • {selectedPeriod ? `${periodFilteredTransactions.length} of ${transactions.length}` : transactions.length} transactions
+                    {selectedPeriod && (
+                      <span className="ml-2 text-primary-600 dark:text-primary-400">({selectedPeriod.label})</span>
+                    )}
+                  </p>
+                </div>
+                <button
+                  onClick={handleClearData}
+                  className="px-4 py-2 text-sm border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
+                >
+                  {isDemoMode ? 'Exit Demo' : 'Upload New File'}
+                </button>
               </div>
-              <button
-                onClick={handleClearData}
-                className="px-4 py-2 text-sm border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
-              >
-                {isDemoMode ? 'Exit Demo' : 'Upload New File'}
-              </button>
-            </div>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-gray-50 dark:bg-slate-700/50 rounded-lg p-4">
-                <p className="text-sm text-gray-500 dark:text-gray-400">Total expenses</p>
-                <p className="text-xl font-semibold text-danger-600 dark:text-danger-400">
-                  -{totalExpenses.toLocaleString('sv-SE', { minimumFractionDigits: 2 })} kr
-                </p>
-              </div>
-              <div className="bg-gray-50 dark:bg-slate-700/50 rounded-lg p-4">
-                <p className="text-sm text-gray-500 dark:text-gray-400">Total income</p>
-                <p className="text-xl font-semibold text-success-600 dark:text-success-400">
-                  +{totalIncome.toLocaleString('sv-SE', { minimumFractionDigits: 2 })} kr
-                </p>
-              </div>
-              <div className="bg-gray-50 dark:bg-slate-700/50 rounded-lg p-4">
-                <p className="text-sm text-gray-500 dark:text-gray-400">Net change</p>
-                <p className={`text-xl font-semibold ${totalIncome - totalExpenses >= 0 ? 'text-success-600 dark:text-success-400' : 'text-danger-600 dark:text-danger-400'}`}>
-                  {(totalIncome - totalExpenses) >= 0 ? '+' : ''}
-                  {(totalIncome - totalExpenses).toLocaleString('sv-SE', { minimumFractionDigits: 2 })} kr
-                </p>
-              </div>
-              {/* Categorized / Uncategorized Stats */}
-              <div className="bg-gray-50 dark:bg-slate-700/50 rounded-lg p-4">
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">Categorization</p>
-                <div className="flex gap-2">
-                  <div className="flex-1 bg-success-50 dark:bg-success-900/30 border border-success-200 dark:border-success-800 rounded-lg p-2 text-center">
-                    <p className="text-lg font-semibold text-success-700 dark:text-success-400">{stats.categorized}</p>
-                    <p className="text-xs text-success-600 dark:text-success-500">Categorized</p>
+              {/* Stats Grid */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-gray-50 dark:bg-slate-700/50 rounded-lg p-3">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Total expenses</p>
+                  <p className="text-lg font-semibold text-danger-600 dark:text-danger-400">
+                    -{totalExpenses.toLocaleString('sv-SE', { minimumFractionDigits: 2 })} kr
+                  </p>
+                </div>
+                <div className="bg-gray-50 dark:bg-slate-700/50 rounded-lg p-3">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Total income</p>
+                  <p className="text-lg font-semibold text-success-600 dark:text-success-400">
+                    +{totalIncome.toLocaleString('sv-SE', { minimumFractionDigits: 2 })} kr
+                  </p>
+                </div>
+                <div className="bg-gray-50 dark:bg-slate-700/50 rounded-lg p-3">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Net change</p>
+                  <p className={`text-lg font-semibold ${totalIncome - totalExpenses >= 0 ? 'text-success-600 dark:text-success-400' : 'text-danger-600 dark:text-danger-400'}`}>
+                    {(totalIncome - totalExpenses) >= 0 ? '+' : ''}
+                    {(totalIncome - totalExpenses).toLocaleString('sv-SE', { minimumFractionDigits: 2 })} kr
+                  </p>
+                </div>
+                {/* Categorized / Uncategorized Stats */}
+                <div className="bg-gray-50 dark:bg-slate-700/50 rounded-lg p-3">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1.5">Categorization</p>
+                  <div className="flex gap-2">
+                    <div className="flex-1 bg-success-50 dark:bg-success-900/30 border border-success-200 dark:border-success-700 rounded-lg p-1.5 text-center">
+                      <p className="text-base font-semibold text-success-700 dark:text-success-300">{stats.categorized}</p>
+                      <p className="text-[10px] text-success-600 dark:text-success-400">Categorized</p>
+                    </div>
+                    <button
+                      onClick={() => setShowUncategorizedCarousel(true)}
+                      disabled={stats.uncategorized === 0}
+                      className={`flex-1 rounded-lg p-1.5 text-center transition-all ${
+                        stats.uncategorized > 0
+                          ? 'bg-warning-50 dark:bg-warning-900/30 border border-warning-300 dark:border-warning-600 hover:border-warning-400 dark:hover:border-warning-500 hover:shadow-sm cursor-pointer'
+                          : 'bg-gray-100 dark:bg-slate-600/50 border border-gray-200 dark:border-slate-500 cursor-default'
+                      }`}
+                    >
+                      <p className={`text-base font-semibold ${stats.uncategorized > 0 ? 'text-warning-700 dark:text-warning-300' : 'text-gray-400 dark:text-gray-500'}`}>
+                        {stats.uncategorized}
+                      </p>
+                      <p className={`text-[10px] ${stats.uncategorized > 0 ? 'text-warning-600 dark:text-warning-400' : 'text-gray-400 dark:text-gray-500'}`}>
+                        {stats.uncategorized > 0 ? 'Fix now →' : 'None'}
+                      </p>
+                    </button>
                   </div>
-                  <button
-                    onClick={() => setShowUncategorizedCarousel(true)}
-                    disabled={stats.uncategorized === 0}
-                    className={`flex-1 rounded-lg p-2 text-center transition-all ${
-                      stats.uncategorized > 0
-                        ? 'bg-warning-50 dark:bg-warning-900/30 border border-warning-300 dark:border-warning-700 hover:border-warning-400 dark:hover:border-warning-600 hover:shadow-sm cursor-pointer'
-                        : 'bg-gray-100 dark:bg-slate-600/50 border border-gray-200 dark:border-slate-600 cursor-default'
-                    }`}
-                  >
-                    <p className={`text-lg font-semibold ${stats.uncategorized > 0 ? 'text-warning-700 dark:text-warning-400' : 'text-gray-400 dark:text-gray-500'}`}>
-                      {stats.uncategorized}
-                    </p>
-                    <p className={`text-xs ${stats.uncategorized > 0 ? 'text-warning-600 dark:text-warning-500' : 'text-gray-400 dark:text-gray-500'}`}>
-                      {stats.uncategorized > 0 ? 'Fix now →' : 'None'}
-                    </p>
-                  </button>
                 </div>
               </div>
+
+              {/* Suspicious Transactions Warning */}
+              {appSettings.enableSuspiciousDetection && undismissedSuspiciousCount > 0 && (
+                <div className="mt-3 bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-800 rounded-lg p-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-warning-100 dark:bg-warning-900/40 flex items-center justify-center flex-shrink-0">
+                        <svg className="w-4 h-4 text-warning-600 dark:text-warning-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-warning-800 dark:text-warning-300">
+                          {undismissedSuspiciousCount} suspicious transaction{undismissedSuspiciousCount !== 1 ? 's' : ''}
+                        </p>
+                        <p className="text-xs text-warning-600 dark:text-warning-400">
+                          Duplicates, large amounts, or unusual patterns
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setShowSuspiciousDialog(true)}
+                      className="px-3 py-1.5 text-sm font-medium text-warning-700 dark:text-warning-300 hover:text-warning-900 dark:hover:text-warning-100 bg-warning-100 dark:bg-warning-900/40 hover:bg-warning-200 dark:hover:bg-warning-900/60 rounded-lg transition-colors flex-shrink-0"
+                    >
+                      Review →
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Suspicious Transactions Warning */}
-            {appSettings.enableSuspiciousDetection && undismissedSuspiciousCount > 0 && (
-              <div className="mt-4 bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-800 rounded-lg p-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-warning-100 dark:bg-warning-900/40 flex items-center justify-center">
-                      <svg className="w-4 h-4 text-warning-600 dark:text-warning-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-warning-800 dark:text-warning-300">
-                        {undismissedSuspiciousCount} potentially suspicious transaction{undismissedSuspiciousCount !== 1 ? 's' : ''} detected
-                      </p>
-                      <p className="text-xs text-warning-600 dark:text-warning-400">
-                        Possible duplicates, large amounts, or unusual spending patterns
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setShowSuspiciousDialog(true)}
-                    className="px-3 py-1.5 text-sm font-medium text-warning-700 dark:text-warning-300 hover:text-warning-900 dark:hover:text-warning-100 bg-warning-100 dark:bg-warning-900/40 hover:bg-warning-200 dark:hover:bg-warning-900/60 rounded-lg transition-colors"
-                  >
-                    Review →
-                  </button>
-                </div>
-              </div>
-            )}
+            {/* Tips & Insights Carousel - 2/5 width */}
+            <TipsCarousel
+              stats={stats}
+              totalIncome={totalIncome}
+              totalExpenses={totalExpenses}
+            />
           </div>
 
           {/* Tab Navigation */}

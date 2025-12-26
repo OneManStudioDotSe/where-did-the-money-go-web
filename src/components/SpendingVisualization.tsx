@@ -1012,25 +1012,25 @@ export function SpendingVisualization({
       <div className="p-3 sm:p-4">
         {/* Quick Stats */}
         <div className="grid grid-cols-4 gap-2 sm:gap-3 mb-4 sm:mb-6">
-          <div className="text-center p-2 sm:p-3 bg-danger-50 dark:bg-danger-900/20 rounded-lg">
+          <div className="text-center p-2 sm:p-3 bg-danger-50 dark:bg-danger-900/30 rounded-lg border border-danger-100 dark:border-danger-800/50">
             <p className="text-[10px] sm:text-xs text-danger-600 dark:text-danger-400 mb-0.5 sm:mb-1">Expenses</p>
-            <p className="text-sm sm:text-lg font-bold text-danger-700 dark:text-danger-400">-{formatAmount(totalExpenses)}</p>
+            <p className="text-sm sm:text-lg font-bold text-danger-700 dark:text-danger-300">-{formatAmount(totalExpenses)}</p>
           </div>
-          <div className="text-center p-2 sm:p-3 bg-success-50 dark:bg-success-900/20 rounded-lg">
+          <div className="text-center p-2 sm:p-3 bg-success-50 dark:bg-success-900/30 rounded-lg border border-success-100 dark:border-success-800/50">
             <p className="text-[10px] sm:text-xs text-success-600 dark:text-success-400 mb-0.5 sm:mb-1">Income</p>
-            <p className="text-sm sm:text-lg font-bold text-success-700 dark:text-success-400">+{formatAmount(totalIncome)}</p>
+            <p className="text-sm sm:text-lg font-bold text-success-700 dark:text-success-300">+{formatAmount(totalIncome)}</p>
           </div>
-          <div className={`text-center p-2 sm:p-3 rounded-lg ${totalIncome - totalExpenses >= 0 ? 'bg-success-50 dark:bg-success-900/20' : 'bg-danger-50 dark:bg-danger-900/20'}`}>
+          <div className={`text-center p-2 sm:p-3 rounded-lg border ${totalIncome - totalExpenses >= 0 ? 'bg-success-50 dark:bg-success-900/30 border-success-100 dark:border-success-800/50' : 'bg-danger-50 dark:bg-danger-900/30 border-danger-100 dark:border-danger-800/50'}`}>
             <p className={`text-[10px] sm:text-xs mb-0.5 sm:mb-1 ${totalIncome - totalExpenses >= 0 ? 'text-success-600 dark:text-success-400' : 'text-danger-600 dark:text-danger-400'}`}>
               Net
             </p>
-            <p className={`text-sm sm:text-lg font-bold ${totalIncome - totalExpenses >= 0 ? 'text-success-700 dark:text-success-400' : 'text-danger-700 dark:text-danger-400'}`}>
+            <p className={`text-sm sm:text-lg font-bold ${totalIncome - totalExpenses >= 0 ? 'text-success-700 dark:text-success-300' : 'text-danger-700 dark:text-danger-300'}`}>
               {totalIncome - totalExpenses >= 0 ? '+' : ''}{formatAmount(totalIncome - totalExpenses)}
             </p>
           </div>
-          <div className="text-center p-2 sm:p-3 bg-primary-50 dark:bg-primary-900/20 rounded-lg">
+          <div className="text-center p-2 sm:p-3 bg-primary-50 dark:bg-primary-900/30 rounded-lg border border-primary-100 dark:border-primary-800/50">
             <p className="text-[10px] sm:text-xs text-primary-600 dark:text-primary-400 mb-0.5 sm:mb-1">Daily Avg</p>
-            <p className="text-sm sm:text-lg font-bold text-primary-700 dark:text-primary-400">~{formatAmount(dailyAverage)} kr</p>
+            <p className="text-sm sm:text-lg font-bold text-primary-700 dark:text-primary-300">~{formatAmount(dailyAverage)} kr</p>
           </div>
         </div>
 

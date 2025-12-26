@@ -284,21 +284,21 @@ export function MonthlyComparisonChart({ transactions, maxMonths = 6 }: MonthlyC
 
       {/* Summary stats */}
       <div className="grid grid-cols-3 gap-2 sm:gap-3 pt-2 border-t border-gray-100 dark:border-slate-700">
-        <div className="text-center p-2 bg-gray-50 dark:bg-slate-700/50 rounded-lg">
+        <div className="text-center p-2 bg-gray-50 dark:bg-slate-700/50 rounded-lg border border-gray-100 dark:border-slate-600">
           <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mb-0.5">Avg Monthly</p>
           <p className="text-sm sm:text-base font-bold text-gray-900 dark:text-white">
             {formatAmount(avgExpense)} kr
           </p>
         </div>
-        <div className="text-center p-2 bg-danger-50 dark:bg-danger-900/20 rounded-lg">
+        <div className="text-center p-2 bg-danger-50 dark:bg-danger-900/30 rounded-lg border border-danger-100 dark:border-danger-800/50">
           <p className="text-[10px] sm:text-xs text-danger-600 dark:text-danger-400 mb-0.5">Highest</p>
-          <p className="text-sm sm:text-base font-bold text-danger-700 dark:text-danger-400">
+          <p className="text-sm sm:text-base font-bold text-danger-700 dark:text-danger-300">
             {formatAmount(maxExpense)} kr
           </p>
         </div>
-        <div className="text-center p-2 bg-success-50 dark:bg-success-900/20 rounded-lg">
+        <div className="text-center p-2 bg-success-50 dark:bg-success-900/30 rounded-lg border border-success-100 dark:border-success-800/50">
           <p className="text-[10px] sm:text-xs text-success-600 dark:text-success-400 mb-0.5">Lowest</p>
-          <p className="text-sm sm:text-base font-bold text-success-700 dark:text-success-400">
+          <p className="text-sm sm:text-base font-bold text-success-700 dark:text-success-300">
             {formatAmount(Math.min(...monthlyData.map(m => m.expenses)))} kr
           </p>
         </div>

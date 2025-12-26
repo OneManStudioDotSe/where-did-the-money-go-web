@@ -455,10 +455,10 @@ export function SubscriptionCard({
         >
           Upcoming
           {upcomingPayments.length > 0 && (
-            <span className={`px-1.5 py-0.5 text-[10px] rounded-full ${
+            <span className={`px-1.5 py-0.5 text-[10px] rounded-full font-semibold ${
               showUpcoming
-                ? 'bg-warning-100 dark:bg-warning-900/50 text-warning-700 dark:text-warning-300'
-                : 'bg-gray-200 dark:bg-slate-600 text-gray-600 dark:text-gray-400'
+                ? 'bg-warning-100 dark:bg-warning-800/60 text-warning-700 dark:text-warning-200'
+                : 'bg-gray-200 dark:bg-slate-500 text-gray-600 dark:text-gray-200'
             }`}>
               {upcomingPayments.length}
             </span>
@@ -483,10 +483,10 @@ export function SubscriptionCard({
                   key={payment.subscription.id}
                   className={`p-3 rounded-lg border ${
                     isToday
-                      ? 'bg-danger-50 dark:bg-danger-900/20 border-danger-200 dark:border-danger-800'
+                      ? 'bg-danger-50 dark:bg-danger-900/30 border-danger-200 dark:border-danger-700'
                       : isTomorrow
-                      ? 'bg-warning-50 dark:bg-warning-900/20 border-warning-200 dark:border-warning-800'
-                      : 'bg-gray-50 dark:bg-slate-700/50 border-transparent'
+                      ? 'bg-warning-50 dark:bg-warning-900/30 border-warning-200 dark:border-warning-700'
+                      : 'bg-gray-50 dark:bg-slate-700/50 border-gray-100 dark:border-slate-600'
                   }`}
                 >
                   <div className="flex items-center gap-2">
