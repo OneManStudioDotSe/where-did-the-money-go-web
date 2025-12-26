@@ -1,15 +1,20 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import type { Transaction } from '../types/transaction';
+import { getCategoryName, getSubcategoryName, getCategoryColor, getCategoryIcon } from '../utils/category-service';
+import { toTitleCase } from '../utils/text-utils';
 
 interface SpendingCalendarProps {
   transactions: Transaction[];
   className?: string;
+  /** Optional: sync with external month selection (e.g., from TimePeriodSelector) */
+  selectedMonth?: Date;
 }
 
 interface DailySpending {
   date: Date;
   total: number;
   count: number;
+  transactions: Transaction[];
 }
 
 function formatAmount(amount: number): string {
@@ -20,9 +25,12 @@ function formatAmount(amount: number): string {
 }
 
 /** Spending calendar showing daily totals in a heatmap-style grid */
-export function SpendingCalendar({ transactions, className = '' }: SpendingCalendarProps) {
+export function SpendingCalendar({ transactions, className = '', selectedMonth: externalMonth }: SpendingCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(() => {
-    // Start with the most recent transaction month, or current month
+    // Use external month if provided, otherwise start with the most recent transaction month
+    if (externalMonth) {
+      return new Date(externalMonth.getFullYear(), externalMonth.getMonth(), 1);
+    }
     if (transactions.length > 0) {
       const sorted = [...transactions].sort((a, b) => b.date.getTime() - a.date.getTime());
       return new Date(sorted[0].date.getFullYear(), sorted[0].date.getMonth(), 1);
@@ -30,30 +38,49 @@ export function SpendingCalendar({ transactions, className = '' }: SpendingCalen
     return new Date(new Date().getFullYear(), new Date().getMonth(), 1);
   });
 
-  // Calculate daily spending for the current month
+  // State for day detail dialog
+  const [selectedDay, setSelectedDay] = useState<DailySpending | null>(null);
+
+  // Sync with external month selection
+  useEffect(() => {
+    if (externalMonth) {
+      setCurrentMonth(new Date(externalMonth.getFullYear(), externalMonth.getMonth(), 1));
+    }
+  }, [externalMonth]);
+
+  // Calculate daily spending for ALL transactions (not just current month)
+  // This ensures proper color scaling across months
   const dailySpending = useMemo(() => {
     const map = new Map<string, DailySpending>();
     const expenses = transactions.filter(t => t.amount < 0);
 
     expenses.forEach(t => {
       const dateKey = t.date.toISOString().split('T')[0];
-      const existing = map.get(dateKey) || { date: t.date, total: 0, count: 0 };
+      const existing = map.get(dateKey) || { date: t.date, total: 0, count: 0, transactions: [] };
       existing.total += Math.abs(t.amount);
       existing.count += 1;
+      existing.transactions.push(t);
       map.set(dateKey, existing);
     });
 
     return map;
   }, [transactions]);
 
-  // Get max spending for color scaling
-  const maxSpending = useMemo(() => {
+  // Get max spending for the CURRENT MONTH only (for proper color scaling)
+  const maxSpendingThisMonth = useMemo(() => {
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
     let max = 0;
-    dailySpending.forEach(d => {
-      if (d.total > max) max = d.total;
+
+    dailySpending.forEach((d, dateKey) => {
+      const date = new Date(dateKey);
+      if (date.getFullYear() === year && date.getMonth() === month) {
+        if (d.total > max) max = d.total;
+      }
     });
+
     return max;
-  }, [dailySpending]);
+  }, [dailySpending, currentMonth]);
 
   // Calculate total and average for the displayed month
   const monthStats = useMemo(() => {
@@ -119,18 +146,27 @@ export function SpendingCalendar({ transactions, className = '' }: SpendingCalen
   };
 
   const getSpendingIntensity = (amount: number): string => {
-    if (amount === 0 || maxSpending === 0) return 'bg-gray-100 dark:bg-slate-700';
-    const ratio = amount / maxSpending;
-    if (ratio < 0.25) return 'bg-primary-100 dark:bg-primary-900/30';
-    if (ratio < 0.5) return 'bg-primary-200 dark:bg-primary-800/40';
-    if (ratio < 0.75) return 'bg-primary-300 dark:bg-primary-700/50';
-    return 'bg-primary-400 dark:bg-primary-600/60';
+    if (amount === 0 || maxSpendingThisMonth === 0) return 'bg-gray-50 dark:bg-slate-700/50';
+    const ratio = amount / maxSpendingThisMonth;
+    if (ratio < 0.2) return 'bg-rose-100 dark:bg-rose-900/30';
+    if (ratio < 0.4) return 'bg-rose-200 dark:bg-rose-800/40';
+    if (ratio < 0.6) return 'bg-rose-300 dark:bg-rose-700/50';
+    if (ratio < 0.8) return 'bg-rose-400 dark:bg-rose-600/60';
+    return 'bg-rose-500 dark:bg-rose-500/70';
   };
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
   const isCurrentMonth = currentMonth.getFullYear() === today.getFullYear() && currentMonth.getMonth() === today.getMonth();
+
+  const handleDayClick = (day: Date) => {
+    const dateKey = day.toISOString().split('T')[0];
+    const spending = dailySpending.get(dateKey);
+    if (spending && spending.count > 0) {
+      setSelectedDay(spending);
+    }
+  };
 
   return (
     <div className={`bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-slate-700 ${className}`}>
@@ -220,32 +256,31 @@ export function SpendingCalendar({ transactions, className = '' }: SpendingCalen
           const spending = dailySpending.get(dateKey);
           const amount = spending?.total || 0;
           const isToday = day.getTime() === today.getTime();
+          const hasSpending = amount > 0;
 
           return (
-            <div
+            <button
               key={dateKey}
-              className={`aspect-square rounded-md flex flex-col items-center justify-center relative group cursor-default ${getSpendingIntensity(amount)} ${isToday ? 'ring-2 ring-primary-500' : ''}`}
-              title={amount > 0 ? `${formatAmount(amount)} kr (${spending?.count} transactions)` : 'No spending'}
+              onClick={() => handleDayClick(day)}
+              disabled={!hasSpending}
+              className={`aspect-square rounded-md relative transition-all ${getSpendingIntensity(amount)} ${
+                isToday ? 'ring-2 ring-primary-500' : ''
+              } ${hasSpending ? 'cursor-pointer hover:ring-2 hover:ring-gray-400 dark:hover:ring-gray-500' : 'cursor-default'}`}
             >
-              <span className={`text-[10px] ${amount > 0 ? 'text-gray-700 dark:text-gray-200' : 'text-gray-400 dark:text-gray-500'}`}>
+              {/* Day number - top left */}
+              <span className={`absolute top-0.5 left-1 text-[10px] font-medium ${
+                hasSpending ? 'text-gray-700 dark:text-gray-200' : 'text-gray-400 dark:text-gray-500'
+              }`}>
                 {day.getDate()}
               </span>
-              {amount > 0 && (
-                <span className="text-[8px] font-medium text-gray-600 dark:text-gray-300 truncate max-w-full px-0.5">
-                  {amount >= 1000 ? `${(amount / 1000).toFixed(0)}k` : formatAmount(amount)}
+
+              {/* Amount - centered and larger */}
+              {hasSpending && (
+                <span className="absolute inset-0 flex items-center justify-center pt-2 text-[11px] font-bold text-gray-800 dark:text-gray-100">
+                  {formatAmount(amount)}
                 </span>
               )}
-
-              {/* Tooltip on hover */}
-              {amount > 0 && (
-                <div className="absolute z-20 bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-gray-900 dark:bg-slate-600 text-white text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
-                  {formatAmount(amount)} kr
-                  <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1">
-                    <div className="border-4 border-transparent border-t-gray-900 dark:border-t-slate-600" />
-                  </div>
-                </div>
-              )}
-            </div>
+            </button>
           );
         })}
       </div>
@@ -254,13 +289,130 @@ export function SpendingCalendar({ transactions, className = '' }: SpendingCalen
       <div className="flex items-center justify-end gap-2 mt-4">
         <span className="text-[10px] text-gray-400">Less</span>
         <div className="flex gap-0.5">
-          <div className="w-3 h-3 rounded-sm bg-gray-100 dark:bg-slate-700" />
-          <div className="w-3 h-3 rounded-sm bg-primary-100 dark:bg-primary-900/30" />
-          <div className="w-3 h-3 rounded-sm bg-primary-200 dark:bg-primary-800/40" />
-          <div className="w-3 h-3 rounded-sm bg-primary-300 dark:bg-primary-700/50" />
-          <div className="w-3 h-3 rounded-sm bg-primary-400 dark:bg-primary-600/60" />
+          <div className="w-3 h-3 rounded-sm bg-gray-50 dark:bg-slate-700/50" />
+          <div className="w-3 h-3 rounded-sm bg-rose-100 dark:bg-rose-900/30" />
+          <div className="w-3 h-3 rounded-sm bg-rose-200 dark:bg-rose-800/40" />
+          <div className="w-3 h-3 rounded-sm bg-rose-300 dark:bg-rose-700/50" />
+          <div className="w-3 h-3 rounded-sm bg-rose-400 dark:bg-rose-600/60" />
+          <div className="w-3 h-3 rounded-sm bg-rose-500 dark:bg-rose-500/70" />
         </div>
         <span className="text-[10px] text-gray-400">More</span>
+      </div>
+
+      {/* Day Detail Dialog */}
+      {selectedDay && (
+        <DayDetailDialog
+          spending={selectedDay}
+          onClose={() => setSelectedDay(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+// Day Detail Dialog Component
+interface DayDetailDialogProps {
+  spending: DailySpending;
+  onClose: () => void;
+}
+
+function DayDetailDialog({ spending, onClose }: DayDetailDialogProps) {
+  const dateLabel = spending.date.toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
+
+  // Sort transactions by amount (largest first)
+  const sortedTransactions = [...spending.transactions].sort(
+    (a, b) => Math.abs(b.amount) - Math.abs(a.amount)
+  );
+
+  // Lock body scroll
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, []);
+
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 animate-fade-in"
+      onClick={handleBackdropClick}
+    >
+      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-md w-full max-h-[80vh] overflow-hidden animate-slide-up">
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-700/50">
+          <div>
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+              {dateLabel}
+            </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {spending.count} transaction{spending.count !== 1 ? 's' : ''} • {formatAmount(spending.total)} kr total
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors"
+          >
+            <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Transactions list */}
+        <div className="max-h-[60vh] overflow-y-auto p-4">
+          <div className="space-y-2">
+            {sortedTransactions.map((transaction) => {
+              const categoryColor = transaction.categoryId ? getCategoryColor(transaction.categoryId) : '#9ca3af';
+              const categoryIcon = transaction.categoryId ? getCategoryIcon(transaction.categoryId) : '📦';
+              const categoryName = transaction.categoryId ? getCategoryName(transaction.categoryId) : 'Uncategorized';
+              const subcategoryName = transaction.subcategoryId && transaction.categoryId
+                ? getSubcategoryName(transaction.categoryId, transaction.subcategoryId)
+                : null;
+
+              return (
+                <div
+                  key={transaction.id}
+                  className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-slate-700/50 rounded-lg"
+                >
+                  {/* Category icon */}
+                  <div
+                    className="w-10 h-10 rounded-lg flex items-center justify-center text-lg flex-shrink-0"
+                    style={{ backgroundColor: `${categoryColor}20` }}
+                  >
+                    {categoryIcon}
+                  </div>
+
+                  {/* Description and category */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                      {toTitleCase(transaction.description)}
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                      {categoryName}
+                      {subcategoryName && <span className="text-gray-400 dark:text-gray-500"> › {subcategoryName}</span>}
+                    </p>
+                  </div>
+
+                  {/* Amount */}
+                  <span className="text-sm font-semibold text-gray-900 dark:text-white flex-shrink-0">
+                    {formatAmount(Math.abs(transaction.amount))} kr
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
     </div>
   );
