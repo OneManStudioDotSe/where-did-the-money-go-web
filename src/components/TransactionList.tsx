@@ -120,61 +120,6 @@ function SortIcon({ field, currentSort }: { field: TransactionSortField; current
   );
 }
 
-function InfoTooltip({ content }: { content: string }) {
-  return (
-    <div className="group/tooltip relative flex items-center justify-center">
-      <button
-        className="w-5 h-5 rounded-full flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      </button>
-      <div className="absolute z-50 hidden group-hover/tooltip:block bottom-full right-0 mb-2 px-3 py-2 text-xs text-white bg-gray-900 dark:bg-slate-700 rounded-lg shadow-lg whitespace-nowrap pointer-events-none">
-        {content}
-        <div className="absolute top-full right-2 -mt-1">
-          <div className="border-4 border-transparent border-t-gray-900 dark:border-t-slate-700" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/** Hover preview tooltip for transaction rows */
-function HoverPreviewTooltip({
-  description,
-  categoryName,
-  subcategoryName,
-  amount,
-  date
-}: {
-  description: string;
-  categoryName: string | undefined;
-  subcategoryName: string | undefined;
-  amount: number;
-  date: Date;
-}) {
-  return (
-    <div className="absolute z-50 left-0 bottom-full mb-2 px-3 py-2 bg-gray-900 dark:bg-slate-700 rounded-lg shadow-lg pointer-events-none opacity-0 group-hover/row:opacity-100 transition-opacity duration-200 max-w-sm">
-      <div className="text-xs text-white space-y-1">
-        <p className="font-medium truncate" title={description}>{toTitleCase(description)}</p>
-        <div className="flex items-center gap-2 text-gray-300">
-          <span>{formatDate(date)}</span>
-          <span>•</span>
-          <span className={amount >= 0 ? 'text-green-400' : 'text-white'}>{formatAmount(amount)}</span>
-        </div>
-        <p className="text-gray-400">
-          {categoryName || 'Uncategorized'}
-          {subcategoryName && ` › ${subcategoryName}`}
-        </p>
-      </div>
-      <div className="absolute top-full left-4 -mt-1">
-        <div className="border-4 border-transparent border-t-gray-900 dark:border-t-slate-700" />
-      </div>
-    </div>
-  );
-}
 
 /** Inline category dropdown for double-click editing */
 function InlineCategoryDropdown({
@@ -599,7 +544,7 @@ export function TransactionList({
       </div>
 
       {/* Header - Sticky */}
-      <div className={`grid ${bulkEditEnabled ? 'grid-cols-13' : 'grid-cols-12'} gap-4 px-4 py-3 bg-gray-50 dark:bg-slate-800/50 border-b border-gray-200 dark:border-slate-700 text-sm font-medium text-gray-600 dark:text-gray-400 sticky top-0 z-10`}>
+      <div className="grid grid-cols-12 gap-4 px-4 py-3 bg-gray-50 dark:bg-slate-800/50 border-b border-gray-200 dark:border-slate-700 text-sm font-medium text-gray-600 dark:text-gray-400 sticky top-0 z-10">
         {bulkEditEnabled && (
           <div className="col-span-1 flex items-center">
             {/* Header checkbox space */}
@@ -607,28 +552,28 @@ export function TransactionList({
         )}
         <button
           onClick={() => handleSort('date')}
-          className={`${isCondensed ? 'col-span-2' : 'col-span-2'} flex items-center text-left hover:text-gray-900 dark:hover:text-white transition-colors`}
+          className="col-span-2 flex items-center text-left hover:text-gray-900 dark:hover:text-white transition-colors"
         >
           <SortIcon field="date" currentSort={sort} />
           <span className="ml-1">Date</span>
         </button>
         <button
           onClick={() => handleSort('description')}
-          className={`${bulkEditEnabled ? (isCondensed ? 'col-span-4' : 'col-span-3') : (isCondensed ? 'col-span-5' : 'col-span-4')} flex items-center text-left hover:text-gray-900 dark:hover:text-white transition-colors`}
+          className={`${bulkEditEnabled ? 'col-span-3' : 'col-span-4'} flex items-center text-left hover:text-gray-900 dark:hover:text-white transition-colors`}
         >
           <SortIcon field="description" currentSort={sort} />
           <span className="ml-1">Description</span>
         </button>
         <button
           onClick={() => handleSort('category')}
-          className={`${isCondensed ? 'col-span-3' : 'col-span-3'} flex items-center text-left hover:text-gray-900 dark:hover:text-white transition-colors`}
+          className="col-span-3 flex items-center text-left hover:text-gray-900 dark:hover:text-white transition-colors"
         >
           <SortIcon field="category" currentSort={sort} />
           <span className="ml-1">Category</span>
         </button>
         <button
           onClick={() => handleSort('amount')}
-          className={`${isCondensed ? 'col-span-2' : 'col-span-3'} flex items-center justify-end hover:text-gray-900 dark:hover:text-white transition-colors`}
+          className={`${bulkEditEnabled ? 'col-span-2' : 'col-span-3'} flex items-center justify-end hover:text-gray-900 dark:hover:text-white transition-colors`}
         >
           <span className="mr-1">Amount</span>
           <SortIcon field="amount" currentSort={sort} />
@@ -646,18 +591,17 @@ export function TransactionList({
             transaction.subcategoryId
           );
 
-          const tooltipContent = `${formatDate(transaction.date)} | ${transaction.description} | ${categoryName || 'Uncategorized'}${subcategoryName ? ` > ${subcategoryName}` : ''} | ${formatAmount(transaction.amount)}`;
-
           const isSelected = selectedIds.has(transaction.id);
+          const isExcluded = transaction.isExcluded;
 
           if (isCondensed) {
             return (
               <div
                 key={transaction.id}
                 onClick={() => bulkEditEnabled ? handleToggleSelect(transaction.id) : onTransactionClick?.(transaction)}
-                className={`grid ${bulkEditEnabled ? 'grid-cols-13' : 'grid-cols-12'} gap-2 px-4 py-1.5 items-center hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors animate-bounce-hover ${
+                className={`grid ${bulkEditEnabled ? 'grid-cols-12' : 'grid-cols-12'} gap-2 px-4 py-1.5 items-center hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors animate-bounce-hover ${
                   onTransactionClick || bulkEditEnabled ? 'cursor-pointer' : ''
-                } ${isSelected ? 'bg-primary-50 dark:bg-primary-900/20' : ''}`}
+                } ${isSelected ? 'bg-primary-50 dark:bg-primary-900/20' : ''} ${isExcluded ? 'opacity-50' : ''}`}
               >
                 {/* Checkbox */}
                 {bulkEditEnabled && (
@@ -715,16 +659,14 @@ export function TransactionList({
 
                 {/* Amount */}
                 <div
-                  className={`col-span-2 text-right text-sm font-medium ${
+                  className={`col-span-3 text-right text-sm font-medium ${
                     transaction.amount >= 0 ? 'text-success-600 dark:text-success-400' : 'text-gray-900 dark:text-white'
                   }`}
                 >
                   {formatAmount(transaction.amount)}
-                </div>
-
-                {/* Info Icon */}
-                <div className="col-span-1 flex justify-end">
-                  <InfoTooltip content={tooltipContent} />
+                  {isExcluded && (
+                    <span className="ml-2 text-[10px] font-normal text-gray-400 dark:text-gray-500">(excluded)</span>
+                  )}
                 </div>
 
                 {/* Debug Info Row (condensed) */}
@@ -750,19 +692,10 @@ export function TransactionList({
             <div
               key={transaction.id}
               onClick={() => bulkEditEnabled ? handleToggleSelect(transaction.id) : onTransactionClick?.(transaction)}
-              className={`group/row relative grid ${bulkEditEnabled ? 'grid-cols-13' : 'grid-cols-12'} gap-2 px-4 py-3 items-center hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors animate-bounce-hover ${
+              className={`group/row relative grid ${bulkEditEnabled ? 'grid-cols-12' : 'grid-cols-12'} gap-2 px-4 py-3 items-center hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors animate-bounce-hover ${
                 onTransactionClick || bulkEditEnabled ? 'cursor-pointer' : ''
-              } ${isSelected ? 'bg-primary-50 dark:bg-primary-900/20' : ''}`}
+              } ${isSelected ? 'bg-primary-50 dark:bg-primary-900/20' : ''} ${isExcluded ? 'opacity-50' : ''}`}
             >
-              {/* Hover Preview Tooltip */}
-              <HoverPreviewTooltip
-                description={transaction.description}
-                categoryName={categoryName}
-                subcategoryName={subcategoryName}
-                amount={transaction.amount}
-                date={transaction.date}
-              />
-
               {/* Checkbox */}
               {bulkEditEnabled && (
                 <div className="col-span-1 flex items-center">
@@ -854,16 +787,14 @@ export function TransactionList({
 
               {/* Amount */}
               <div
-                className={`col-span-2 text-right text-sm font-medium ${
+                className={`col-span-3 text-right text-sm font-medium ${
                   transaction.amount >= 0 ? 'text-success-600 dark:text-success-400' : 'text-gray-900 dark:text-white'
                 }`}
               >
                 {formatAmount(transaction.amount)}
-              </div>
-
-              {/* Info Icon */}
-              <div className="col-span-1 flex justify-end">
-                <InfoTooltip content={tooltipContent} />
+                {isExcluded && (
+                  <span className="ml-2 text-xs font-normal text-gray-400 dark:text-gray-500">(excluded)</span>
+                )}
               </div>
 
               {/* Debug Info Row (expanded) */}
