@@ -165,6 +165,18 @@ export const defaultCategories: Category[] = [
     ],
   },
   {
+    id: 'travel',
+    name: 'Travel',
+    icon: '✈️',
+    color: '#0ea5e9',
+    subcategories: [
+      { id: 'flights', name: 'Flights', parentCategoryId: 'travel' },
+      { id: 'hotels', name: 'Hotels/Accommodation', parentCategoryId: 'travel' },
+      { id: 'car_rental', name: 'Car Rental', parentCategoryId: 'travel' },
+      { id: 'travel_other', name: 'Other Travel', parentCategoryId: 'travel' },
+    ],
+  },
+  {
     id: 'other',
     name: 'Other',
     icon: '📦',
