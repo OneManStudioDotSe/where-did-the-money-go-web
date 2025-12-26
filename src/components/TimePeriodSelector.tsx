@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import type { Transaction, TransactionGrouping } from '../types/transaction';
 
 interface TimePeriod {
@@ -39,34 +39,18 @@ function formatSwedishDate(date: Date): string {
   return date.toLocaleDateString('sv-SE', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
-/**
- * Given a transaction date and monthStartDay, determine which "salary month" this transaction belongs to.
- * For example, if monthStartDay is 25:
- *   - Dec 25 → Jan 24 is "January" (the month when the period ends)
- *   - Jan 25 → Feb 24 is "February"
- *
- * Returns { periodMonth, periodYear } representing the label month
- */
 function getSalaryPeriod(date: Date, monthStartDay: number): { periodMonth: number; periodYear: number } {
   const day = date.getDate();
   const month = date.getMonth();
   const year = date.getFullYear();
 
   if (monthStartDay === 1) {
-    // Standard calendar month
     return { periodMonth: month, periodYear: year };
   }
 
-  // For salary-aligned periods:
-  // If we're before the monthStartDay, we belong to the previous month's "salary month"
-  // If we're on or after the monthStartDay, we belong to the current month's "salary month"
   if (day < monthStartDay) {
-    // Transaction is before the start day, so it belongs to the previous salary period
-    // The label will be the current calendar month
     return { periodMonth: month, periodYear: year };
   } else {
-    // Transaction is on or after the start day, so it belongs to the next salary period
-    // The label will be the next calendar month
     const nextMonth = month + 1;
     if (nextMonth > 11) {
       return { periodMonth: 0, periodYear: year + 1 };
@@ -75,23 +59,14 @@ function getSalaryPeriod(date: Date, monthStartDay: number): { periodMonth: numb
   }
 }
 
-/**
- * Get the start and end dates for a salary period given the label month and monthStartDay
- */
 function getSalaryPeriodDates(periodMonth: number, periodYear: number, monthStartDay: number): { start: Date; end: Date } {
   if (monthStartDay === 1) {
-    // Standard calendar month
     const start = new Date(periodYear, periodMonth, 1);
     start.setHours(0, 0, 0, 0);
     const end = new Date(periodYear, periodMonth + 1, 0);
     end.setHours(23, 59, 59, 999);
     return { start, end };
   }
-
-  // Salary-aligned period:
-  // For "January 2025" with monthStartDay=25, the period is Dec 25, 2024 → Jan 24, 2025
-  // Start: previous month's monthStartDay
-  // End: current month's (monthStartDay - 1)
 
   let startMonth = periodMonth - 1;
   let startYear = periodYear;
@@ -139,7 +114,6 @@ function getPeriodsFromTransactions(
         const weekNum = getWeekNumber(date);
         const year = date.getFullYear();
         key = `${year}-W${weekNum.toString().padStart(2, '0')}`;
-        // Get Monday of this week
         const dayOfWeek = date.getDay() || 7;
         start = new Date(date);
         start.setDate(date.getDate() - dayOfWeek + 1);
@@ -152,16 +126,11 @@ function getPeriodsFromTransactions(
         break;
       }
       case 'month': {
-        // Get the salary period this transaction belongs to
         const { periodMonth, periodYear } = getSalaryPeriod(date, monthStartDay);
         key = `${periodYear}-${(periodMonth + 1).toString().padStart(2, '0')}`;
-
-        // Get the actual date range for this salary period
         const dates = getSalaryPeriodDates(periodMonth, periodYear, monthStartDay);
         start = dates.start;
         end = dates.end;
-
-        // Label shows the period's month name (the month being labeled)
         const labelDate = new Date(periodYear, periodMonth, 15);
         label = labelDate.toLocaleDateString('sv-SE', { year: 'numeric', month: 'long' });
         shortLabel = labelDate.toLocaleDateString('sv-SE', { month: 'short' });
@@ -193,8 +162,525 @@ function getPeriodsFromTransactions(
     }
   });
 
-  // Sort by start date (most recent first)
   return Array.from(periodsMap.values()).sort((a, b) => b.start.getTime() - a.start.getTime());
+}
+
+// Popover component for period selection
+interface PopoverProps {
+  isOpen: boolean;
+  onClose: () => void;
+  anchorRef: React.RefObject<HTMLButtonElement | null>;
+  children: React.ReactNode;
+}
+
+function Popover({ isOpen, onClose, anchorRef, children }: PopoverProps) {
+  const popoverRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        popoverRef.current &&
+        !popoverRef.current.contains(event.target as Node) &&
+        anchorRef.current &&
+        !anchorRef.current.contains(event.target as Node)
+      ) {
+        onClose();
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isOpen, onClose, anchorRef]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div
+      ref={popoverRef}
+      className="absolute z-50 mt-2 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-gray-200 dark:border-slate-700 overflow-hidden animate-slide-down"
+    >
+      {children}
+    </div>
+  );
+}
+
+// Day Picker with Calendar
+interface DayPickerProps {
+  periods: TimePeriod[];
+  selectedPeriod: TimePeriod | null;
+  onSelect: (period: TimePeriod) => void;
+  onClose: () => void;
+}
+
+function DayPicker({ periods, selectedPeriod, onSelect, onClose }: DayPickerProps) {
+  // Group days by month
+  const daysByMonth = useMemo(() => {
+    const grouped = new Map<string, TimePeriod[]>();
+    periods.forEach(period => {
+      const monthKey = `${period.start.getFullYear()}-${period.start.getMonth()}`;
+      if (!grouped.has(monthKey)) {
+        grouped.set(monthKey, []);
+      }
+      grouped.get(monthKey)!.push(period);
+    });
+    return grouped;
+  }, [periods]);
+
+  const months = Array.from(daysByMonth.keys()).sort((a, b) => b.localeCompare(a));
+  const [activeMonth, setActiveMonth] = useState(months[0] || '');
+
+  const activeDays = daysByMonth.get(activeMonth) || [];
+  const [year, month] = activeMonth.split('-').map(Number);
+  const monthLabel = activeMonth ? new Date(year, month, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : '';
+
+  // Generate calendar grid
+  const calendarDays = useMemo(() => {
+    if (!activeMonth) return [];
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const startDayOfWeek = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1; // Monday start
+
+    const days: (Date | null)[] = [];
+    for (let i = 0; i < startDayOfWeek; i++) {
+      days.push(null);
+    }
+    for (let i = 1; i <= lastDay.getDate(); i++) {
+      days.push(new Date(year, month, i));
+    }
+    return days;
+  }, [activeMonth, year, month]);
+
+  const periodsByDate = useMemo(() => {
+    const map = new Map<string, TimePeriod>();
+    activeDays.forEach(p => {
+      map.set(p.start.toISOString().split('T')[0], p);
+    });
+    return map;
+  }, [activeDays]);
+
+  return (
+    <div className="w-72 p-3">
+      {/* Month Navigation */}
+      <div className="flex items-center justify-between mb-3">
+        <button
+          onClick={() => {
+            const idx = months.indexOf(activeMonth);
+            if (idx < months.length - 1) setActiveMonth(months[idx + 1]);
+          }}
+          disabled={months.indexOf(activeMonth) >= months.length - 1}
+          className="p-1 rounded hover:bg-gray-100 dark:hover:bg-slate-700 disabled:opacity-30"
+        >
+          <svg className="w-4 h-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        <span className="text-sm font-medium text-gray-900 dark:text-white">{monthLabel}</span>
+        <button
+          onClick={() => {
+            const idx = months.indexOf(activeMonth);
+            if (idx > 0) setActiveMonth(months[idx - 1]);
+          }}
+          disabled={months.indexOf(activeMonth) <= 0}
+          className="p-1 rounded hover:bg-gray-100 dark:hover:bg-slate-700 disabled:opacity-30"
+        >
+          <svg className="w-4 h-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Day Headers */}
+      <div className="grid grid-cols-7 gap-1 mb-1">
+        {['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'].map(d => (
+          <div key={d} className="text-[10px] text-center text-gray-400 dark:text-gray-500 font-medium py-1">{d}</div>
+        ))}
+      </div>
+
+      {/* Calendar Grid */}
+      <div className="grid grid-cols-7 gap-1">
+        {calendarDays.map((day, idx) => {
+          if (!day) return <div key={`empty-${idx}`} className="w-8 h-8" />;
+
+          const dateKey = day.toISOString().split('T')[0];
+          const period = periodsByDate.get(dateKey);
+          const isSelected = selectedPeriod && period &&
+            selectedPeriod.start.getTime() === period.start.getTime();
+          const hasData = !!period;
+
+          return (
+            <button
+              key={dateKey}
+              onClick={() => {
+                if (period) {
+                  onSelect(period);
+                  onClose();
+                }
+              }}
+              disabled={!hasData}
+              className={`w-8 h-8 rounded-lg text-xs font-medium transition-all ${
+                isSelected
+                  ? 'bg-primary-500 text-white'
+                  : hasData
+                  ? 'bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 hover:bg-primary-200 dark:hover:bg-primary-800/50'
+                  : 'text-gray-300 dark:text-gray-600 cursor-default'
+              }`}
+            >
+              {day.getDate()}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// Week Picker - organized by month
+interface WeekPickerProps {
+  periods: TimePeriod[];
+  selectedPeriod: TimePeriod | null;
+  onSelect: (period: TimePeriod) => void;
+  onClose: () => void;
+}
+
+const MONTH_SHORT_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+function WeekPicker({ periods, selectedPeriod, onSelect, onClose }: WeekPickerProps) {
+  // Group weeks by year and month
+  const weeksByYearAndMonth = useMemo(() => {
+    const grouped = new Map<string, TimePeriod[]>();
+    periods.forEach(period => {
+      const year = period.start.getFullYear();
+      const month = period.start.getMonth();
+      const key = `${year}-${month}`;
+      if (!grouped.has(key)) {
+        grouped.set(key, []);
+      }
+      grouped.get(key)!.push(period);
+    });
+    return grouped;
+  }, [periods]);
+
+  // Get unique years
+  const years = useMemo(() => {
+    const yearsSet = new Set<number>();
+    periods.forEach(period => yearsSet.add(period.start.getFullYear()));
+    return Array.from(yearsSet).sort((a, b) => b - a);
+  }, [periods]);
+
+  const [activeYear, setActiveYear] = useState(years[0] || new Date().getFullYear());
+
+  // Get months for the active year (in reverse order - newest first)
+  const monthsInYear = useMemo(() => {
+    const months: number[] = [];
+    for (let m = 11; m >= 0; m--) {
+      const key = `${activeYear}-${m}`;
+      if (weeksByYearAndMonth.has(key)) {
+        months.push(m);
+      }
+    }
+    return months;
+  }, [activeYear, weeksByYearAndMonth]);
+
+  return (
+    <div className="w-80 p-3">
+      {/* Year Navigation */}
+      <div className="flex items-center justify-between mb-3">
+        <button
+          onClick={() => {
+            const idx = years.indexOf(activeYear);
+            if (idx < years.length - 1) setActiveYear(years[idx + 1]);
+          }}
+          disabled={years.indexOf(activeYear) >= years.length - 1}
+          className="p-1 rounded hover:bg-gray-100 dark:hover:bg-slate-700 disabled:opacity-30"
+        >
+          <svg className="w-4 h-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        <span className="text-sm font-medium text-gray-900 dark:text-white">{activeYear}</span>
+        <button
+          onClick={() => {
+            const idx = years.indexOf(activeYear);
+            if (idx > 0) setActiveYear(years[idx - 1]);
+          }}
+          disabled={years.indexOf(activeYear) <= 0}
+          className="p-1 rounded hover:bg-gray-100 dark:hover:bg-slate-700 disabled:opacity-30"
+        >
+          <svg className="w-4 h-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Weeks organized by month */}
+      <div className="space-y-2 max-h-72 overflow-y-auto">
+        {monthsInYear.map(month => {
+          const key = `${activeYear}-${month}`;
+          const weeksInMonth = weeksByYearAndMonth.get(key) || [];
+          // Sort weeks by week number (descending - newest first)
+          const sortedWeeks = [...weeksInMonth].sort((a, b) => b.start.getTime() - a.start.getTime());
+
+          return (
+            <div key={key} className="flex items-start gap-2">
+              <span className="text-[10px] text-gray-400 dark:text-gray-500 w-8 flex-shrink-0 pt-2 font-medium">
+                {MONTH_SHORT_NAMES[month]}
+              </span>
+              <div className="flex-1 flex flex-wrap gap-1.5">
+                {sortedWeeks.map(period => {
+                  const isSelected = selectedPeriod &&
+                    selectedPeriod.start.getTime() === period.start.getTime();
+                  const weekNum = getWeekNumber(period.start);
+
+                  return (
+                    <button
+                      key={period.label}
+                      onClick={() => {
+                        onSelect(period);
+                        onClose();
+                      }}
+                      className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                        isSelected
+                          ? 'bg-primary-500 text-white'
+                          : 'bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-primary-100 dark:hover:bg-primary-900/40'
+                      }`}
+                      title={`${formatSwedishDate(period.start)} - ${formatSwedishDate(period.end)}`}
+                    >
+                      W{weekNum}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// Month Picker with Quarters
+interface MonthPickerProps {
+  periods: TimePeriod[];
+  selectedPeriod: TimePeriod | null;
+  onSelect: (period: TimePeriod) => void;
+  onClose: () => void;
+}
+
+function MonthPicker({ periods, selectedPeriod, onSelect, onClose }: MonthPickerProps) {
+  const monthsByYear = useMemo(() => {
+    const grouped = new Map<number, TimePeriod[]>();
+    periods.forEach(period => {
+      const year = period.start.getFullYear();
+      if (!grouped.has(year)) {
+        grouped.set(year, []);
+      }
+      grouped.get(year)!.push(period);
+    });
+    return grouped;
+  }, [periods]);
+
+  const years = Array.from(monthsByYear.keys()).sort((a, b) => b - a);
+  const [activeYear, setActiveYear] = useState(years[0] || new Date().getFullYear());
+  const activeMonths = monthsByYear.get(activeYear) || [];
+
+  // Create a map for quick lookup
+  const monthMap = useMemo(() => {
+    const map = new Map<number, TimePeriod>();
+    activeMonths.forEach(p => {
+      map.set(p.start.getMonth(), p);
+    });
+    return map;
+  }, [activeMonths]);
+
+  const quarters = [
+    { label: 'Q1', months: [0, 1, 2], names: ['Jan', 'Feb', 'Mar'] },
+    { label: 'Q2', months: [3, 4, 5], names: ['Apr', 'May', 'Jun'] },
+    { label: 'Q3', months: [6, 7, 8], names: ['Jul', 'Aug', 'Sep'] },
+    { label: 'Q4', months: [9, 10, 11], names: ['Oct', 'Nov', 'Dec'] },
+  ];
+
+  return (
+    <div className="w-72 p-3">
+      {/* Year Navigation */}
+      <div className="flex items-center justify-between mb-3">
+        <button
+          onClick={() => {
+            const idx = years.indexOf(activeYear);
+            if (idx < years.length - 1) setActiveYear(years[idx + 1]);
+          }}
+          disabled={years.indexOf(activeYear) >= years.length - 1}
+          className="p-1 rounded hover:bg-gray-100 dark:hover:bg-slate-700 disabled:opacity-30"
+        >
+          <svg className="w-4 h-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        <span className="text-sm font-medium text-gray-900 dark:text-white">{activeYear}</span>
+        <button
+          onClick={() => {
+            const idx = years.indexOf(activeYear);
+            if (idx > 0) setActiveYear(years[idx - 1]);
+          }}
+          disabled={years.indexOf(activeYear) <= 0}
+          className="p-1 rounded hover:bg-gray-100 dark:hover:bg-slate-700 disabled:opacity-30"
+        >
+          <svg className="w-4 h-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Months organized by quarter */}
+      <div className="space-y-2">
+        {quarters.map(quarter => (
+          <div key={quarter.label} className="flex items-center gap-2">
+            <span className="text-[10px] text-gray-400 dark:text-gray-500 w-6 flex-shrink-0">{quarter.label}</span>
+            <div className="flex-1 grid grid-cols-3 gap-1.5">
+              {quarter.months.map((monthIdx, i) => {
+                const period = monthMap.get(monthIdx);
+                const isSelected = selectedPeriod && period &&
+                  selectedPeriod.start.getTime() === period.start.getTime();
+                const hasData = !!period;
+
+                return (
+                  <button
+                    key={monthIdx}
+                    onClick={() => {
+                      if (period) {
+                        onSelect(period);
+                        onClose();
+                      }
+                    }}
+                    disabled={!hasData}
+                    className={`px-2 py-2 rounded-lg text-xs font-medium transition-all ${
+                      isSelected
+                        ? 'bg-primary-500 text-white'
+                        : hasData
+                        ? 'bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-primary-100 dark:hover:bg-primary-900/40'
+                        : 'bg-gray-50 dark:bg-slate-800 text-gray-300 dark:text-gray-600 cursor-default'
+                    }`}
+                  >
+                    {quarter.names[i]}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Quarter Picker
+interface QuarterPickerProps {
+  periods: TimePeriod[];
+  selectedPeriod: TimePeriod | null;
+  onSelect: (period: TimePeriod) => void;
+  onClose: () => void;
+}
+
+function QuarterPicker({ periods, selectedPeriod, onSelect, onClose }: QuarterPickerProps) {
+  const quartersByYear = useMemo(() => {
+    const grouped = new Map<number, TimePeriod[]>();
+    periods.forEach(period => {
+      const year = period.start.getFullYear();
+      if (!grouped.has(year)) {
+        grouped.set(year, []);
+      }
+      grouped.get(year)!.push(period);
+    });
+    return grouped;
+  }, [periods]);
+
+  const years = Array.from(quartersByYear.keys()).sort((a, b) => b - a);
+
+  return (
+    <div className="w-64 p-3 max-h-72 overflow-y-auto">
+      {years.map(year => {
+        const yearQuarters = quartersByYear.get(year) || [];
+        return (
+          <div key={year} className="mb-3 last:mb-0">
+            <div className="text-xs text-gray-500 dark:text-gray-400 mb-1.5">{year}</div>
+            <div className="grid grid-cols-4 gap-1.5">
+              {yearQuarters.sort((a, b) => b.start.getTime() - a.start.getTime()).map(period => {
+                const isSelected = selectedPeriod &&
+                  selectedPeriod.start.getTime() === period.start.getTime();
+
+                return (
+                  <button
+                    key={period.label}
+                    onClick={() => {
+                      onSelect(period);
+                      onClose();
+                    }}
+                    className={`px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                      isSelected
+                        ? 'bg-primary-500 text-white'
+                        : 'bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-primary-100 dark:hover:bg-primary-900/40'
+                    }`}
+                  >
+                    {period.shortLabel}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// Year Picker
+interface YearPickerProps {
+  periods: TimePeriod[];
+  selectedPeriod: TimePeriod | null;
+  onSelect: (period: TimePeriod) => void;
+  onClose: () => void;
+}
+
+function YearPicker({ periods, selectedPeriod, onSelect, onClose }: YearPickerProps) {
+  return (
+    <div className="p-3">
+      <div className="flex flex-wrap gap-1.5 max-w-64">
+        {periods.map(period => {
+          const isSelected = selectedPeriod &&
+            selectedPeriod.start.getTime() === period.start.getTime();
+
+          return (
+            <button
+              key={period.label}
+              onClick={() => {
+                onSelect(period);
+                onClose();
+              }}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                isSelected
+                  ? 'bg-primary-500 text-white'
+                  : 'bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-primary-100 dark:hover:bg-primary-900/40'
+              }`}
+            >
+              {period.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 export function TimePeriodSelector({
@@ -202,12 +688,8 @@ export function TimePeriodSelector({
   onPeriodChange,
   selectedPeriod,
 }: TimePeriodSelectorProps) {
-  // Initialize activePeriodType from selectedPeriod to persist across tab switches
-  const [activePeriodType, setActivePeriodType] = useState<TransactionGrouping | null>(
-    selectedPeriod?.type ?? null
-  );
+  const [openPicker, setOpenPicker] = useState<TransactionGrouping | null>(null);
   const [monthStartDay, setMonthStartDay] = useState<number>(() => {
-    // Load from localStorage if available
     try {
       const saved = localStorage.getItem('period-month-start-day');
       return saved ? parseInt(saved, 10) : 1;
@@ -217,28 +699,29 @@ export function TimePeriodSelector({
   });
   const [showSettings, setShowSettings] = useState(false);
 
-  // Sync activePeriodType when selectedPeriod changes (e.g., when switching tabs)
-  useEffect(() => {
-    if (selectedPeriod) {
-      setActivePeriodType(selectedPeriod.type);
-    }
-  }, [selectedPeriod]);
-
-  const availablePeriods = useMemo(() => {
-    if (!activePeriodType) return [];
-    return getPeriodsFromTransactions(transactions, activePeriodType, monthStartDay);
-  }, [transactions, activePeriodType, monthStartDay]);
-
-  const handlePeriodTypeClick = (type: TransactionGrouping) => {
-    if (activePeriodType === type) {
-      // Toggle off
-      setActivePeriodType(null);
-      onPeriodChange(null);
-    } else {
-      setActivePeriodType(type);
-      // Don't auto-select, let user pick
-    }
+  const buttonRefs = {
+    day: useRef<HTMLButtonElement>(null),
+    week: useRef<HTMLButtonElement>(null),
+    month: useRef<HTMLButtonElement>(null),
+    quarter: useRef<HTMLButtonElement>(null),
+    year: useRef<HTMLButtonElement>(null),
   };
+
+  // Precompute all periods
+  const allPeriods = useMemo(() => {
+    const types: TransactionGrouping[] = ['day', 'week', 'month', 'quarter', 'year'];
+    const result: Record<TransactionGrouping, TimePeriod[]> = {
+      day: [],
+      week: [],
+      month: [],
+      quarter: [],
+      year: [],
+    };
+    types.forEach(type => {
+      result[type] = getPeriodsFromTransactions(transactions, type, monthStartDay);
+    });
+    return result;
+  }, [transactions, monthStartDay]);
 
   const handlePeriodSelect = (period: TimePeriod) => {
     if (
@@ -246,7 +729,6 @@ export function TimePeriodSelector({
       selectedPeriod.start.getTime() === period.start.getTime() &&
       selectedPeriod.end.getTime() === period.end.getTime()
     ) {
-      // Deselect
       onPeriodChange(null);
     } else {
       onPeriodChange(period);
@@ -254,7 +736,6 @@ export function TimePeriodSelector({
   };
 
   const handleClearPeriod = () => {
-    setActivePeriodType(null);
     onPeriodChange(null);
   };
 
@@ -265,29 +746,10 @@ export function TimePeriodSelector({
     } catch {
       // localStorage may be unavailable
     }
-    // Clear selection when changing the start day
     if (selectedPeriod?.type === 'month') {
       onPeriodChange(null);
     }
   };
-
-  // Calculate transaction counts per period type for preview
-  const periodTypeCounts = useMemo(() => {
-    const counts: Record<TransactionGrouping, number> = {
-      day: 0,
-      week: 0,
-      month: 0,
-      quarter: 0,
-      year: 0,
-    };
-
-    const types: TransactionGrouping[] = ['day', 'week', 'month', 'quarter', 'year'];
-    types.forEach((type) => {
-      counts[type] = getPeriodsFromTransactions(transactions, type, monthStartDay).length;
-    });
-
-    return counts;
-  }, [transactions, monthStartDay]);
 
   // Calculate totals for selected period
   const periodTotals = useMemo(() => {
@@ -314,81 +776,139 @@ export function TimePeriodSelector({
 
   return (
     <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 mb-6">
-      {/* Period Type Selector */}
       <div className="p-4">
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-medium text-gray-900 dark:text-white">View by Time Period</h3>
-          {selectedPeriod && (
+          <div className="flex items-center gap-2">
+            {selectedPeriod && (
+              <button
+                onClick={handleClearPeriod}
+                className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+              >
+                Clear
+              </button>
+            )}
             <button
-              onClick={handleClearPeriod}
-              className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+              onClick={() => setShowSettings(!showSettings)}
+              className={`p-1.5 rounded-lg transition-colors ${
+                showSettings
+                  ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
+                  : 'hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-500 dark:text-gray-400'
+              }`}
+              title="Period settings"
             >
-              Clear selection
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
             </button>
-          )}
+          </div>
         </div>
 
-        {/* Period Type Buttons + Settings Button (inline) */}
+        {/* Period Type Buttons with Popovers */}
         <div className="flex flex-wrap items-center gap-2">
           {(Object.keys(periodTypeConfig) as TransactionGrouping[]).map((type) => {
             const config = periodTypeConfig[type];
-            const isActive = activePeriodType === type;
-            const count = periodTypeCounts[type];
+            const periods = allPeriods[type];
+            const count = periods.length;
+            const isActive = openPicker === type;
+            const isSelected = selectedPeriod?.type === type;
 
             return (
-              <button
-                key={type}
-                onClick={() => handlePeriodTypeClick(type)}
-                disabled={count === 0}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border transition-all ${
-                  isActive
-                    ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
-                    : count === 0
-                    ? 'border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 text-gray-400 dark:text-gray-500 cursor-not-allowed'
-                    : 'border-gray-200 dark:border-slate-600 hover:border-gray-300 dark:hover:border-slate-500 hover:bg-gray-50 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300'
-                }`}
-              >
-                <span className="text-lg">{config.icon}</span>
-                <span className="font-medium">{config.label}</span>
-                <span
-                  className={`text-xs px-1.5 py-0.5 rounded-full ${
-                    isActive
-                      ? 'bg-primary-200 dark:bg-primary-800 text-primary-700 dark:text-primary-300'
-                      : 'bg-gray-100 dark:bg-slate-600 text-gray-500 dark:text-gray-400'
+              <div key={type} className="relative">
+                <button
+                  ref={buttonRefs[type]}
+                  onClick={() => {
+                    if (count > 0) {
+                      setOpenPicker(openPicker === type ? null : type);
+                    }
+                  }}
+                  disabled={count === 0}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border text-sm transition-all ${
+                    isSelected
+                      ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
+                      : isActive
+                      ? 'border-primary-300 dark:border-primary-600 bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400'
+                      : count === 0
+                      ? 'border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                      : 'border-gray-200 dark:border-slate-600 hover:border-gray-300 dark:hover:border-slate-500 hover:bg-gray-50 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300'
                   }`}
                 >
-                  {count}
-                </span>
-              </button>
+                  <span>{config.icon}</span>
+                  <span className="font-medium">{config.label}</span>
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                    isSelected || isActive
+                      ? 'bg-primary-200 dark:bg-primary-800 text-primary-700 dark:text-primary-300'
+                      : 'bg-gray-100 dark:bg-slate-600 text-gray-500 dark:text-gray-400'
+                  }`}>
+                    {count}
+                  </span>
+                  {count > 0 && (
+                    <svg className={`w-3 h-3 transition-transform ${isActive ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  )}
+                </button>
+
+                <Popover
+                  isOpen={openPicker === type}
+                  onClose={() => setOpenPicker(null)}
+                  anchorRef={buttonRefs[type]}
+                >
+                  {type === 'day' && (
+                    <DayPicker
+                      periods={periods}
+                      selectedPeriod={selectedPeriod}
+                      onSelect={handlePeriodSelect}
+                      onClose={() => setOpenPicker(null)}
+                    />
+                  )}
+                  {type === 'week' && (
+                    <WeekPicker
+                      periods={periods}
+                      selectedPeriod={selectedPeriod}
+                      onSelect={handlePeriodSelect}
+                      onClose={() => setOpenPicker(null)}
+                    />
+                  )}
+                  {type === 'month' && (
+                    <MonthPicker
+                      periods={periods}
+                      selectedPeriod={selectedPeriod}
+                      onSelect={handlePeriodSelect}
+                      onClose={() => setOpenPicker(null)}
+                    />
+                  )}
+                  {type === 'quarter' && (
+                    <QuarterPicker
+                      periods={periods}
+                      selectedPeriod={selectedPeriod}
+                      onSelect={handlePeriodSelect}
+                      onClose={() => setOpenPicker(null)}
+                    />
+                  )}
+                  {type === 'year' && (
+                    <YearPicker
+                      periods={periods}
+                      selectedPeriod={selectedPeriod}
+                      onSelect={handlePeriodSelect}
+                      onClose={() => setOpenPicker(null)}
+                    />
+                  )}
+                </Popover>
+              </div>
             );
           })}
-
-          {/* Settings Button (inline with period buttons) */}
-          <button
-            onClick={() => setShowSettings(!showSettings)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border transition-all ${
-              showSettings
-                ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
-                : 'border-gray-200 dark:border-slate-600 hover:border-gray-300 dark:hover:border-slate-500 hover:bg-gray-50 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300'
-            }`}
-            title="Period settings"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            <span className="font-medium">Settings</span>
-          </button>
         </div>
 
-        {/* Settings Panel (collapsible) */}
+        {/* Settings Panel */}
         {showSettings && (
-          <div className="mt-4 p-3 bg-gray-50 dark:bg-slate-700/50 rounded-lg border border-gray-200 dark:border-slate-600">
+          <div className="mt-3 p-3 bg-gray-50 dark:bg-slate-700/50 rounded-lg border border-gray-200 dark:border-slate-600">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Month Start Day</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Swedish salary is typically paid on the 25th. Set when your month "begins".
+                  Swedish salary is typically paid on the 25th
                 </p>
               </div>
               <select
@@ -407,38 +927,7 @@ export function TimePeriodSelector({
         )}
       </div>
 
-      {/* Period Selection Dropdown */}
-      {activePeriodType && availablePeriods.length > 0 && (
-        <div className="border-t border-gray-200 dark:border-slate-700 p-4">
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-            Select a {periodTypeConfig[activePeriodType].label.toLowerCase()} to view:
-          </p>
-          <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto">
-            {availablePeriods.map((period, index) => {
-              const isSelected =
-                selectedPeriod &&
-                selectedPeriod.start.getTime() === period.start.getTime() &&
-                selectedPeriod.end.getTime() === period.end.getTime();
-
-              return (
-                <button
-                  key={index}
-                  onClick={() => handlePeriodSelect(period)}
-                  className={`px-3 py-1.5 rounded-lg border text-sm transition-all ${
-                    isSelected
-                      ? 'border-primary-500 bg-primary-500 text-white'
-                      : 'border-gray-200 dark:border-slate-600 hover:border-primary-300 dark:hover:border-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/30 text-gray-700 dark:text-gray-300'
-                  }`}
-                >
-                  {period.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Selected Period Info with Large Numbers */}
+      {/* Selected Period Info */}
       {selectedPeriod && periodTotals && (
         <div className="border-t border-gray-200 dark:border-slate-700 bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/30 dark:to-primary-800/30">
           <div className="p-4">
@@ -456,23 +945,13 @@ export function TimePeriodSelector({
                 onClick={() => onPeriodChange(null)}
                 className="p-2 hover:bg-primary-200 dark:hover:bg-primary-800/50 rounded-lg transition-colors"
               >
-                <svg
-                  className="w-5 h-5 text-primary-600 dark:text-primary-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
+                <svg className="w-5 h-5 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
 
-            {/* Large Period Stats */}
+            {/* Period Stats */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
               <div className="bg-white/60 dark:bg-slate-800/60 rounded-lg p-2 sm:p-3 text-center">
                 <p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 mb-0.5 sm:mb-1">Transactions</p>
