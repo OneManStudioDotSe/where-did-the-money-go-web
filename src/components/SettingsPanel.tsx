@@ -40,6 +40,12 @@ export interface AppSettings {
   enableBulkEditing: boolean;
   /** Whether suspicious transaction detection is enabled (default: true) */
   enableSuspiciousDetection: boolean;
+  /** Whether to reduce motion/animations (default: false, respects system preference) */
+  reduceMotion: boolean;
+  /** Whether high contrast mode is enabled (default: false) */
+  highContrast: boolean;
+  /** Whether debug mode is enabled (default: false) */
+  debugMode: boolean;
 }
 
 const defaultSettings: AppSettings = {
@@ -58,6 +64,9 @@ const defaultSettings: AppSettings = {
   enableCustomMappingRules: false,
   enableBulkEditing: false,
   enableSuspiciousDetection: true,
+  reduceMotion: false,
+  highContrast: false,
+  debugMode: false,
 };
 
 const STORAGE_KEY = 'app_settings';
@@ -107,6 +116,10 @@ interface SettingsPanelProps {
   onResetOnboarding?: () => void;
   /** Whether onboarding has been completed */
   hasCompletedOnboarding?: boolean;
+  /** Callback to clear all app data (transactions, settings, etc.) */
+  onClearAllData?: () => void;
+  /** Number of transactions currently loaded */
+  transactionCount?: number;
 }
 
 function IconPreview({ iconSet, categoryId }: { iconSet: IconSetId; categoryId: string }) {
@@ -138,10 +151,78 @@ function IconPreview({ iconSet, categoryId }: { iconSet: IconSetId; categoryId: 
   );
 }
 
-export function SettingsPanel({ isOpen, onClose, settings, onSettingsChange, subscriptionCount = 0, onClearSubscriptions, customMappingRulesCount = 0, onOpenMappingRules, onResetOnboarding, hasCompletedOnboarding = true }: SettingsPanelProps) {
+/** Collapsible section component for settings */
+function CollapsibleSection({
+  title,
+  icon,
+  children,
+  sectionKey,
+  expandedSections,
+  onToggle,
+}: {
+  title: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+  sectionKey: string;
+  expandedSections: Set<string>;
+  onToggle: (key: string) => void;
+}) {
+  const isExpanded = expandedSections.has(sectionKey);
+
+  return (
+    <div className="border-t border-gray-200 dark:border-slate-700 pt-4">
+      <button
+        type="button"
+        onClick={() => onToggle(sectionKey)}
+        className="w-full flex items-center justify-between mb-4 group"
+      >
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+          {icon}
+          {title}
+        </h3>
+        <svg
+          className={`w-5 h-5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-transform duration-200 ${
+            isExpanded ? 'rotate-180' : ''
+          }`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      <div
+        className={`overflow-hidden transition-all duration-200 ${
+          isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
+        }`}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
+export function SettingsPanel({ isOpen, onClose, settings, onSettingsChange, subscriptionCount = 0, onClearSubscriptions, customMappingRulesCount = 0, onOpenMappingRules, onResetOnboarding, hasCompletedOnboarding = true, onClearAllData, transactionCount = 0 }: SettingsPanelProps) {
   const [localSettings, setLocalSettings] = useState<AppSettings>(settings);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [showClearAllConfirm, setShowClearAllConfirm] = useState(false);
   const [showApiKey, setShowApiKey] = useState(false);
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(() => {
+    // All sections expanded by default
+    return new Set(['import', 'subscription', 'display', 'categorization', 'ai', 'accessibility', 'help', 'developer']);
+  });
+
+  const toggleSection = (key: string) => {
+    setExpandedSections((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  };
 
   // Accessibility: focus trap and escape key handling
   const modalRef = useFocusTrap<HTMLDivElement>(isOpen, onClose);
@@ -288,14 +369,17 @@ export function SettingsPanel({ isOpen, onClose, settings, onSettingsChange, sub
             </div>
 
             {/* Import Settings Section */}
-            <div className="border-t border-gray-200 dark:border-slate-700 pt-6">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            <CollapsibleSection
+              title="Import settings"
+              icon={
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                 </svg>
-                Import settings
-              </h3>
-
+              }
+              sectionKey="import"
+              expandedSections={expandedSections}
+              onToggle={toggleSection}
+            >
               {/* Transaction Limit */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -383,17 +467,20 @@ export function SettingsPanel({ isOpen, onClose, settings, onSettingsChange, sub
                   </div>
                 )}
               </div>
-            </div>
+            </CollapsibleSection>
 
             {/* Subscription Settings Section */}
-            <div className="border-t border-gray-200 dark:border-slate-700 pt-6">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            <CollapsibleSection
+              title="Subscription display"
+              icon={
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                Subscription display
-              </h3>
-
+              }
+              sectionKey="subscription"
+              expandedSections={expandedSections}
+              onToggle={toggleSection}
+            >
               {/* View Variation */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -556,17 +643,20 @@ export function SettingsPanel({ isOpen, onClose, settings, onSettingsChange, sub
                   )}
                 </div>
               )}
-            </div>
+            </CollapsibleSection>
 
             {/* Display Settings Section */}
-            <div className="border-t border-gray-200 dark:border-slate-700 pt-6">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            <CollapsibleSection
+              title="Display settings"
+              icon={
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
                 </svg>
-                Display settings
-              </h3>
-
+              }
+              sectionKey="display"
+              expandedSections={expandedSections}
+              onToggle={toggleSection}
+            >
               {/* Transaction Page Size */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -641,39 +731,42 @@ export function SettingsPanel({ isOpen, onClose, settings, onSettingsChange, sub
                   How dates are displayed throughout the app
                 </p>
               </div>
-            </div>
 
-            {/* Month Start Day */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Month start day
-              </label>
-              <select
-                value={localSettings.monthStartDay}
-                onChange={(e) => setLocalSettings({ ...localSettings, monthStartDay: parseInt(e.target.value) })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              >
-                {Array.from({ length: 28 }, (_, i) => i + 1).map((day) => (
-                  <option key={day} value={day}>
-                    {day === 1 ? '1st (Default)' : day === 25 ? '25th (Swedish salary)' : `${day}${getOrdinalSuffix(day)}`}
-                  </option>
-                ))}
-              </select>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                When calculating monthly periods, start from this day instead of the 1st.
-                Useful if your salary arrives on a specific date.
-              </p>
-            </div>
+              {/* Month Start Day */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Month start day
+                </label>
+                <select
+                  value={localSettings.monthStartDay}
+                  onChange={(e) => setLocalSettings({ ...localSettings, monthStartDay: parseInt(e.target.value) })}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                >
+                  {Array.from({ length: 28 }, (_, i) => i + 1).map((day) => (
+                    <option key={day} value={day}>
+                      {day === 1 ? '1st (Default)' : day === 25 ? '25th (Swedish salary)' : `${day}${getOrdinalSuffix(day)}`}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  When calculating monthly periods, start from this day instead of the 1st.
+                  Useful if your salary arrives on a specific date.
+                </p>
+              </div>
+            </CollapsibleSection>
 
             {/* Categorization Settings Section */}
-            <div className="border-t border-gray-200 dark:border-slate-700 pt-6">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            <CollapsibleSection
+              title="Categorization"
+              icon={
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                 </svg>
-                Categorization
-              </h3>
-
+              }
+              sectionKey="categorization"
+              expandedSections={expandedSections}
+              onToggle={toggleSection}
+            >
               {/* Enable Custom Mapping Rules Toggle */}
               <div className="mb-4">
                 <label className="flex items-center justify-between cursor-pointer">
@@ -793,17 +886,20 @@ export function SettingsPanel({ isOpen, onClose, settings, onSettingsChange, sub
                   </button>
                 </label>
               </div>
-            </div>
+            </CollapsibleSection>
 
             {/* AI Insights Section */}
-            <div className="border-t border-gray-200 dark:border-slate-700 pt-6">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            <CollapsibleSection
+              title="AI insights (beta)"
+              icon={
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                 </svg>
-                AI insights (beta)
-              </h3>
-
+              }
+              sectionKey="ai"
+              expandedSections={expandedSections}
+              onToggle={toggleSection}
+            >
               {/* AI Provider */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -911,17 +1007,109 @@ export function SettingsPanel({ isOpen, onClose, settings, onSettingsChange, sub
                   </p>
                 </div>
               )}
-            </div>
+            </CollapsibleSection>
+
+            {/* Accessibility Section */}
+            <CollapsibleSection
+              title="Accessibility"
+              icon={
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+              }
+              sectionKey="accessibility"
+              expandedSections={expandedSections}
+              onToggle={toggleSection}
+            >
+              {/* Reduce Motion Toggle */}
+              <div className="mb-4">
+                <label className="flex items-center justify-between cursor-pointer">
+                  <div>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Reduce motion
+                    </span>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                      Minimize animations and transitions throughout the app
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={localSettings.reduceMotion}
+                    onClick={() => setLocalSettings({ ...localSettings, reduceMotion: !localSettings.reduceMotion })}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      localSettings.reduceMotion ? 'bg-primary-600' : 'bg-gray-200 dark:bg-slate-600'
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                        localSettings.reduceMotion ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </label>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-2 flex items-center gap-1">
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  The app also respects your system's "prefers-reduced-motion" setting
+                </p>
+              </div>
+
+              {/* High Contrast Toggle */}
+              <div className="mb-4">
+                <label className="flex items-center justify-between cursor-pointer">
+                  <div>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      High contrast
+                    </span>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                      Increase color contrast and border visibility
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={localSettings.highContrast}
+                    onClick={() => setLocalSettings({ ...localSettings, highContrast: !localSettings.highContrast })}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      localSettings.highContrast ? 'bg-primary-600' : 'bg-gray-200 dark:bg-slate-600'
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                        localSettings.highContrast ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </label>
+              </div>
+
+              {/* Keyboard Navigation Info */}
+              <div className="p-3 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700">
+                <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Keyboard navigation
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Use <kbd className="px-1.5 py-0.5 bg-gray-200 dark:bg-slate-700 rounded text-[10px] font-mono">Tab</kbd> to navigate between elements.
+                  Focus indicators are always visible when using keyboard navigation.
+                </p>
+              </div>
+            </CollapsibleSection>
 
             {/* Help & Support Section */}
-            <div className="border-t border-gray-200 dark:border-slate-700 pt-6">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            <CollapsibleSection
+              title="Help & support"
+              icon={
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                Help & support
-              </h3>
-
+              }
+              sectionKey="help"
+              expandedSections={expandedSections}
+              onToggle={toggleSection}
+            >
               {/* Restart Onboarding Tour */}
               {onResetOnboarding && (
                 <button
@@ -947,7 +1135,148 @@ export function SettingsPanel({ isOpen, onClose, settings, onSettingsChange, sub
                   </div>
                 </button>
               )}
-            </div>
+            </CollapsibleSection>
+
+            {/* Developer Experience Section */}
+            <CollapsibleSection
+              title="Developer tools"
+              icon={
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                </svg>
+              }
+              sectionKey="developer"
+              expandedSections={expandedSections}
+              onToggle={toggleSection}
+            >
+              {/* Debug Mode Toggle */}
+              <div className="mb-4">
+                <label className="flex items-center justify-between cursor-pointer">
+                  <div>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Debug mode
+                    </span>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                      Show transaction IDs and raw data for troubleshooting
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={localSettings.debugMode}
+                    onClick={() => setLocalSettings({ ...localSettings, debugMode: !localSettings.debugMode })}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      localSettings.debugMode ? 'bg-primary-600' : 'bg-gray-200 dark:bg-slate-600'
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                        localSettings.debugMode ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </label>
+              </div>
+
+              {/* Debug mode feature toggles - only show when debug mode is enabled */}
+              {localSettings.debugMode && (
+                <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+                  <p className="text-xs font-medium text-amber-800 dark:text-amber-300 mb-2 flex items-center gap-1.5">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Debug mode enabled
+                  </p>
+                  <ul className="text-xs text-amber-700 dark:text-amber-400 space-y-1">
+                    <li>• Transaction IDs visible in list</li>
+                    <li>• Raw data shown in transaction details</li>
+                    <li>• Console logging enabled</li>
+                  </ul>
+                </div>
+              )}
+
+              {/* Clear All Data */}
+              <div className="mb-4">
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Clear all data
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                  Remove all transactions, settings, and cached data. This action cannot be undone.
+                </p>
+
+                {!showClearAllConfirm ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowClearAllConfirm(true)}
+                    disabled={transactionCount === 0 && subscriptionCount === 0}
+                    className="w-full p-3 rounded-lg border-2 border-danger-200 dark:border-danger-800 hover:border-danger-300 dark:hover:border-danger-700 hover:bg-danger-50 dark:hover:bg-danger-900/20 text-left transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <div className="flex items-center gap-3">
+                      <svg className="w-5 h-5 text-danger-600 dark:text-danger-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      <div>
+                        <p className="text-sm font-medium text-danger-700 dark:text-danger-300">
+                          Clear all data
+                        </p>
+                        <p className="text-xs text-gray-400 dark:text-gray-500">
+                          {transactionCount > 0 || subscriptionCount > 0
+                            ? `${transactionCount} transactions, ${subscriptionCount} subscriptions`
+                            : 'No data to clear'}
+                        </p>
+                      </div>
+                    </div>
+                  </button>
+                ) : (
+                  <div className="p-3 bg-danger-50 dark:bg-danger-900/30 rounded-lg border border-danger-200 dark:border-danger-800">
+                    <p className="text-sm font-medium text-danger-700 dark:text-danger-300 mb-2">
+                      Are you sure? This will delete:
+                    </p>
+                    <ul className="text-xs text-danger-600 dark:text-danger-400 mb-3 space-y-0.5">
+                      <li>• All {transactionCount} transactions</li>
+                      <li>• All {subscriptionCount} detected subscriptions</li>
+                      <li>• Custom category mappings</li>
+                      <li>• App settings (will reset to defaults)</li>
+                    </ul>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (onClearAllData) {
+                            onClearAllData();
+                            setShowClearAllConfirm(false);
+                            onClose();
+                          }
+                        }}
+                        className="flex-1 px-3 py-2 text-sm font-medium text-white bg-danger-600 hover:bg-danger-700 rounded-lg transition-colors"
+                      >
+                        Yes, clear everything
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowClearAllConfirm(false)}
+                        className="flex-1 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-slate-700 hover:bg-gray-50 dark:hover:bg-slate-600 border border-gray-300 dark:border-slate-600 rounded-lg transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* App Info */}
+              <div className="p-3 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700">
+                <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  App information
+                </p>
+                <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
+                  <p>Version: 1.0.0</p>
+                  <p>Transactions: {transactionCount}</p>
+                  <p>Subscriptions: {subscriptionCount}</p>
+                  <p>Custom rules: {customMappingRulesCount}</p>
+                </div>
+              </div>
+            </CollapsibleSection>
           </div>
 
           {/* Footer */}

@@ -2,7 +2,7 @@ import { useState, useEffect, useTransition, useMemo, useCallback, useRef } from
 import './index.css'
 import { defaultCategories } from './data/categories'
 import { defaultCategoryMappings } from './data/category-mappings'
-import { FileUpload, TransactionList, FilterPanel, defaultFilters, ProjectRoadmap, TimePeriodSelector, SpendingVisualization, SettingsPanel, loadSettings, TransactionEditModal, UncategorizedCarousel, CsvConfirmationDialog, ExportDialog, SubscriptionConfirmationDialog, SubscriptionPanel, SubscriptionCard, SubscriptionEditModal, ErrorBoundary, LoadingOverlay, TopMerchants, MappingRulesModal, AddMappingRuleModal, BulkCategoryModal, SuspiciousTransactionsDialog, OnboardingModal } from './components'
+import { FileUpload, TransactionList, FilterPanel, defaultFilters, ProjectRoadmap, TimePeriodSelector, SpendingVisualization, SettingsPanel, loadSettings, TransactionEditModal, UncategorizedCarousel, CsvConfirmationDialog, ExportDialog, SubscriptionConfirmationDialog, SubscriptionPanel, SubscriptionCard, SubscriptionEditModal, ErrorBoundary, LoadingOverlay, TopMerchants, MappingRulesModal, AddMappingRuleModal, BulkCategoryModal, SuspiciousTransactionsDialog, OnboardingModal, DebugPanel } from './components'
 import { SectionErrorBoundary } from './components/SectionErrorBoundary'
 import { AddSubcategoryModal } from './components/AddSubcategoryModal'
 import { CategorySystemModal } from './components/CategorySystemModal'
@@ -53,6 +53,7 @@ function App() {
   const [customMappingsVersion, setCustomMappingsVersion] = useState(0)
   const [showBulkCategoryModal, setShowBulkCategoryModal] = useState(false)
   const [showSuspiciousDialog, setShowSuspiciousDialog] = useState(false)
+  const [showDebugPanel, setShowDebugPanel] = useState(false)
   const [bulkSelectedIds, setBulkSelectedIds] = useState<Set<string>>(new Set())
   const [suspiciousTransactions, setSuspiciousTransactions] = useState<SuspiciousTransaction[]>([])
   const [pendingFileContent, setPendingFileContent] = useState<string | null>(null)
@@ -153,6 +154,23 @@ function App() {
   useEffect(() => {
     setMode(appSettings.theme)
   }, [appSettings.theme, setMode])
+
+  // Apply accessibility settings to HTML element
+  useEffect(() => {
+    const html = document.documentElement
+    // Reduce motion
+    if (appSettings.reduceMotion) {
+      html.classList.add('reduce-motion')
+    } else {
+      html.classList.remove('reduce-motion')
+    }
+    // High contrast
+    if (appSettings.highContrast) {
+      html.classList.add('high-contrast')
+    } else {
+      html.classList.remove('high-contrast')
+    }
+  }, [appSettings.reduceMotion, appSettings.highContrast])
 
   // Load saved transactions on mount
   useEffect(() => {
@@ -381,6 +399,82 @@ function App() {
       badges: t.badges.filter(b => b.type !== 'subscription' && b.type !== 'recurring_expense')
     })))
     toast.info('All recurring expenses have been cleared')
+  }
+
+  const handleClearAllData = () => {
+    // Clear transactions
+    setTransactions([])
+    clearTransactions()
+
+    // Clear subscriptions
+    setSubscriptions([])
+    saveSubscriptions([])
+
+    // Clear custom mapping rules
+    localStorage.removeItem('custom_mapping_rules')
+    setCustomMappingsVersion(v => v + 1)
+
+    // Clear custom subcategories
+    localStorage.removeItem('custom_subcategories')
+    setCustomSubcategoriesVersion(v => v + 1)
+
+    // Reset settings to defaults
+    const defaultSettings = loadSettings()
+    setAppSettings({ ...defaultSettings, debugMode: false, reduceMotion: false, highContrast: false })
+
+    // Clear other state
+    setFileName(null)
+    setIsDemoMode(false)
+    setLastUpdated(null)
+    setSelectedPeriod(null)
+    setBulkSelectedIds(new Set())
+
+    // Reset onboarding
+    resetOnboarding()
+
+    toast.success('All data has been cleared')
+  }
+
+  // Debug panel handlers for selective reset
+  const handleClearTransactionsOnly = () => {
+    setTransactions([])
+    clearTransactions()
+    setFileName(null)
+    setIsDemoMode(false)
+    setLastUpdated(null)
+    setSelectedPeriod(null)
+    setBulkSelectedIds(new Set())
+    toast.info('Transactions cleared')
+  }
+
+  const handleClearSubscriptionsOnly = () => {
+    setSubscriptions([])
+    saveSubscriptions([])
+    // Also clear isSubscription flag from transactions
+    setTransactions(prev => prev.map(t => ({
+      ...t,
+      isSubscription: false,
+      badges: t.badges.filter(b => b.type !== 'subscription' && b.type !== 'recurring_expense')
+    })))
+    toast.info('Subscriptions cleared')
+  }
+
+  const handleResetSettingsOnly = () => {
+    const defaultSettings = loadSettings()
+    setAppSettings({ ...defaultSettings })
+    localStorage.removeItem('app_settings')
+    toast.info('Settings reset to defaults')
+  }
+
+  // Force error for testing error boundaries
+  const [forceError, setForceError] = useState(false)
+  const handleForceError = () => {
+    setForceError(true)
+  }
+
+  // If forceError is triggered, throw to test error boundary
+  if (forceError) {
+    throw new Error('Forced error for testing error boundaries')
   }
 
   const handleEditSubscription = (subscription: Subscription) => {
@@ -630,6 +724,31 @@ function App() {
       .reduce((sum, t) => sum + t.amount, 0)
     return { totalExpenses: expenses, totalIncome: income }
   }, [transactions, selectedPeriod, periodStats.totalExpenses, periodStats.totalIncome])
+
+  // Calculate largest expense and income transaction IDs for badges
+  const { largestExpenseId, largestIncomeId } = useMemo(() => {
+    let largestExpense: { id: string; amount: number } | null = null
+    let largestIncome: { id: string; amount: number } | null = null
+
+    for (const t of filteredTransactions) {
+      if (t.amount < 0) {
+        // Expense (negative amount) - find largest absolute value
+        if (!largestExpense || Math.abs(t.amount) > Math.abs(largestExpense.amount)) {
+          largestExpense = { id: t.id, amount: t.amount }
+        }
+      } else if (t.amount > 0) {
+        // Income (positive amount) - find largest value
+        if (!largestIncome || t.amount > largestIncome.amount) {
+          largestIncome = { id: t.id, amount: t.amount }
+        }
+      }
+    }
+
+    return {
+      largestExpenseId: largestExpense?.id ?? null,
+      largestIncomeId: largestIncome?.id ?? null,
+    }
+  }, [filteredTransactions])
 
   // Route rendering
   const renderPage = () => {
@@ -1054,6 +1173,10 @@ function App() {
                   onSelectionChange={setBulkSelectedIds}
                   onBulkCategorize={() => setShowBulkCategoryModal(true)}
                   lastUpdated={lastUpdated}
+                  onCategoryChange={handleCategoryChange}
+                  largestExpenseId={largestExpenseId}
+                  largestIncomeId={largestIncomeId}
+                  debugMode={appSettings.debugMode}
                 />
               </SectionErrorBoundary>
             </div>
@@ -1254,6 +1377,8 @@ function App() {
         }}
         onResetOnboarding={resetOnboarding}
         hasCompletedOnboarding={hasCompletedOnboarding}
+        onClearAllData={handleClearAllData}
+        transactionCount={transactions.length}
       />
 
       {/* Transaction Edit Modal */}
@@ -1419,6 +1544,32 @@ function App() {
         onComplete={completeOnboarding}
         onSkip={skipOnboarding}
       />
+
+      {/* Debug Panel - only shown when debug mode is enabled */}
+      {appSettings.debugMode && (
+        <DebugPanel
+          isOpen={showDebugPanel}
+          onClose={() => setShowDebugPanel(false)}
+          transactions={transactions}
+          onClearTransactions={handleClearTransactionsOnly}
+          onClearSubscriptions={handleClearSubscriptionsOnly}
+          onClearSettings={handleResetSettingsOnly}
+          onForceError={handleForceError}
+        />
+      )}
+
+      {/* Debug Mode Floating Button - only shown when debug mode is enabled */}
+      {appSettings.debugMode && !showDebugPanel && (
+        <button
+          onClick={() => setShowDebugPanel(true)}
+          className="fixed bottom-4 right-4 z-30 p-3 bg-amber-500 hover:bg-amber-600 text-white rounded-full shadow-lg transition-all hover:scale-105"
+          title="Open Debug Panel"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+          </svg>
+        </button>
+      )}
 
       {/* Loading Overlay */}
       <LoadingOverlay

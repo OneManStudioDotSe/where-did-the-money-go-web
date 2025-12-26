@@ -25,6 +25,7 @@ export { AddMappingRuleModal } from './AddMappingRuleModal';
 export { BulkCategoryModal } from './BulkCategoryModal';
 export { SuspiciousTransactionsDialog } from './SuspiciousTransactionsDialog';
 export { OnboardingModal } from './OnboardingModal';
+export { DebugPanel, trackRender, trackMetric, setVerboseLogging, isVerboseLogging } from './DebugPanel';
 export type { TimePeriod } from './TimePeriodSelector';
 export type { AppSettings, SubscriptionViewVariation, SubscriptionPlacement } from './SettingsPanel';
 

@@ -77,6 +77,89 @@ body {
   font-family: 'DM Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
+/* ============================================
+   ACCESSIBILITY: Focus visible indicators
+   ============================================ */
+
+/* Remove default focus outline, we'll add our own */
+*:focus {
+  outline: none;
+}
+
+/* Focus-visible styles for keyboard navigation
+   This only shows focus ring when navigating with keyboard */
+*:focus-visible {
+  outline: 2px solid var(--color-primary-500);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Specific focus styles for buttons */
+button:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid var(--color-primary-500);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.2);
+}
+
+/* Focus styles for inputs */
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--color-primary-500);
+  outline-offset: 0;
+  border-color: var(--color-primary-500);
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.15);
+}
+
+/* Focus styles for checkboxes and radios */
+input[type="checkbox"]:focus-visible,
+input[type="radio"]:focus-visible {
+  outline: 2px solid var(--color-primary-500);
+  outline-offset: 2px;
+}
+
+/* Focus styles for links */
+a:focus-visible {
+  outline: 2px solid var(--color-primary-500);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Skip link for keyboard navigation */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-primary-600);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0 0 0.5rem 0.5rem;
+  z-index: 9999;
+  transition: top 0.2s ease;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+/* Dark mode focus adjustments */
+html.dark *:focus-visible {
+  outline-color: var(--color-primary-400);
+}
+
+html.dark button:focus-visible,
+html.dark [role="button"]:focus-visible {
+  box-shadow: 0 0 0 4px rgba(45, 212, 191, 0.25);
+}
+
+html.dark input:focus-visible,
+html.dark select:focus-visible,
+html.dark textarea:focus-visible {
+  box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.2);
+}
+
 /* Monospace font for numbers and code */
 .font-mono {
   font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
@@ -365,4 +448,172 @@ html.dark .animate-shimmer {
 
 .animate-rotate.rotated {
   transform: rotate(180deg);
+}
+
+/* ============================================
+   ACCESSIBILITY: Reduced motion preference
+   ============================================ */
+
+/* Respect user's system preference for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Disable all custom animations */
+  .animate-bar-grow,
+  .animate-fade-in,
+  .animate-slide-up,
+  .animate-card-hover,
+  .animate-press,
+  .animate-shimmer,
+  .animate-stagger,
+  .animate-tab-content,
+  .animate-scale-in,
+  .animate-bounce-hover,
+  .animate-spin-hover,
+  .animate-pulse-subtle,
+  .animate-count-up,
+  .animate-highlight,
+  .animate-progress,
+  .animate-check,
+  .animate-slide-down,
+  .animate-slide-in-right,
+  .animate-rotate {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  /* Keep essential transforms but remove animations */
+  .animate-card-hover:hover,
+  .animate-bounce-hover:hover,
+  .animate-spin-hover:hover {
+    transform: none !important;
+  }
+}
+
+/* Also support a class-based reduced motion toggle (for user preference in settings) */
+html.reduce-motion *,
+html.reduce-motion *::before,
+html.reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+html.reduce-motion .animate-bar-grow,
+html.reduce-motion .animate-fade-in,
+html.reduce-motion .animate-slide-up,
+html.reduce-motion .animate-card-hover,
+html.reduce-motion .animate-press,
+html.reduce-motion .animate-shimmer,
+html.reduce-motion .animate-stagger,
+html.reduce-motion .animate-tab-content,
+html.reduce-motion .animate-scale-in,
+html.reduce-motion .animate-bounce-hover,
+html.reduce-motion .animate-spin-hover,
+html.reduce-motion .animate-pulse-subtle,
+html.reduce-motion .animate-count-up,
+html.reduce-motion .animate-highlight,
+html.reduce-motion .animate-progress,
+html.reduce-motion .animate-check,
+html.reduce-motion .animate-slide-down,
+html.reduce-motion .animate-slide-in-right,
+html.reduce-motion .animate-rotate {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* ============================================
+   ACCESSIBILITY: High contrast mode
+   ============================================ */
+
+/* High contrast mode - activated via class on html element */
+html.high-contrast {
+  /* Increase text contrast */
+  --color-gray-500: #4b5563;
+  --color-gray-600: #374151;
+
+  /* Stronger borders */
+  --border-contrast: 2px;
+}
+
+html.high-contrast body {
+  font-weight: 500;
+}
+
+html.high-contrast * {
+  /* Force solid borders instead of transparent */
+  border-color: currentColor !important;
+}
+
+/* High contrast button styles */
+html.high-contrast button,
+html.high-contrast [role="button"] {
+  border: 2px solid currentColor !important;
+  font-weight: 600;
+}
+
+/* High contrast input styles */
+html.high-contrast input,
+html.high-contrast select,
+html.high-contrast textarea {
+  border: 2px solid #374151 !important;
+}
+
+html.high-contrast.dark input,
+html.high-contrast.dark select,
+html.high-contrast.dark textarea {
+  border: 2px solid #d1d5db !important;
+}
+
+/* High contrast focus indicators */
+html.high-contrast *:focus-visible {
+  outline: 3px solid #000 !important;
+  outline-offset: 2px;
+}
+
+html.high-contrast.dark *:focus-visible {
+  outline: 3px solid #fff !important;
+}
+
+/* High contrast links */
+html.high-contrast a {
+  text-decoration: underline !important;
+  text-underline-offset: 2px;
+}
+
+/* High contrast badges and tags */
+html.high-contrast .rounded-full,
+html.high-contrast .rounded-lg,
+html.high-contrast .rounded-md {
+  border: 1px solid currentColor;
+}
+
+/* High contrast cards and panels */
+html.high-contrast .bg-white,
+html.high-contrast .bg-gray-50 {
+  border: 2px solid #374151 !important;
+}
+
+html.high-contrast.dark .bg-slate-800,
+html.high-contrast.dark .bg-slate-900 {
+  border: 2px solid #9ca3af !important;
+}
+
+/* High contrast text in light mode - ensure minimum contrast */
+html.high-contrast .text-gray-400,
+html.high-contrast .text-gray-500 {
+  color: #374151 !important;
+}
+
+/* High contrast text in dark mode */
+html.high-contrast.dark .text-gray-400,
+html.high-contrast.dark .text-gray-500 {
+  color: #d1d5db !important;
 }

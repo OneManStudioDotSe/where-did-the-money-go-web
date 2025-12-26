@@ -1,7 +1,7 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import type { Transaction, TransactionSortField, SortDirection } from '../types/transaction';
-import { getCategoryName, getSubcategoryName, getCategoryColor, getCategoryIcon } from '../utils/category-service';
-import { TransactionBadges } from './ui/Badge';
+import { getCategoryName, getSubcategoryName, getCategoryColor, getCategoryIcon, getAllCategoriesWithCustomSubcategories } from '../utils/category-service';
+import { TransactionBadges, Badge } from './ui/Badge';
 import { toTitleCase } from '../utils/text-utils';
 import { TransactionsEmptyState } from './ui/EmptyState';
 
@@ -45,6 +45,28 @@ interface TransactionListProps {
    * Timestamp when the data was last updated/saved.
    */
   lastUpdated?: string | null;
+  /**
+   * Callback fired when a transaction's category is changed via inline editing.
+   * @param transactionId - The ID of the transaction to update
+   * @param categoryId - The new category ID
+   * @param subcategoryId - The new subcategory ID
+   */
+  onCategoryChange?: (transactionId: string, categoryId: string, subcategoryId: string) => void;
+  /**
+   * ID of the largest expense transaction in the current view.
+   * Used to show the "Largest" badge.
+   */
+  largestExpenseId?: string | null;
+  /**
+   * ID of the largest income transaction in the current view.
+   * Used to show the "Largest" badge.
+   */
+  largestIncomeId?: string | null;
+  /**
+   * Whether debug mode is enabled.
+   * When true, shows transaction IDs and additional debug info.
+   */
+  debugMode?: boolean;
 }
 
 interface SortState {
@@ -119,6 +141,185 @@ function InfoTooltip({ content }: { content: string }) {
   );
 }
 
+/** Hover preview tooltip for transaction rows */
+function HoverPreviewTooltip({
+  description,
+  categoryName,
+  subcategoryName,
+  amount,
+  date
+}: {
+  description: string;
+  categoryName: string | undefined;
+  subcategoryName: string | undefined;
+  amount: number;
+  date: Date;
+}) {
+  return (
+    <div className="absolute z-50 left-0 bottom-full mb-2 px-3 py-2 bg-gray-900 dark:bg-slate-700 rounded-lg shadow-lg pointer-events-none opacity-0 group-hover/row:opacity-100 transition-opacity duration-200 max-w-sm">
+      <div className="text-xs text-white space-y-1">
+        <p className="font-medium truncate" title={description}>{toTitleCase(description)}</p>
+        <div className="flex items-center gap-2 text-gray-300">
+          <span>{formatDate(date)}</span>
+          <span>•</span>
+          <span className={amount >= 0 ? 'text-green-400' : 'text-white'}>{formatAmount(amount)}</span>
+        </div>
+        <p className="text-gray-400">
+          {categoryName || 'Uncategorized'}
+          {subcategoryName && ` › ${subcategoryName}`}
+        </p>
+      </div>
+      <div className="absolute top-full left-4 -mt-1">
+        <div className="border-4 border-transparent border-t-gray-900 dark:border-t-slate-700" />
+      </div>
+    </div>
+  );
+}
+
+/** Inline category dropdown for double-click editing */
+function InlineCategoryDropdown({
+  transactionId,
+  currentCategoryId,
+  currentSubcategoryId,
+  onSelect,
+  onClose,
+}: {
+  transactionId: string;
+  currentCategoryId: string | null;
+  currentSubcategoryId: string | null;
+  onSelect: (transactionId: string, categoryId: string, subcategoryId: string) => void;
+  onClose: () => void;
+}) {
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(currentCategoryId);
+  const allCategories = useMemo(() => getAllCategoriesWithCustomSubcategories(), []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        onClose();
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [onClose]);
+
+  // Close on escape key
+  useEffect(() => {
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    }
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [onClose]);
+
+  const filteredCategories = useMemo(() => {
+    if (!searchQuery.trim()) return allCategories;
+    const query = searchQuery.toLowerCase();
+    return allCategories
+      .map((category) => {
+        const categoryMatches = category.name.toLowerCase().includes(query);
+        const matchingSubcategories = category.subcategories.filter((sub) =>
+          sub.name.toLowerCase().includes(query)
+        );
+        if (categoryMatches) return category;
+        if (matchingSubcategories.length > 0) {
+          return { ...category, subcategories: matchingSubcategories };
+        }
+        return null;
+      })
+      .filter((c) => c !== null);
+  }, [searchQuery, allCategories]);
+
+  const handleSubcategorySelect = (categoryId: string, subcategoryId: string) => {
+    onSelect(transactionId, categoryId, subcategoryId);
+    onClose();
+  };
+
+  return (
+    <div
+      ref={dropdownRef}
+      className="absolute z-50 top-full left-0 mt-1 w-72 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-gray-200 dark:border-slate-600 animate-scale-in"
+      onClick={(e) => e.stopPropagation()}
+    >
+      {/* Search */}
+      <div className="p-2 border-b border-gray-200 dark:border-slate-700">
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search categories..."
+          className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          autoFocus
+        />
+      </div>
+
+      {/* Category List */}
+      <div className="max-h-64 overflow-y-auto p-1">
+        {filteredCategories.map((category) => {
+          if (!category) return null;
+          const isExpanded = expandedCategory === category.id || searchQuery.trim() !== '';
+          const isSelectedCategory = currentCategoryId === category.id;
+
+          return (
+            <div key={category.id} className="mb-1">
+              <button
+                onClick={() => setExpandedCategory(expandedCategory === category.id ? null : category.id)}
+                className={`w-full flex items-center gap-2 px-2 py-1.5 text-left rounded-md transition-colors ${
+                  isSelectedCategory ? 'bg-primary-50 dark:bg-primary-900/30' : 'hover:bg-gray-100 dark:hover:bg-slate-700'
+                }`}
+              >
+                <span
+                  className="w-6 h-6 rounded flex items-center justify-center text-sm flex-shrink-0"
+                  style={{ backgroundColor: `${category.color}20` }}
+                >
+                  {category.icon}
+                </span>
+                <span className="flex-1 text-sm font-medium text-gray-900 dark:text-white truncate">
+                  {category.name}
+                </span>
+                <svg
+                  className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {isExpanded && (
+                <div className="ml-8 mt-1 space-y-0.5">
+                  {category.subcategories.map((sub) => {
+                    const isSelected = currentCategoryId === category.id && currentSubcategoryId === sub.id;
+                    return (
+                      <button
+                        key={sub.id}
+                        onClick={() => handleSubcategorySelect(category.id, sub.id)}
+                        className={`w-full px-2 py-1 text-left text-sm rounded transition-colors ${
+                          isSelected
+                            ? 'bg-primary-600 text-white'
+                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700'
+                        }`}
+                      >
+                        {sub.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 const DEFAULT_PAGE_SIZE = 100;
 
 /**
@@ -160,11 +361,16 @@ export function TransactionList({
   onSelectionChange,
   onBulkCategorize,
   lastUpdated,
+  onCategoryChange,
+  largestExpenseId,
+  largestIncomeId,
+  debugMode = false,
 }: TransactionListProps) {
   const [sort, setSort] = useState<SortState>({ field: 'date', direction: 'desc' });
   const [isCondensed, setIsCondensed] = useState(false);
   const [isSorting, setIsSorting] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
+  const [editingTransactionId, setEditingTransactionId] = useState<string | null>(null);
 
   // Pre-compute category names cache to avoid repeated lookups during sort
   const categoryNameCache = useMemo(() => {
@@ -392,8 +598,8 @@ export function TransactionList({
         </div>
       </div>
 
-      {/* Header */}
-      <div className={`grid ${bulkEditEnabled ? 'grid-cols-13' : 'grid-cols-12'} gap-4 px-4 py-3 bg-gray-50 dark:bg-slate-800/50 border-b border-gray-200 dark:border-slate-700 text-sm font-medium text-gray-600 dark:text-gray-400`}>
+      {/* Header - Sticky */}
+      <div className={`grid ${bulkEditEnabled ? 'grid-cols-13' : 'grid-cols-12'} gap-4 px-4 py-3 bg-gray-50 dark:bg-slate-800/50 border-b border-gray-200 dark:border-slate-700 text-sm font-medium text-gray-600 dark:text-gray-400 sticky top-0 z-10`}>
         {bulkEditEnabled && (
           <div className="col-span-1 flex items-center">
             {/* Header checkbox space */}
@@ -476,10 +682,18 @@ export function TransactionList({
                   <span className="text-sm text-gray-900 dark:text-white truncate">
                     {toTitleCase(transaction.description)}
                   </span>
-                  <TransactionBadges
-                    transaction={transaction}
-                    showLabels={false}
-                  />
+                  <div className="flex items-center gap-1">
+                    {transaction.id === largestExpenseId && (
+                      <Badge type="largest-expense" showLabel={false} />
+                    )}
+                    {transaction.id === largestIncomeId && (
+                      <Badge type="largest-income" showLabel={false} />
+                    )}
+                    <TransactionBadges
+                      transaction={transaction}
+                      showLabels={false}
+                    />
+                  </div>
                 </div>
 
                 {/* Category */}
@@ -512,18 +726,43 @@ export function TransactionList({
                 <div className="col-span-1 flex justify-end">
                   <InfoTooltip content={tooltipContent} />
                 </div>
+
+                {/* Debug Info Row (condensed) */}
+                {debugMode && (
+                  <div className="col-span-full mt-1 pl-2 border-l-2 border-gray-200 dark:border-slate-600">
+                    <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] font-mono text-gray-400 dark:text-gray-500">
+                      <span>id: {transaction.id}</span>
+                      <span>cat: {transaction.categoryId || 'null'}</span>
+                      <span>sub: {transaction.subcategoryId || 'null'}</span>
+                      {transaction.badges.length > 0 && (
+                        <span>badges: [{transaction.badges.map(b => b.type).join(', ')}]</span>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             );
           }
+
+          const isEditing = editingTransactionId === transaction.id;
 
           return (
             <div
               key={transaction.id}
               onClick={() => bulkEditEnabled ? handleToggleSelect(transaction.id) : onTransactionClick?.(transaction)}
-              className={`grid ${bulkEditEnabled ? 'grid-cols-13' : 'grid-cols-12'} gap-2 px-4 py-3 items-center hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors animate-bounce-hover ${
+              className={`group/row relative grid ${bulkEditEnabled ? 'grid-cols-13' : 'grid-cols-12'} gap-2 px-4 py-3 items-center hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors animate-bounce-hover ${
                 onTransactionClick || bulkEditEnabled ? 'cursor-pointer' : ''
               } ${isSelected ? 'bg-primary-50 dark:bg-primary-900/20' : ''}`}
             >
+              {/* Hover Preview Tooltip */}
+              <HoverPreviewTooltip
+                description={transaction.description}
+                categoryName={categoryName}
+                subcategoryName={subcategoryName}
+                amount={transaction.amount}
+                date={transaction.date}
+              />
+
               {/* Checkbox */}
               {bulkEditEnabled && (
                 <div className="col-span-1 flex items-center">
@@ -548,17 +787,33 @@ export function TransactionList({
                   {toTitleCase(transaction.description)}
                 </p>
                 {/* Badges */}
-                <TransactionBadges
-                  transaction={transaction}
-                  showLabels={false}
-                  className="mt-1"
-                />
+                <div className="flex items-center gap-1 mt-1">
+                  {transaction.id === largestExpenseId && (
+                    <Badge type="largest-expense" showLabel={false} />
+                  )}
+                  {transaction.id === largestIncomeId && (
+                    <Badge type="largest-income" showLabel={false} />
+                  )}
+                  <TransactionBadges
+                    transaction={transaction}
+                    showLabels={false}
+                  />
+                </div>
               </div>
 
-              {/* Category */}
-              <div className="col-span-3">
+              {/* Category - Double-click to edit */}
+              <div
+                className="col-span-3 relative"
+                onDoubleClick={(e) => {
+                  e.stopPropagation();
+                  if (onCategoryChange) {
+                    setEditingTransactionId(transaction.id);
+                  }
+                }}
+                title={onCategoryChange ? 'Double-click to change category' : undefined}
+              >
                 {transaction.categoryId ? (
-                  <div className="flex items-center gap-2">
+                  <div className={`flex items-center gap-2 ${onCategoryChange ? 'hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-md px-1 -mx-1 py-0.5 -my-0.5 cursor-pointer' : ''}`}>
                     <span
                       className="w-6 h-6 rounded flex items-center justify-center text-sm"
                       style={{ backgroundColor: `${categoryColor}20` }}
@@ -573,9 +828,27 @@ export function TransactionList({
                         <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{subcategoryName}</p>
                       )}
                     </div>
+                    {onCategoryChange && (
+                      <svg className="w-3 h-3 text-gray-400 opacity-0 group-hover/row:opacity-100 transition-opacity flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                      </svg>
+                    )}
                   </div>
                 ) : (
-                  <span className="text-sm text-gray-400 dark:text-gray-500 italic">Uncategorized</span>
+                  <span className={`text-sm text-gray-400 dark:text-gray-500 italic ${onCategoryChange ? 'hover:text-primary-600 dark:hover:text-primary-400 cursor-pointer' : ''}`}>
+                    Uncategorized
+                  </span>
+                )}
+
+                {/* Inline Category Dropdown */}
+                {isEditing && onCategoryChange && (
+                  <InlineCategoryDropdown
+                    transactionId={transaction.id}
+                    currentCategoryId={transaction.categoryId}
+                    currentSubcategoryId={transaction.subcategoryId}
+                    onSelect={onCategoryChange}
+                    onClose={() => setEditingTransactionId(null)}
+                  />
                 )}
               </div>
 
@@ -592,6 +865,23 @@ export function TransactionList({
               <div className="col-span-1 flex justify-end">
                 <InfoTooltip content={tooltipContent} />
               </div>
+
+              {/* Debug Info Row (expanded) */}
+              {debugMode && (
+                <div className="col-span-full mt-2 pl-2 border-l-2 border-gray-200 dark:border-slate-600">
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs font-mono text-gray-400 dark:text-gray-500">
+                    <span>id: {transaction.id}</span>
+                    <span>categoryId: {transaction.categoryId || 'null'}</span>
+                    <span>subcategoryId: {transaction.subcategoryId || 'null'}</span>
+                    <span>amount: {transaction.amount}</span>
+                    <span>date: {transaction.date.toISOString()}</span>
+                    {transaction.isSubscription && <span className="text-primary-500">isSubscription: true</span>}
+                    {transaction.badges.length > 0 && (
+                      <span>badges: [{transaction.badges.map(b => b.type).join(', ')}]</span>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           );
         })}

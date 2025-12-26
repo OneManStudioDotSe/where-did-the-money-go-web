@@ -200,9 +200,29 @@ export function FilterPanel({
 
             {/* Date Range Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Date Range
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Date Range
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const today = new Date();
+                    const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+                    onFiltersChange({
+                      ...filters,
+                      dateRange: { start: firstOfMonth, end: today },
+                    });
+                  }}
+                  className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded transition-colors"
+                  title="Set date range to current month"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  This month
+                </button>
+              </div>
               <div className="space-y-2">
                 <div>
                   <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">From</label>

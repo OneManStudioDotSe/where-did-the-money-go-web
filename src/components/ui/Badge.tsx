@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-export type BadgeType = 'uncategorized' | 'subscription' | 'recurring_expense' | 'high-value' | 'suspicious';
+export type BadgeType = 'uncategorized' | 'subscription' | 'recurring_expense' | 'high-value' | 'suspicious' | 'largest-expense' | 'largest-income';
 
 interface BadgeConfig {
   label: string;
@@ -65,6 +65,28 @@ const badgeConfigs: Record<BadgeType, BadgeConfig> = {
     bgColor: 'bg-orange-100 dark:bg-orange-900/30',
     textColor: 'text-orange-700 dark:text-orange-400',
     tooltip: 'Potentially suspicious - duplicate, unusual amount, or pattern anomaly',
+  },
+  'largest-expense': {
+    label: 'Largest',
+    icon: (
+      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
+      </svg>
+    ),
+    bgColor: 'bg-red-100 dark:bg-red-900/30',
+    textColor: 'text-red-700 dark:text-red-400',
+    tooltip: 'Largest expense in the current view',
+  },
+  'largest-income': {
+    label: 'Largest',
+    icon: (
+      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+      </svg>
+    ),
+    bgColor: 'bg-emerald-100 dark:bg-emerald-900/30',
+    textColor: 'text-emerald-700 dark:text-emerald-400',
+    tooltip: 'Largest income in the current view',
   },
 };
 

@@ -78,35 +78,36 @@
 - [x] Add "Last updated" timestamp to transaction list
 - [x] Show transaction count in category breakdown
 - [x] Add "Copy to clipboard" for export data
-- [x] Keyboard shortcuts for common actions (Ctrl+F for search, Ctrl+Shift+S for settings, Ctrl+E for export, Alt+1/2/3 for tabs)
+- [x] Keyboard shortcuts (Ctrl+F for search, +S for settings, +E for export, Alt+1/2/3 for tabs)
 - [x] Remember last used tab (Overview/Transactions/Subscriptions)
-- [x] Change the way you show the settings from being a modal dialog to being a sliding side panel that is locked at the far right side of the screen
+- [x] Change settings from modal dialog to sliding side panel
 
 ---
 
 ## Quick Wins - Round 2
 
-### UI/UX Enhancements
-- [ ] Double-click to edit transaction category - Inline category change without opening a menu
-- [ ] Sticky table headers - Keep column headers visible when scrolling through long lists
-- [ ] Transaction row hover preview - Tooltip with full merchant name and notes for truncated text
-- [ ] "Jump to today" button - Quick navigation to current month in date filters
-- [ ] Collapsible sidebar sections - Let users collapse/expand sections in the settings panel
+### UI/UX Enhancements ✅
+- [x] Double-click to edit transaction category - Inline category change without opening a menu
+- [x] Sticky table headers - Keep column headers visible when scrolling through long lists
+- [x] Transaction row hover preview - Tooltip with full merchant name and notes for truncated text
+- [x] "Jump to today" button - Quick navigation to current month in date filters 
+- [x] Collapsible sidebar sections - Let users collapse/expand sections in the settings panel
 
-### Data & Insights
-- [ ] Daily spending average - Show "You spend ~X kr/day this month" in the overview
-- [ ] Largest transaction badge - Highlight the biggest expense/income in the transaction list
-- [ ] Category percentage change - Show "↑12% vs last month" next to each category in breakdown
-- [ ] Spending streak indicator - "5 days without spending in [category]" gamification element
+### Data & Insights ✅
+- [x] Daily spending average - Show "You spend ~X kr/day this month" in the overview
+- [x] Show a calendar with the total spending for each day
+- [x] Largest transaction badge - Highlight the biggest expense/income in the transaction list
+- [x] Category percentage change - Show "↑12% vs last month" next to each category in breakdown
 
-### Accessibility & Polish
-- [ ] Focus visible indicators - Better keyboard navigation focus styles throughout the app
-- [ ] Reduced motion preference - Respect `prefers-reduced-motion` for users who prefer less animation
-- [ ] High contrast mode - Toggle for users who need stronger color contrast
+### Accessibility & Polish ✅
+- [x] Focus visible indicators - Better keyboard navigation focus styles throughout the app
+- [x] Reduced motion preference - Respect `prefers-reduced-motion` for users who prefer less animation
+- [x] High contrast mode - Toggle for users who need stronger color contrast
 
-### Developer Experience
-- [ ] Clear all data button - One-click reset in settings (with confirmation) for testing or starting fresh
-- [ ] Debug mode toggle - Show raw transaction data and internal IDs for troubleshooting
+### Developer Experience ✅
+- [x] Clear all data button - One-click reset in settings for testing or starting fresh
+- [x] Debug mode toggle - Show raw transaction data and internal IDs for troubleshooting
+- [x] Debug mode toggle - Suggest and add more toggles and controls for features and functionality
 
 ---
 

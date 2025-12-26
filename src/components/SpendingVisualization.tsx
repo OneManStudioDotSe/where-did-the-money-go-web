@@ -11,6 +11,12 @@ interface SpendingVisualizationProps {
   allTransactions: Transaction[]; // For calculating trends/averages
 }
 
+interface DailySpending {
+  date: Date;
+  total: number;
+  count: number;
+}
+
 type ChartType = 'bar' | 'bar-vertical' | 'donut';
 
 interface CategoryTotal {
@@ -557,10 +563,191 @@ function TrendSection({
   );
 }
 
+/** Spending calendar showing daily totals */
+function SpendingCalendar({ transactions }: { transactions: Transaction[] }) {
+  const [currentMonth, setCurrentMonth] = useState(() => {
+    // Start with the most recent transaction month, or current month
+    if (transactions.length > 0) {
+      const sorted = [...transactions].sort((a, b) => b.date.getTime() - a.date.getTime());
+      return new Date(sorted[0].date.getFullYear(), sorted[0].date.getMonth(), 1);
+    }
+    return new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+  });
+
+  // Calculate daily spending for the current month
+  const dailySpending = useMemo(() => {
+    const map = new Map<string, DailySpending>();
+    const expenses = transactions.filter(t => t.amount < 0);
+
+    expenses.forEach(t => {
+      const dateKey = t.date.toISOString().split('T')[0];
+      const existing = map.get(dateKey) || { date: t.date, total: 0, count: 0 };
+      existing.total += Math.abs(t.amount);
+      existing.count += 1;
+      map.set(dateKey, existing);
+    });
+
+    return map;
+  }, [transactions]);
+
+  // Get max spending for color scaling
+  const maxSpending = useMemo(() => {
+    let max = 0;
+    dailySpending.forEach(d => {
+      if (d.total > max) max = d.total;
+    });
+    return max;
+  }, [dailySpending]);
+
+  // Generate calendar days for current month
+  const calendarDays = useMemo(() => {
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startDayOfWeek = firstDay.getDay(); // 0 = Sunday
+
+    // Adjust for Monday start (0 = Monday, 6 = Sunday)
+    const adjustedStartDay = startDayOfWeek === 0 ? 6 : startDayOfWeek - 1;
+
+    const days: (Date | null)[] = [];
+
+    // Add empty slots for days before the first day of month
+    for (let i = 0; i < adjustedStartDay; i++) {
+      days.push(null);
+    }
+
+    // Add days of the month
+    for (let i = 1; i <= daysInMonth; i++) {
+      days.push(new Date(year, month, i));
+    }
+
+    return days;
+  }, [currentMonth]);
+
+  const monthLabel = currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+  const goToPrevMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
+  };
+
+  const goToNextMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
+  };
+
+  const getSpendingIntensity = (amount: number): string => {
+    if (amount === 0 || maxSpending === 0) return 'bg-gray-100 dark:bg-slate-700';
+    const ratio = amount / maxSpending;
+    if (ratio < 0.25) return 'bg-primary-100 dark:bg-primary-900/30';
+    if (ratio < 0.5) return 'bg-primary-200 dark:bg-primary-800/40';
+    if (ratio < 0.75) return 'bg-primary-300 dark:bg-primary-700/50';
+    return 'bg-primary-400 dark:bg-primary-600/60';
+  };
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return (
+    <div>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-3">
+        <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Daily Spending</h4>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={goToPrevMonth}
+            className="p-1 rounded hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+          >
+            <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300 min-w-[120px] text-center">
+            {monthLabel}
+          </span>
+          <button
+            onClick={goToNextMonth}
+            className="p-1 rounded hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+          >
+            <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      {/* Day headers */}
+      <div className="grid grid-cols-7 gap-1 mb-1">
+        {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+          <div key={day} className="text-[10px] text-center text-gray-400 dark:text-gray-500 font-medium py-1">
+            {day}
+          </div>
+        ))}
+      </div>
+
+      {/* Calendar grid */}
+      <div className="grid grid-cols-7 gap-1">
+        {calendarDays.map((day, index) => {
+          if (!day) {
+            return <div key={`empty-${index}`} className="aspect-square" />;
+          }
+
+          const dateKey = day.toISOString().split('T')[0];
+          const spending = dailySpending.get(dateKey);
+          const amount = spending?.total || 0;
+          const isToday = day.getTime() === today.getTime();
+
+          return (
+            <div
+              key={dateKey}
+              className={`aspect-square rounded-md flex flex-col items-center justify-center relative group cursor-default ${getSpendingIntensity(amount)} ${isToday ? 'ring-2 ring-primary-500' : ''}`}
+              title={amount > 0 ? `${formatAmount(amount)} kr (${spending?.count} transactions)` : 'No spending'}
+            >
+              <span className={`text-[10px] ${amount > 0 ? 'text-gray-700 dark:text-gray-200' : 'text-gray-400 dark:text-gray-500'}`}>
+                {day.getDate()}
+              </span>
+              {amount > 0 && (
+                <span className="text-[8px] font-medium text-gray-600 dark:text-gray-300 truncate max-w-full px-0.5">
+                  {amount >= 1000 ? `${(amount / 1000).toFixed(0)}k` : formatAmount(amount)}
+                </span>
+              )}
+
+              {/* Tooltip on hover */}
+              {amount > 0 && (
+                <div className="absolute z-20 bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-gray-900 dark:bg-slate-600 text-white text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+                  {formatAmount(amount)} kr
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1">
+                    <div className="border-4 border-transparent border-t-gray-900 dark:border-t-slate-600" />
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Legend */}
+      <div className="flex items-center justify-end gap-2 mt-2">
+        <span className="text-[10px] text-gray-400">Less</span>
+        <div className="flex gap-0.5">
+          <div className="w-3 h-3 rounded-sm bg-gray-100 dark:bg-slate-700" />
+          <div className="w-3 h-3 rounded-sm bg-primary-100 dark:bg-primary-900/30" />
+          <div className="w-3 h-3 rounded-sm bg-primary-200 dark:bg-primary-800/40" />
+          <div className="w-3 h-3 rounded-sm bg-primary-300 dark:bg-primary-700/50" />
+          <div className="w-3 h-3 rounded-sm bg-primary-400 dark:bg-primary-600/60" />
+        </div>
+        <span className="text-[10px] text-gray-400">More</span>
+      </div>
+    </div>
+  );
+}
+
 function CategoryTotalsTable({
   categories,
+  previousMonthCategories,
 }: {
   categories: CategoryTotal[];
+  previousMonthCategories?: Map<string | null, number>;
 }) {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
 
@@ -587,6 +774,9 @@ function CategoryTotalsTable({
               <th className="text-left px-3 py-2 font-medium text-gray-600 dark:text-gray-400">Category</th>
               <th className="text-right px-3 py-2 font-medium text-gray-600 dark:text-gray-400">Amount</th>
               <th className="text-right px-3 py-2 font-medium text-gray-600 dark:text-gray-400">%</th>
+              {previousMonthCategories && (
+                <th className="text-right px-3 py-2 font-medium text-gray-600 dark:text-gray-400">vs Last</th>
+              )}
               <th className="text-right px-3 py-2 font-medium text-gray-600 dark:text-gray-400">#</th>
             </tr>
           </thead>
@@ -595,6 +785,12 @@ function CategoryTotalsTable({
               const key = category.categoryId || 'uncategorized';
               const isExpanded = expandedCategories.has(key);
               const hasSubcategories = category.subcategories.length > 1;
+
+              // Calculate percentage change from last month
+              const prevTotal = previousMonthCategories?.get(category.categoryId) || 0;
+              const percentChange = prevTotal > 0
+                ? ((category.total - prevTotal) / prevTotal) * 100
+                : category.total > 0 ? 100 : 0;
 
               return (
                 <React.Fragment key={key}>
@@ -630,6 +826,20 @@ function CategoryTotalsTable({
                     <td className="px-3 py-2 text-right text-gray-600 dark:text-gray-400">
                       {category.percentage.toFixed(1)}%
                     </td>
+                    {previousMonthCategories && (
+                      <td className="px-3 py-2 text-right">
+                        {prevTotal > 0 || category.total > 0 ? (
+                          <span className={`text-xs font-medium ${
+                            percentChange > 0 ? 'text-danger-600 dark:text-danger-400' : percentChange < 0 ? 'text-success-600 dark:text-success-400' : 'text-gray-400'
+                          }`}>
+                            {percentChange > 0 ? '↑' : percentChange < 0 ? '↓' : '–'}
+                            {percentChange !== 0 && ` ${Math.abs(percentChange).toFixed(0)}%`}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-gray-400">–</span>
+                        )}
+                      </td>
+                    )}
                     <td className="px-3 py-2 text-right text-gray-500 dark:text-gray-400">{category.count}</td>
                   </tr>
                   {isExpanded &&
@@ -667,14 +877,55 @@ export function SpendingVisualization({
   const categoryTotals = useMemo(() => calculateCategoryTotals(transactions), [transactions]);
 
   // Memoize expensive expense/income calculations
-  const { totalExpenses, totalIncome } = useMemo(() => {
+  const { totalExpenses, totalIncome, dailyAverage } = useMemo(() => {
     const exp = transactions.filter((t) => t.amount < 0);
     const inc = transactions.filter((t) => t.amount > 0);
+    const totalExp = exp.reduce((sum, t) => sum + Math.abs(t.amount), 0);
+
+    // Calculate daily average based on date range
+    let days = 1;
+    if (transactions.length > 0) {
+      const dates = transactions.map(t => t.date.getTime());
+      const minDate = Math.min(...dates);
+      const maxDate = Math.max(...dates);
+      days = Math.max(1, Math.ceil((maxDate - minDate) / (1000 * 60 * 60 * 24)) + 1);
+    }
+
     return {
-      totalExpenses: exp.reduce((sum, t) => sum + Math.abs(t.amount), 0),
+      totalExpenses: totalExp,
       totalIncome: inc.reduce((sum, t) => sum + t.amount, 0),
+      dailyAverage: totalExp / days,
     };
   }, [transactions]);
+
+  // Calculate previous month category totals for comparison
+  const previousMonthCategories = useMemo(() => {
+    if (!selectedPeriod) return undefined;
+
+    // Get the previous month's date range
+    const prevMonthStart = new Date(selectedPeriod.start);
+    prevMonthStart.setMonth(prevMonthStart.getMonth() - 1);
+    const prevMonthEnd = new Date(selectedPeriod.end);
+    prevMonthEnd.setMonth(prevMonthEnd.getMonth() - 1);
+
+    // Filter transactions from previous month
+    const prevTransactions = allTransactions.filter(t =>
+      t.amount < 0 &&
+      t.date >= prevMonthStart &&
+      t.date <= prevMonthEnd
+    );
+
+    if (prevTransactions.length === 0) return undefined;
+
+    // Calculate category totals for previous month
+    const map = new Map<string | null, number>();
+    prevTransactions.forEach(t => {
+      const current = map.get(t.categoryId) || 0;
+      map.set(t.categoryId, current + Math.abs(t.amount));
+    });
+
+    return map;
+  }, [allTransactions, selectedPeriod]);
 
   if (transactions.length === 0) {
     return (
@@ -760,7 +1011,7 @@ export function SpendingVisualization({
 
       <div className="p-3 sm:p-4">
         {/* Quick Stats */}
-        <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-4 sm:mb-6">
+        <div className="grid grid-cols-4 gap-2 sm:gap-3 mb-4 sm:mb-6">
           <div className="text-center p-2 sm:p-3 bg-danger-50 dark:bg-danger-900/20 rounded-lg">
             <p className="text-[10px] sm:text-xs text-danger-600 dark:text-danger-400 mb-0.5 sm:mb-1">Expenses</p>
             <p className="text-sm sm:text-lg font-bold text-danger-700 dark:text-danger-400">-{formatAmount(totalExpenses)}</p>
@@ -776,6 +1027,10 @@ export function SpendingVisualization({
             <p className={`text-sm sm:text-lg font-bold ${totalIncome - totalExpenses >= 0 ? 'text-success-700 dark:text-success-400' : 'text-danger-700 dark:text-danger-400'}`}>
               {totalIncome - totalExpenses >= 0 ? '+' : ''}{formatAmount(totalIncome - totalExpenses)}
             </p>
+          </div>
+          <div className="text-center p-2 sm:p-3 bg-primary-50 dark:bg-primary-900/20 rounded-lg">
+            <p className="text-[10px] sm:text-xs text-primary-600 dark:text-primary-400 mb-0.5 sm:mb-1">Daily Avg</p>
+            <p className="text-sm sm:text-lg font-bold text-primary-700 dark:text-primary-400">~{formatAmount(dailyAverage)} kr</p>
           </div>
         </div>
 
@@ -820,6 +1075,11 @@ export function SpendingVisualization({
           />
         </div>
 
+        {/* Spending Calendar */}
+        <div className="border-t border-gray-200 dark:border-slate-700 pt-4 mb-4">
+          <SpendingCalendar transactions={allTransactions} />
+        </div>
+
         {/* Monthly Comparison Chart */}
         <div className="border-t border-gray-200 dark:border-slate-700 pt-4 mb-4">
           <MonthlyComparisonChart transactions={allTransactions} maxMonths={6} />
@@ -827,7 +1087,10 @@ export function SpendingVisualization({
 
         {/* Category Totals Table */}
         <div className="border-t border-gray-200 dark:border-slate-700 pt-4">
-          <CategoryTotalsTable categories={categoryTotals} />
+          <CategoryTotalsTable
+            categories={categoryTotals}
+            previousMonthCategories={previousMonthCategories}
+          />
         </div>
       </div>
     </div>
