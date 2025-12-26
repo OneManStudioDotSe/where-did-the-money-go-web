@@ -513,16 +513,12 @@ export function markTransactionsAsRecurring(
     const recurringType = recurringTransactionIds.get(t.id);
     if (recurringType) {
       const hasRecurringBadge = t.badges.some(
-        b => b.type === 'subscription' || b.type === 'recurring_expense' || b.type === 'fixed_expense'
+        b => b.type === 'subscription' || b.type === 'fixed'
       );
-      let badge: { type: 'subscription' | 'recurring_expense' | 'fixed_expense'; label: string };
-      if (recurringType === 'subscription') {
-        badge = { type: 'subscription', label: 'Subscription' };
-      } else if (recurringType === 'fixed_expense') {
-        badge = { type: 'fixed_expense', label: 'Fixed' };
-      } else {
-        badge = { type: 'recurring_expense', label: 'Recurring' };
-      }
+      const badge: { type: 'subscription' | 'fixed'; label: string } =
+        recurringType === 'subscription'
+          ? { type: 'subscription', label: 'Subscription' }
+          : { type: 'fixed', label: 'Fixed' };
       return {
         ...t,
         isSubscription: true,

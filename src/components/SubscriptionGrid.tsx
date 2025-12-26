@@ -104,9 +104,9 @@ export function SubscriptionGrid({
                   {subscriptions.filter(s => s.recurringType === 'subscription').length} subscriptions
                 </span>
               )}
-              {subscriptions.filter(s => s.recurringType === 'recurring_expense').length > 0 && (
-                <span className="text-xs px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400">
-                  {subscriptions.filter(s => s.recurringType === 'recurring_expense').length} recurring
+              {subscriptions.filter(s => s.recurringType === 'fixed').length > 0 && (
+                <span className="text-xs px-1.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400">
+                  {subscriptions.filter(s => s.recurringType === 'fixed').length} fixed
                 </span>
               )}
             </div>

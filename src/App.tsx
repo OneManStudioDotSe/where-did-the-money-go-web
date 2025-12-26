@@ -626,7 +626,7 @@ function App() {
     setTransactions(prev => prev.map(t => ({
       ...t,
       isSubscription: false,
-      badges: t.badges.filter(b => b.type !== 'subscription' && b.type !== 'recurring_expense')
+      badges: t.badges.filter(b => b.type !== 'subscription' && b.type !== 'fixed')
     })))
     toast.info('All recurring expenses have been cleared')
   }
@@ -684,7 +684,7 @@ function App() {
     setTransactions(prev => prev.map(t => ({
       ...t,
       isSubscription: false,
-      badges: t.badges.filter(b => b.type !== 'subscription' && b.type !== 'recurring_expense')
+      badges: t.badges.filter(b => b.type !== 'subscription' && b.type !== 'fixed')
     })))
     toast.info('Subscriptions cleared')
   }

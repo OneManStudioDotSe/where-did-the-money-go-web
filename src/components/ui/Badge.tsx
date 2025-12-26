@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-export type BadgeType = 'uncategorized' | 'subscription' | 'recurring_expense' | 'high-value' | 'suspicious' | 'largest-expense' | 'largest-income';
+export type BadgeType = 'uncategorized' | 'subscription' | 'fixed' | 'high-value' | 'suspicious' | 'largest-expense' | 'largest-income';
 
 interface BadgeConfig {
   label: string;
@@ -33,16 +33,16 @@ const badgeConfigs: Record<BadgeType, BadgeConfig> = {
     textColor: 'text-purple-700 dark:text-purple-400',
     tooltip: 'Cancellable subscription (Netflix, Spotify, gym)',
   },
-  recurring_expense: {
-    label: 'Recurring',
+  fixed: {
+    label: 'Fixed',
     icon: (
       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
       </svg>
     ),
-    bgColor: 'bg-amber-100 dark:bg-amber-900/30',
-    textColor: 'text-amber-700 dark:text-amber-400',
-    tooltip: 'Fixed recurring expense (loan, rent, insurance)',
+    bgColor: 'bg-blue-100 dark:bg-blue-900/30',
+    textColor: 'text-blue-700 dark:text-blue-400',
+    tooltip: 'Fixed expense (rent, mortgage, loan, insurance)',
   },
   'high-value': {
     label: 'High Value',
@@ -151,8 +151,8 @@ export function getTransactionBadges(
     for (const badge of transaction.badges) {
       if (badge.type === 'subscription' && !badges.includes('subscription')) {
         badges.push('subscription');
-      } else if (badge.type === 'recurring_expense' && !badges.includes('recurring_expense')) {
-        badges.push('recurring_expense');
+      } else if (badge.type === 'fixed' && !badges.includes('fixed')) {
+        badges.push('fixed');
       } else if (badge.type === 'suspicious' && !badges.includes('suspicious')) {
         badges.push('suspicious');
       }

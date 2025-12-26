@@ -119,7 +119,7 @@ export function SubscriptionPanel({
 
   // Filter state - which types to show
   const [typeFilters, setTypeFilters] = useState<Set<RecurringType>>(
-    new Set(['subscription', 'recurring_expense', 'fixed_expense'])
+    new Set(['subscription', 'fixed'])
   );
 
   // Sort state
@@ -181,8 +181,7 @@ export function SubscriptionPanel({
 
   // Count by type for filter buttons
   const subscriptionCount = subscriptions.filter(s => s.recurringType === 'subscription').length;
-  const recurringCount = subscriptions.filter(s => s.recurringType === 'recurring_expense').length;
-  const fixedCount = subscriptions.filter(s => s.recurringType === 'fixed_expense').length;
+  const fixedCount = subscriptions.filter(s => s.recurringType === 'fixed').length;
 
   return (
     <div className={compact ? '' : 'space-y-4'}>
@@ -245,23 +244,11 @@ export function SubscriptionPanel({
                 Subs ({subscriptionCount})
               </button>
             )}
-            {recurringCount > 0 && (
-              <button
-                onClick={() => toggleTypeFilter('recurring_expense')}
-                className={`px-2 py-1 rounded-full transition-colors ${
-                  typeFilters.has('recurring_expense')
-                    ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300'
-                    : 'bg-gray-100 dark:bg-slate-700 text-gray-400 dark:text-gray-500'
-                }`}
-              >
-                Recurring ({recurringCount})
-              </button>
-            )}
             {fixedCount > 0 && (
               <button
-                onClick={() => toggleTypeFilter('fixed_expense')}
+                onClick={() => toggleTypeFilter('fixed')}
                 className={`px-2 py-1 rounded-full transition-colors ${
-                  typeFilters.has('fixed_expense')
+                  typeFilters.has('fixed')
                     ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300'
                     : 'bg-gray-100 dark:bg-slate-700 text-gray-400 dark:text-gray-500'
                 }`}

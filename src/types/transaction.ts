@@ -32,9 +32,8 @@ export interface Transaction {
  * Type of recurring payment
  */
 export type RecurringType =
-  | 'subscription'      // Cancellable services (Netflix, Spotify, gym)
-  | 'recurring_expense' // Regular recurring expenses
-  | 'fixed_expense';    // Fixed expenses (loan, rent, insurance)
+  | 'subscription'      // Cancellable services (Netflix, Spotify, Disney+, gym)
+  | 'fixed';            // Fixed expenses (rent, mortgage, loan, insurance)
 
 /**
  * Billing frequency for subscriptions
@@ -70,9 +69,8 @@ export interface ConfidenceScoreBreakdown {
  */
 export type TransactionBadgeType =
   | 'uncategorized'      // Needs manual categorization
-  | 'subscription'       // Cancellable recurring service
-  | 'recurring_expense'  // Regular recurring expense
-  | 'fixed_expense'      // Fixed expense (loan, rent, insurance)
+  | 'subscription'       // Cancellable recurring service (Netflix, Spotify, gym)
+  | 'fixed'              // Fixed expense (rent, mortgage, loan, insurance)
   | 'high_value'         // Above threshold amount
   | 'refund'             // Money returned
   | 'income'             // Positive amount

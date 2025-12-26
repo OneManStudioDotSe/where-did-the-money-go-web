@@ -28,7 +28,7 @@ export function SubscriptionConfirmationDialog({
   detectedSubscriptions,
   transactions,
 }: SubscriptionConfirmationDialogProps) {
-  // Track decision for each subscription: 'subscription', 'recurring_expense', 'skip', or null (undecided)
+  // Track decision for each subscription: 'subscription', 'fixed', 'skip', or null (undecided)
   const [decisions, setDecisions] = useState<Record<string, DecisionType>>(() => {
     const initial: Record<string, DecisionType> = {};
     detectedSubscriptions.forEach(s => {
@@ -77,7 +77,7 @@ export function SubscriptionConfirmationDialog({
     const rejectedIds: string[] = [];
 
     for (const [id, decision] of Object.entries(decisions)) {
-      if (decision === 'subscription' || decision === 'recurring_expense' || decision === 'fixed_expense') {
+      if (decision === 'subscription' || decision === 'fixed') {
         confirmedWithTypes.push({ id, type: decision });
       } else if (decision === 'skip') {
         rejectedIds.push(id);
@@ -89,12 +89,11 @@ export function SubscriptionConfirmationDialog({
   };
 
   const subscriptionCount = Object.values(decisions).filter(d => d === 'subscription').length;
-  const recurringCount = Object.values(decisions).filter(d => d === 'recurring_expense').length;
-  const fixedCount = Object.values(decisions).filter(d => d === 'fixed_expense').length;
-  const confirmedCount = subscriptionCount + recurringCount + fixedCount;
+  const fixedCount = Object.values(decisions).filter(d => d === 'fixed').length;
+  const confirmedCount = subscriptionCount + fixedCount;
 
   const totalMonthly = detectedSubscriptions
-    .filter(s => decisions[s.id] === 'subscription' || decisions[s.id] === 'recurring_expense' || decisions[s.id] === 'fixed_expense')
+    .filter(s => decisions[s.id] === 'subscription' || decisions[s.id] === 'fixed')
     .reduce((sum, s) => sum + s.averageAmount, 0);
 
   // Helper to format amount range
@@ -136,12 +135,7 @@ export function SubscriptionConfirmationDialog({
               </span>
               {subscriptionCount > 0 && (
                 <span className="text-xs px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">
-                  {subscriptionCount} sub
-                </span>
-              )}
-              {recurringCount > 0 && (
-                <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">
-                  {recurringCount} recurring
+                  {subscriptionCount} subscription
                 </span>
               )}
               {fixedCount > 0 && (
@@ -182,9 +176,7 @@ export function SubscriptionConfirmationDialog({
                   className={`p-4 rounded-lg border-2 transition-all ${
                     decision === 'subscription'
                       ? 'border-purple-500 dark:border-purple-400 bg-purple-50 dark:bg-purple-900/30'
-                      : decision === 'recurring_expense'
-                      ? 'border-amber-500 dark:border-amber-400 bg-amber-50 dark:bg-amber-900/30'
-                      : decision === 'fixed_expense'
+                      : decision === 'fixed'
                       ? 'border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/30'
                       : decision === 'skip'
                       ? 'border-gray-300 dark:border-slate-600 bg-gray-50 dark:bg-slate-800/50 opacity-50'
@@ -207,9 +199,7 @@ export function SubscriptionConfirmationDialog({
                           <h3 className={`font-medium truncate ${
                             decision === 'subscription'
                               ? 'text-purple-900 dark:text-white'
-                              : decision === 'recurring_expense'
-                              ? 'text-amber-900 dark:text-white'
-                              : decision === 'fixed_expense'
+                              : decision === 'fixed'
                               ? 'text-blue-900 dark:text-white'
                               : 'text-gray-900 dark:text-white'
                           }`}>
@@ -316,7 +306,7 @@ export function SubscriptionConfirmationDialog({
                       )}
                     </div>
 
-                    {/* Action Buttons - 4 options */}
+                    {/* Action Buttons - 3 options */}
                     <div className="flex flex-col gap-1 flex-shrink-0">
                       <button
                         onClick={() => handleSetType(subscription.id, 'subscription')}
@@ -325,35 +315,21 @@ export function SubscriptionConfirmationDialog({
                             ? 'bg-purple-500 text-white'
                             : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400 hover:bg-purple-100 dark:hover:bg-purple-900/30 hover:text-purple-600 dark:hover:text-purple-400'
                         }`}
-                        title="Cancellable service (Netflix, Spotify, gym)"
+                        title="Cancellable service (Netflix, Spotify, Disney+, gym)"
                       >
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                         </svg>
-                        Sub
+                        Subscription
                       </button>
                       <button
-                        onClick={() => handleSetType(subscription.id, 'recurring_expense')}
+                        onClick={() => handleSetType(subscription.id, 'fixed')}
                         className={`px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1 transition-colors ${
-                          decision === 'recurring_expense'
-                            ? 'bg-amber-500 text-white'
-                            : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400 hover:bg-amber-100 dark:hover:bg-amber-900/30 hover:text-amber-600 dark:hover:text-amber-400'
-                        }`}
-                        title="Regular recurring expense"
-                      >
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                        Recurring
-                      </button>
-                      <button
-                        onClick={() => handleSetType(subscription.id, 'fixed_expense')}
-                        className={`px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1 transition-colors ${
-                          decision === 'fixed_expense'
+                          decision === 'fixed'
                             ? 'bg-blue-500 text-white'
                             : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400'
                         }`}
-                        title="Fixed expense (loan, rent, insurance)"
+                        title="Fixed expense (rent, mortgage, loan, insurance)"
                       >
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
@@ -367,7 +343,7 @@ export function SubscriptionConfirmationDialog({
                             ? 'bg-gray-500 text-white'
                             : 'bg-gray-100 dark:bg-slate-700 text-gray-400 dark:text-gray-500 hover:bg-gray-200 dark:hover:bg-slate-600 hover:text-gray-600 dark:hover:text-gray-300'
                         }`}
-                        title="Skip this payment"
+                        title="Not a recurring expense"
                       >
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
