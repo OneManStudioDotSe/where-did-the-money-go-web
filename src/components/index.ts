@@ -26,6 +26,8 @@ export { BulkCategoryModal } from './BulkCategoryModal';
 export { SuspiciousTransactionsDialog } from './SuspiciousTransactionsDialog';
 export { OnboardingModal } from './OnboardingModal';
 export { DebugPanel, trackRender, trackMetric, setVerboseLogging, isVerboseLogging } from './DebugPanel';
+export { SpendingCalendar } from './SpendingCalendar';
+export { ReportsPanel } from './ReportsPanel';
 export type { TimePeriod } from './TimePeriodSelector';
 export type { AppSettings, SubscriptionViewVariation, SubscriptionPlacement } from './SettingsPanel';
 

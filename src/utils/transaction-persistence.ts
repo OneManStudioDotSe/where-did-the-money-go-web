@@ -19,6 +19,7 @@ export function saveTransactions(transactions: Transaction[], fileName: string |
     const serializable = transactions.map(t => ({
       ...t,
       date: t.date.toISOString(),
+      valueDate: t.valueDate.toISOString(),
     }));
 
     localStorage.setItem(TRANSACTIONS_STORAGE_KEY, JSON.stringify(serializable));
@@ -54,6 +55,7 @@ export function loadTransactions(): { transactions: Transaction[]; metadata: Tra
     const transactions: Transaction[] = parsed.map((t: Record<string, unknown>) => ({
       ...t,
       date: new Date(t.date as string),
+      valueDate: new Date(t.valueDate as string),
     }));
 
     const metadata: TransactionMetadata | null = metaStored ? JSON.parse(metaStored) : null;

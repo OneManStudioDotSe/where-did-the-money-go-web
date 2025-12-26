@@ -2,7 +2,7 @@ import { useState, useEffect, useTransition, useMemo, useCallback, useRef } from
 import './index.css'
 import { defaultCategories } from './data/categories'
 import { defaultCategoryMappings } from './data/category-mappings'
-import { FileUpload, TransactionList, FilterPanel, defaultFilters, ProjectRoadmap, TimePeriodSelector, SpendingVisualization, SettingsPanel, loadSettings, TransactionEditModal, UncategorizedCarousel, CsvConfirmationDialog, ExportDialog, SubscriptionConfirmationDialog, SubscriptionPanel, SubscriptionCard, SubscriptionEditModal, ErrorBoundary, LoadingOverlay, TopMerchants, MappingRulesModal, AddMappingRuleModal, BulkCategoryModal, SuspiciousTransactionsDialog, OnboardingModal, DebugPanel } from './components'
+import { FileUpload, TransactionList, FilterPanel, defaultFilters, ProjectRoadmap, TimePeriodSelector, SpendingVisualization, SettingsPanel, loadSettings, TransactionEditModal, UncategorizedCarousel, CsvConfirmationDialog, ExportDialog, SubscriptionConfirmationDialog, SubscriptionPanel, SubscriptionCard, SubscriptionEditModal, ErrorBoundary, LoadingOverlay, MappingRulesModal, AddMappingRuleModal, BulkCategoryModal, SuspiciousTransactionsDialog, OnboardingModal, DebugPanel, ReportsPanel } from './components'
 import { SectionErrorBoundary } from './components/SectionErrorBoundary'
 import { AddSubcategoryModal } from './components/AddSubcategoryModal'
 import { CategorySystemModal } from './components/CategorySystemModal'
@@ -35,7 +35,7 @@ declare global {
   }
 }
 
-type DashboardTab = 'overview' | 'transactions' | 'subscriptions' | 'insights'
+type DashboardTab = 'overview' | 'transactions' | 'subscriptions' | 'reports' | 'insights'
 
 function App() {
   const [showCategoriesModal, setShowCategoriesModal] = useState(false)
@@ -67,7 +67,7 @@ function App() {
   const [activeTab, setActiveTab] = useState<DashboardTab>(() => {
     // Load last used tab from localStorage
     const savedTab = localStorage.getItem('wdtmg_active_tab') as DashboardTab | null
-    return savedTab && ['overview', 'transactions', 'subscriptions', 'insights'].includes(savedTab)
+    return savedTab && ['overview', 'transactions', 'subscriptions', 'reports', 'insights'].includes(savedTab)
       ? savedTab
       : 'overview'
   })
@@ -1040,6 +1040,19 @@ function App() {
               </button>
             )}
             <button
+              onClick={() => startTransition(() => setActiveTab('reports'))}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${
+                activeTab === 'reports'
+                  ? 'bg-white dark:bg-slate-700 text-gray-900 dark:text-white shadow-sm'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Reports
+            </button>
+            <button
               onClick={() => startTransition(() => setActiveTab('insights'))}
               className={`px-4 py-2 text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${
                 activeTab === 'insights'
@@ -1118,25 +1131,6 @@ function App() {
                 )}
               </div>
 
-              {/* Top Merchants Analysis */}
-              <div className="mt-6">
-                <SectionErrorBoundary section="merchants">
-                  <TopMerchants transactions={filteredTransactions} />
-                </SectionErrorBoundary>
-              </div>
-
-              {/* AI Insights Panel */}
-              <div className="mt-6">
-                <SectionErrorBoundary section="insights">
-                  <AIInsightsPanel
-                    transactions={periodFilteredTransactions}
-                    subscriptions={subscriptions}
-                    aiProvider={appSettings.aiProvider}
-                    aiApiKey={appSettings.aiApiKey}
-                    onOpenSettings={() => setShowSettingsPanel(true)}
-                  />
-                </SectionErrorBoundary>
-              </div>
             </div>
           )}
 
@@ -1190,6 +1184,17 @@ function App() {
                   transactions={transactions}
                   viewMode={appSettings.subscriptionViewVariation}
                   onEditSubscription={handleEditSubscription}
+                />
+              </SectionErrorBoundary>
+            </div>
+          )}
+
+          {activeTab === 'reports' && (
+            <div className="animate-tab-content">
+              <SectionErrorBoundary section="reports">
+                <ReportsPanel
+                  transactions={transactions}
+                  onExport={() => setShowExportDialog(true)}
                 />
               </SectionErrorBoundary>
             </div>

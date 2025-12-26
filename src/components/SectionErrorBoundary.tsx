@@ -5,9 +5,13 @@ type SectionType =
   | 'transactions'
   | 'subscriptions'
   | 'insights'
+  | 'reports'
   | 'filters'
   | 'merchants'
   | 'time-period'
+  | 'spending-calendar'
+  | 'top-merchants'
+  | 'monthly-comparison'
   | 'general';
 
 interface Props {
@@ -42,6 +46,11 @@ const sectionInfo: Record<SectionType, { title: string; icon: string; descriptio
     icon: '💡',
     description: 'The insights panel could not be loaded.',
   },
+  reports: {
+    title: 'Reports',
+    icon: '📈',
+    description: 'The reports panel could not be loaded.',
+  },
   filters: {
     title: 'Filters',
     icon: '🔍',
@@ -56,6 +65,21 @@ const sectionInfo: Record<SectionType, { title: string; icon: string; descriptio
     title: 'Time Period',
     icon: '📅',
     description: 'The time period selector could not be displayed.',
+  },
+  'spending-calendar': {
+    title: 'Spending Calendar',
+    icon: '📅',
+    description: 'The spending calendar could not be displayed.',
+  },
+  'top-merchants': {
+    title: 'Top Merchants',
+    icon: '🏪',
+    description: 'The top merchants analysis could not be loaded.',
+  },
+  'monthly-comparison': {
+    title: 'Monthly Comparison',
+    icon: '📊',
+    description: 'The monthly comparison chart could not be loaded.',
   },
   general: {
     title: 'Section',
