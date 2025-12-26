@@ -16,6 +16,8 @@ interface TransactionEditModalProps {
   allTransactions?: Transaction[];
   /** Callback for batch updating multiple transactions */
   onBatchSave?: (transactionIds: string[], categoryId: string, subcategoryId: string) => void;
+  /** Callback for toggling exclude status */
+  onExcludeToggle?: (transactionId: string, isExcluded: boolean) => void;
 }
 
 function formatAmount(amount: number): string {
@@ -41,6 +43,7 @@ export function TransactionEditModal({
   onSave,
   allTransactions = [],
   onBatchSave,
+  onExcludeToggle,
 }: TransactionEditModalProps) {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
     transaction.categoryId
@@ -48,6 +51,7 @@ export function TransactionEditModal({
   const [selectedSubcategoryId, setSelectedSubcategoryId] = useState<string | null>(
     transaction.subcategoryId
   );
+  const [isExcluded, setIsExcluded] = useState(transaction.isExcluded ?? false);
   const [showSimilarDialog, setShowSimilarDialog] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -100,13 +104,23 @@ export function TransactionEditModal({
 
   const hasChanges =
     selectedCategoryId !== transaction.categoryId ||
-    selectedSubcategoryId !== transaction.subcategoryId;
+    selectedSubcategoryId !== transaction.subcategoryId ||
+    isExcluded !== (transaction.isExcluded ?? false);
 
   const canSave = selectedCategoryId && selectedSubcategoryId;
 
   const handleSelect = (categoryId: string, subcategoryId: string) => {
     setSelectedCategoryId(categoryId);
     setSelectedSubcategoryId(subcategoryId);
+  };
+
+  const handleExcludeToggle = () => {
+    const newValue = !isExcluded;
+    setIsExcluded(newValue);
+    // Immediately call the callback if provided (for instant feedback)
+    if (onExcludeToggle) {
+      onExcludeToggle(transaction.id, newValue);
+    }
   };
 
   const handleSave = () => {
@@ -269,6 +283,44 @@ export function TransactionEditModal({
                   {transactionsToUpdate.length} similar transaction{transactionsToUpdate.length !== 1 ? 's' : ''} found
                 </div>
               )}
+
+              {/* Exclude from calculations toggle */}
+              <div className="mt-4 pt-4 border-t border-gray-200 dark:border-slate-600">
+                <button
+                  onClick={handleExcludeToggle}
+                  className="w-full flex items-center justify-between py-2 group"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                      isExcluded
+                        ? 'bg-warning-100 dark:bg-warning-900/30 text-warning-600 dark:text-warning-400'
+                        : 'bg-gray-100 dark:bg-slate-700 text-gray-400 dark:text-gray-500'
+                    }`}>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                      </svg>
+                    </div>
+                    <div className="text-left">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">
+                        Exclude from calculations
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {isExcluded ? 'This transaction is excluded from totals and reports' : 'Include in all totals and reports'}
+                      </p>
+                    </div>
+                  </div>
+                  {/* Toggle switch */}
+                  <div className={`relative w-11 h-6 rounded-full transition-colors ${
+                    isExcluded
+                      ? 'bg-warning-500'
+                      : 'bg-gray-300 dark:bg-slate-600'
+                  }`}>
+                    <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                      isExcluded ? 'translate-x-5' : 'translate-x-0'
+                    }`} />
+                  </div>
+                </button>
+              </div>
             </div>
 
             {/* Category Selector */}

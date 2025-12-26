@@ -227,7 +227,7 @@ function App() {
   }, [transactions])
 
   // Apply time period filter first
-  const { periodFilteredTransactions, periodStats } = useTimePeriodFilter(
+  const { periodFilteredTransactions } = useTimePeriodFilter(
     transactions,
     selectedPeriod
   )
@@ -632,6 +632,14 @@ function App() {
     setEditingTransaction(transaction)
   }
 
+  const handleExcludeToggle = (transactionId: string, isExcluded: boolean) => {
+    setTransactions(prevTransactions =>
+      prevTransactions.map(t =>
+        t.id === transactionId ? { ...t, isExcluded } : t
+      )
+    )
+  }
+
   // Suspicious transaction handlers
   const handleDismissSuspicious = (warningId: string) => {
     // Update state
@@ -708,29 +716,40 @@ function App() {
 
   const stats = getCategorizedStats(periodFilteredTransactions)
 
-  // Memoize expensive expense/income calculations
+  // Memoize expensive expense/income calculations (excluding excluded transactions)
   const { totalExpenses, totalIncome } = useMemo(() => {
+    // Filter out excluded transactions for all calculations
+    const includedTransactions = transactions.filter(t => !t.isExcluded)
+
     if (selectedPeriod) {
-      return {
-        totalExpenses: periodStats.totalExpenses,
-        totalIncome: periodStats.totalIncome,
-      }
+      // Recalculate period stats excluding excluded transactions
+      const periodIncluded = periodFilteredTransactions.filter(t => !t.isExcluded)
+      const expenses = periodIncluded
+        .filter((t) => t.amount < 0)
+        .reduce((sum, t) => sum + Math.abs(t.amount), 0)
+      const income = periodIncluded
+        .filter((t) => t.amount > 0)
+        .reduce((sum, t) => sum + t.amount, 0)
+      return { totalExpenses: expenses, totalIncome: income }
     }
-    const expenses = transactions
+    const expenses = includedTransactions
       .filter((t) => t.amount < 0)
       .reduce((sum, t) => sum + Math.abs(t.amount), 0)
-    const income = transactions
+    const income = includedTransactions
       .filter((t) => t.amount > 0)
       .reduce((sum, t) => sum + t.amount, 0)
     return { totalExpenses: expenses, totalIncome: income }
-  }, [transactions, selectedPeriod, periodStats.totalExpenses, periodStats.totalIncome])
+  }, [transactions, selectedPeriod, periodFilteredTransactions])
 
-  // Calculate largest expense and income transaction IDs for badges
+  // Calculate largest expense and income transaction IDs for badges (excluding excluded transactions)
   const { largestExpenseId, largestIncomeId } = useMemo(() => {
     let largestExpense: { id: string; amount: number } | null = null
     let largestIncome: { id: string; amount: number } | null = null
 
     for (const t of filteredTransactions) {
+      // Skip excluded transactions
+      if (t.isExcluded) continue
+
       if (t.amount < 0) {
         // Expense (negative amount) - find largest absolute value
         if (!largestExpense || Math.abs(t.amount) > Math.abs(largestExpense.amount)) {
@@ -1235,6 +1254,7 @@ function App() {
           onSave={handleCategoryChange}
           allTransactions={transactions}
           onBatchSave={handleBatchCategoryChange}
+          onExcludeToggle={handleExcludeToggle}
         />
       )}
 
@@ -1265,7 +1285,6 @@ function App() {
           fileContent={pendingFileContent}
           fileName={pendingFileName}
           maxTransactionLimit={appSettings.maxTransactionLimit}
-          preferredBank={appSettings.preferredBank}
         />
       )}
 

@@ -26,6 +26,8 @@ export interface Transaction {
   badges: TransactionBadge[];
   /** Original CSV row data for reference */
   rawData: Record<string, string>;
+  /** Whether this transaction is excluded from all calculations */
+  isExcluded?: boolean;
 }
 
 /**
