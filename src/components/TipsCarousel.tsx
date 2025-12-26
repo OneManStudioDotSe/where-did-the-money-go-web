@@ -18,6 +18,7 @@ interface Tip {
 export function TipsCarousel({ stats, totalIncome, totalExpenses }: TipsCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const autoPlayTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const carouselRef = useRef<HTMLDivElement>(null);
 
   // Build tips array based on user data
@@ -107,23 +108,37 @@ export function TipsCarousel({ stats, totalIncome, totalExpenses }: TipsCarousel
     return () => clearInterval(interval);
   }, [isAutoPlaying, tips.length]);
 
-  const goToSlide = (index: number) => {
-    setCurrentIndex(index);
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (autoPlayTimeoutRef.current) {
+        clearTimeout(autoPlayTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const pauseAutoPlay = () => {
     setIsAutoPlaying(false);
-    // Resume auto-play after 10 seconds of inactivity
-    setTimeout(() => setIsAutoPlaying(true), 10000);
+    if (autoPlayTimeoutRef.current) {
+      clearTimeout(autoPlayTimeoutRef.current);
+    }
+    autoPlayTimeoutRef.current = setTimeout(() => setIsAutoPlaying(true), 10000);
+  };
+
+  const goToSlide = (index: number) => {
+    if (index === currentIndex) return;
+    setCurrentIndex(index);
+    pauseAutoPlay();
   };
 
   const goToPrev = () => {
     setCurrentIndex((prev) => (prev - 1 + tips.length) % tips.length);
-    setIsAutoPlaying(false);
-    setTimeout(() => setIsAutoPlaying(true), 10000);
+    pauseAutoPlay();
   };
 
   const goToNext = () => {
     setCurrentIndex((prev) => (prev + 1) % tips.length);
-    setIsAutoPlaying(false);
-    setTimeout(() => setIsAutoPlaying(true), 10000);
+    pauseAutoPlay();
   };
 
   const currentTip = tips[currentIndex];
@@ -176,26 +191,37 @@ export function TipsCarousel({ stats, totalIncome, totalExpenses }: TipsCarousel
           </div>
         </div>
 
-        {/* Carousel content */}
-        <div ref={carouselRef} className="relative min-h-[140px]">
+        {/* Carousel content with smooth sliding */}
+        <div ref={carouselRef} className="relative min-h-[140px] overflow-hidden">
           <div
-            key={currentTip.id}
-            className="animate-fade-in"
+            className="flex transition-transform duration-400 ease-out"
+            style={{
+              transform: `translateX(-${currentIndex * 100}%)`,
+              transitionDuration: '400ms',
+              transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)'
+            }}
           >
-            {/* Icon */}
-            <div className={`w-14 h-14 rounded-2xl ${currentTip.iconBg} flex items-center justify-center mb-4 shadow-sm`}>
-              <span className="text-3xl">{currentTip.icon}</span>
-            </div>
+            {tips.map((tip) => (
+              <div
+                key={tip.id}
+                className="w-full flex-shrink-0"
+              >
+                {/* Icon */}
+                <div className={`w-14 h-14 rounded-2xl ${tip.iconBg} flex items-center justify-center mb-4 shadow-sm`}>
+                  <span className="text-3xl">{tip.icon}</span>
+                </div>
 
-            {/* Title */}
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2 leading-tight">
-              {currentTip.title}
-            </h3>
+                {/* Title */}
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2 leading-tight">
+                  {tip.title}
+                </h3>
 
-            {/* Description */}
-            <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-              {currentTip.description}
-            </p>
+                {/* Description */}
+                <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                  {tip.description}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
 
