@@ -253,9 +253,13 @@ export function CsvConfirmationDialog({
                     <select
                       value={selectedBank || ''}
                       onChange={(e) => setSelectedBank((e.target.value || null) as BankId | null)}
-                      className="w-full px-2 py-1.5 text-sm border border-gray-200 dark:border-slate-500 rounded-md bg-white dark:bg-slate-600 text-gray-900 dark:text-white"
+                      className={`w-full px-2 py-1.5 text-sm border rounded-md bg-white dark:bg-slate-600 text-gray-900 dark:text-white ${
+                        selectedBank === null
+                          ? 'border-warning-400 dark:border-warning-500'
+                          : 'border-gray-200 dark:border-slate-500'
+                      }`}
                     >
-                      <option value="">Auto-detect</option>
+                      <option value="">Select bank...</option>
                       {Object.values(BANK_CONFIGS).map((bank) => (
                         <option key={bank.id} value={bank.id}>{bank.name}</option>
                       ))}
@@ -406,9 +410,12 @@ export function CsvConfirmationDialog({
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                       </svg>
                       <div>
-                        <p className="text-sm font-medium text-warning-700 dark:text-warning-300">Missing required columns</p>
+                        <p className="text-sm font-medium text-warning-700 dark:text-warning-300">Missing required fields</p>
                         <p className="text-xs text-warning-600 dark:text-warning-400 mt-0.5">
-                          Drag the following fields to their columns: {!effectiveMapping.dateColumn && 'Date'} {!effectiveMapping.amountColumn && 'Amount'} {!effectiveMapping.descriptionColumn && 'Description'}
+                          {selectedBank === null && 'Select a bank above. '}
+                          {(!effectiveMapping.dateColumn || !effectiveMapping.amountColumn || !effectiveMapping.descriptionColumn) && (
+                            <>Drag the following fields to their columns: {!effectiveMapping.dateColumn && 'Date '}{!effectiveMapping.amountColumn && 'Amount '}{!effectiveMapping.descriptionColumn && 'Description'}</>
+                          )}
                         </p>
                       </div>
                     </>

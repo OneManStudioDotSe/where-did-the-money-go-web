@@ -181,7 +181,7 @@ export function TransactionEditModal({
   return (
     <>
       <div
-        className="fixed inset-0 z-50 overflow-y-auto"
+        className="fixed inset-0 z-[60] overflow-y-auto"
         onClick={handleBackdropClick}
         role="dialog"
         aria-modal="true"
