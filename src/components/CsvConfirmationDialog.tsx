@@ -125,11 +125,12 @@ export function CsvConfirmationDialog({
     setManualMappings(newMappings);
   };
 
-  // Check if we have minimum required columns
+  // Check if we have minimum required columns (including bank selection)
   const hasRequiredColumns =
     effectiveMapping.dateColumn &&
     effectiveMapping.amountColumn &&
-    effectiveMapping.descriptionColumn;
+    effectiveMapping.descriptionColumn &&
+    selectedBank !== null;
 
   // Check if exceeds transaction limit
   const exceedsLimit = analysis.rowCount > maxTransactionLimit;
