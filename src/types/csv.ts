@@ -64,8 +64,8 @@ export const BANK_CONFIGS: Record<BankId, BankConfig> = {
     trimDescriptionAt: '/',
     // Rules for adding "Swish - " prefix when description starts with 467 or 123
     prefixRules: [
-      { pattern: /^467\s+/, prefix: 'Swish - ', removeMatch: true },
-      { pattern: /^123\s+/, prefix: 'Swish - ', removeMatch: true },
+      { pattern: /^467/, prefix: 'Swish - ', removeMatch: false },
+      { pattern: /^123/, prefix: 'Swish - ', removeMatch: false },
     ],
     // SEB-specific text replacements to expand abbreviations and fix casing
     textReplacements: [
@@ -79,8 +79,8 @@ export const BANK_CONFIGS: Record<BankId, BankConfig> = {
     examples: [
       { before: 'NETFLIX COM /25-12-18', after: 'NETFLIX COM' },
       { before: 'ICA MAXI /24-12-20', after: 'ICA MAXI' },
-      { before: '467 JOHN DOE', after: 'Swish - JOHN DOE' },
-      { before: '123 JANE DOE', after: 'Swish - JANE DOE' },
+      { before: '467 JOHN DOE', after: 'Swish - 467 JOHN DOE' },
+      { before: '123 JANE DOE', after: 'Swish - 123 JANE DOE' },
       { before: 'SL', after: 'SL' },
       { before: 'Sl', after: 'SL' },
       { before: 'IF FÖRSÄKR', after: 'IF FÖRSÄKRING' },
