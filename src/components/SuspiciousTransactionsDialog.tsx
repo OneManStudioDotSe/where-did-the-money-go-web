@@ -1,9 +1,19 @@
-import { useState, useMemo, useId } from 'react';
+import { useState, useMemo, useId, useCallback } from 'react';
 import type { Transaction, SuspiciousTransaction, SuspiciousType } from '../types/transaction';
 import { getSuspiciousTypeLabel, getSuspiciousTypeIcon } from '../utils/transaction-validation';
 import { getCategoryIcon, getCategoryColor } from '../utils/category-service';
 import { toTitleCase } from '../utils/text-utils';
 import { useFocusTrap } from '../hooks';
+
+// Small spinner component for loading states
+function ButtonSpinner() {
+  return (
+    <svg className="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+    </svg>
+  );
+}
 
 interface SuspiciousTransactionsDialogProps {
   isOpen: boolean;
@@ -39,9 +49,34 @@ export function SuspiciousTransactionsDialog({
 }: SuspiciousTransactionsDialogProps) {
   const [filter, setFilter] = useState<FilterType>('all');
   const [showDismissed, setShowDismissed] = useState(false);
+  const [loadingDismissId, setLoadingDismissId] = useState<string | null>(null);
+  const [isLoadingDismissAll, setIsLoadingDismissAll] = useState(false);
 
   const modalRef = useFocusTrap<HTMLDivElement>(isOpen, onClose);
   const titleId = useId();
+
+  // Handle dismiss with loading state
+  const handleDismiss = useCallback((warningId: string) => {
+    setLoadingDismissId(warningId);
+    // Use requestAnimationFrame to ensure the loading state renders before the potentially heavy operation
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        onDismiss(warningId);
+        setLoadingDismissId(null);
+      }, 0);
+    });
+  }, [onDismiss]);
+
+  // Handle dismiss all with loading state
+  const handleDismissAll = useCallback(() => {
+    setIsLoadingDismissAll(true);
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        onDismissAll();
+        setIsLoadingDismissAll(false);
+      }, 0);
+    });
+  }, [onDismissAll]);
 
   // Create transaction lookup map
   const transactionMap = useMemo(() => {
@@ -307,18 +342,23 @@ export function SuspiciousTransactionsDialog({
                       <div className="flex flex-col gap-1 flex-shrink-0">
                         <button
                           onClick={() => onViewTransaction(transaction.id)}
-                          className="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors"
+                          className="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-600 active:bg-gray-300 dark:active:bg-slate-500 transition-all active:scale-95"
                           title="View transaction"
                         >
                           View
                         </button>
                         {!suspicious.isDismissed && (
                           <button
-                            onClick={() => onDismiss(`${suspicious.transactionId}|${suspicious.type}`)}
-                            className="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-success-100 dark:bg-success-900/30 text-success-700 dark:text-success-400 hover:bg-success-200 dark:hover:bg-success-900/50 transition-colors"
+                            onClick={() => handleDismiss(`${suspicious.transactionId}|${suspicious.type}`)}
+                            disabled={loadingDismissId === `${suspicious.transactionId}|${suspicious.type}`}
+                            className="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-success-100 dark:bg-success-900/30 text-success-700 dark:text-success-400 hover:bg-success-200 dark:hover:bg-success-900/50 active:bg-success-300 dark:active:bg-success-800/60 transition-all active:scale-95 disabled:opacity-70 disabled:cursor-wait flex items-center justify-center gap-1 min-w-[42px]"
                             title="Mark as reviewed"
                           >
-                            OK
+                            {loadingDismissId === `${suspicious.transactionId}|${suspicious.type}` ? (
+                              <ButtonSpinner />
+                            ) : (
+                              'OK'
+                            )}
                           </button>
                         )}
                       </div>
@@ -334,16 +374,24 @@ export function SuspiciousTransactionsDialog({
         <div className="px-6 py-4 border-t border-gray-200 dark:border-slate-700 flex items-center justify-between">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+            className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white active:text-gray-700 transition-all active:scale-[0.98]"
           >
             Close
           </button>
           {counts.all > 0 && (
             <button
-              onClick={onDismissAll}
-              className="px-4 py-2 bg-success-600 hover:bg-success-700 text-white text-sm font-medium rounded-lg transition-colors"
+              onClick={handleDismissAll}
+              disabled={isLoadingDismissAll}
+              className="px-4 py-2 bg-success-600 hover:bg-success-700 active:bg-success-800 text-white text-sm font-medium rounded-lg transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-wait flex items-center gap-2"
             >
-              Mark All as Reviewed
+              {isLoadingDismissAll ? (
+                <>
+                  <ButtonSpinner />
+                  <span>Processing...</span>
+                </>
+              ) : (
+                'Mark All as Reviewed'
+              )}
             </button>
           )}
         </div>
