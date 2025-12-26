@@ -10,7 +10,7 @@ function getSystemTheme(): 'light' | 'dark' {
 }
 
 function getStoredTheme(): ThemeMode {
-  if (typeof window === 'undefined') return 'system';
+  if (typeof window === 'undefined') return 'light';
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored === 'light' || stored === 'dark' || stored === 'system') {
@@ -19,7 +19,7 @@ function getStoredTheme(): ThemeMode {
   } catch {
     // localStorage may be unavailable (e.g., private browsing)
   }
-  return 'system';
+  return 'light';
 }
 
 function applyTheme(mode: ThemeMode) {

@@ -1253,6 +1253,7 @@ function App() {
         isOpen={showUncategorizedCarousel}
         onClose={() => setShowUncategorizedCarousel(false)}
         onCategorize={handleCategoryChange}
+        onBatchCategorize={handleBatchCategoryChange}
       />
 
       {/* CSV Confirmation Dialog */}
