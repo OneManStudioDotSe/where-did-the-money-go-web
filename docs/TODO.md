@@ -11,7 +11,7 @@
 ### Phase 2: Data Quality & Accuracy ✅
 - [x] Expand category mappings - 72+ new Swedish merchant mappings added (coffee shops, restaurants, convenience stores, entertainment, shopping, subscriptions, parking, income)
 - [x] Improve category matching accuracy - Swedish character normalization (å/ä/ö → a/a/o for matching) and token-based matching for multi-word patterns
-- [x] Add manual category mapping rules - Let users create their own merchant → category mappings (toggle in Settings)
+- [x] Add manual category mapping rules
 - [x] Subscription detection refinement - Enhanced algorithm with frequency detection (weekly, bi-weekly, monthly, quarterly, annual), confidence scoring (70% threshold), custom naming/aliases, and next payment prediction
 - [x] Data validation - Suspicious transaction detection with exact/near duplicates, large transactions, and unusual merchant amounts; review dialog with dismiss functionality
 
@@ -37,19 +37,13 @@
 
 ### Phase 5: AI & Smart Features
 - [ ] AI-powered spending insights and recommendations
-- [ ] Anomaly detection for unusual spending patterns
+- [x] Anomaly detection for unusual spending patterns
 - [ ] Natural language search ("show me all coffee purchases last month")
 
 ### Phase 6: Multi-Bank & Data Management
 - [ ] Support for additional CSV formats (Swedbank, Handelsbanken, Nordea)
-- [ ] Multi-account support with account switching
 - [ ] Data import from previous sessions
-- [x] Data export in multiple formats (CSV, JSON, Excel)
-
-### Phase 8: Platform Expansion
-- [ ] Progressive Web App (PWA) with offline support
-- [ ] Browser extension for automatic CSV download detection
-- [ ] Desktop app (Electron)
+- [ ] Data export in multiple formats (CSV, JSON, Excel)
 
 ---
 
@@ -61,14 +55,14 @@
 - [x] Lazy load chart components with loading skeletons
 
 ### Testing ✅
-- [x] Unit tests for core utilities (Vitest with 57 tests for csv-parser, category-service, subscription-detection)
+- [x] Unit tests for core utilities (Vitest with 57 tests)
 - [x] Integration tests for main user flows (using @testing-library/react)
 - [x] E2E tests with Playwright (basic smoke tests for app loading, navigation, responsive design)
 
 ### Code Quality ✅
-- [x] Add ESLint with strict rules (typescript-eslint with consistent-type-imports, no-explicit-any, max-lines-per-function)
+- [x] Add ESLint with strict rules
 - [x] Add Prettier for consistent formatting (semi, singleQuote, tabWidth: 2)
-- [x] Document component props with JSDoc/TSDoc (FileUpload, TransactionList, CategorySelector, SubscriptionPanel)
+- [x] Document component props with JSDoc/TSDoc
 - [x] Create Storybook for component library (v10.1 with autodocs, a11y addon)
 
 ---
