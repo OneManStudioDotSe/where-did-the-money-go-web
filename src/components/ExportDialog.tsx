@@ -3,6 +3,8 @@ import type { Transaction, Subscription } from '../types/transaction';
 import { exportTransactions, getExportPreview, type ExportFormat, type ExportScope } from '../services/export-service';
 import { exportToPdf } from '../services/pdf-export-service';
 import { useFocusTrap } from '../hooks';
+import { useToast } from '../context/ToastContext';
+import { COPY_FEEDBACK_DURATION } from '../constants/timing';
 
 interface ExportDialogProps {
   isOpen: boolean;
@@ -33,6 +35,7 @@ export function ExportDialog({
   // Accessibility: focus trap and escape key handling
   const modalRef = useFocusTrap<HTMLDivElement>(isOpen, onClose);
   const titleId = useId();
+  const toast = useToast();
 
   // Calculate min/max dates from transactions
   const dateRange = useMemo(() => {
@@ -74,9 +77,9 @@ export function ExportDialog({
     try {
       await navigator.clipboard.writeText(fullExportContent);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy:', err);
+      setTimeout(() => setCopied(false), COPY_FEEDBACK_DURATION);
+    } catch {
+      toast.error('Failed to copy to clipboard');
     }
   };
 
@@ -133,8 +136,9 @@ export function ExportDialog({
             <button
               onClick={onClose}
               className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+              aria-label="Close dialog"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>

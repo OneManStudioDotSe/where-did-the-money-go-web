@@ -3,6 +3,8 @@ import type { Transaction, Subscription } from '../types/transaction';
 import type { AIInsightsResponse, AIInsight, AIProvider } from '../types/insights';
 import { aggregateSpendingData, buildInsightsPrompt } from '../utils/insights-aggregator';
 import { Card } from './ui/Card';
+import { InsightsSkeleton } from './ui/Skeleton';
+import { MOCK_AI_DELAY } from '../constants/timing';
 
 interface AIInsightsPanelProps {
   transactions: Transaction[];
@@ -266,7 +268,7 @@ export function AIInsightsPanel({
       // Use mock data if enabled
       if (useMockAI) {
         // Simulate a small delay to mimic API call
-        await new Promise(resolve => setTimeout(resolve, 800));
+        await new Promise(resolve => setTimeout(resolve, MOCK_AI_DELAY));
         const mockInsights = generateMockInsights();
         setInsights(mockInsights);
         return;
@@ -479,6 +481,9 @@ export function AIInsightsPanel({
         </Card>
       )}
 
+      {/* Loading state */}
+      {isLoading && <InsightsSkeleton />}
+
       {/* Insights results */}
       {insights && (
         <div className="space-y-4">
@@ -530,7 +535,7 @@ export function AIInsightsPanel({
         </div>
       )}
 
-      {/* Initial state - no insights yet */}
+      {/* Initial state - no insights yet and not loading */}
       {!insights && !isLoading && !error && (
         <Card variant="default" padding="lg">
           <div className="text-center py-4">

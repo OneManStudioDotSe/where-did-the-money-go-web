@@ -6,6 +6,7 @@ import type { BankId } from '../types/csv';
 import { BANK_CONFIGS } from '../types/csv';
 import { useFocusTrap } from '../hooks';
 import type { AIProvider } from '../types/insights';
+import { useToast } from '../context/ToastContext';
 
 /** Subscription view variation */
 export type SubscriptionViewVariation = 'list' | 'grid';
@@ -94,11 +95,12 @@ export function loadSettings(): AppSettings {
   return defaultSettings;
 }
 
-export function saveSettings(settings: AppSettings): void {
+export function saveSettings(settings: AppSettings): boolean {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
-  } catch (error) {
-    console.error('Failed to save settings to localStorage:', error);
+    return true;
+  } catch {
+    return false;
   }
 }
 
@@ -230,13 +232,18 @@ export function SettingsPanel({ isOpen, onClose, settings, onSettingsChange, sub
   // Accessibility: focus trap and escape key handling
   const modalRef = useFocusTrap<HTMLDivElement>(isOpen, onClose);
   const titleId = useId();
+  const toast = useToast();
 
   useEffect(() => {
     setLocalSettings(settings);
   }, [settings]);
 
   const handleSave = () => {
-    saveSettings(localSettings);
+    const saved = saveSettings(localSettings);
+    if (!saved) {
+      toast.error('Failed to save settings');
+      return;
+    }
     onSettingsChange(localSettings);
     onClose();
   };

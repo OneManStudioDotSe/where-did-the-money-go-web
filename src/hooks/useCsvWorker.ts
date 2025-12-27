@@ -33,8 +33,8 @@ export function useCsvWorker(): UseCsvWorkerResult {
           new URL('../workers/csv-parser.worker.ts', import.meta.url),
           { type: 'module' }
         );
-      } catch (e) {
-        console.warn('Failed to create Web Worker, falling back to main thread:', e);
+      } catch {
+        // Silently fall back to main thread - this is expected in some environments
         return null;
       }
     }

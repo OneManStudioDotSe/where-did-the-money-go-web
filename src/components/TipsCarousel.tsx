@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
+import { CAROUSEL_AUTO_PLAY_INTERVAL, CAROUSEL_RESUME_DELAY } from '../constants/timing';
 
 export interface TipsCarouselProps {
   stats: { categorized: number; uncategorized: number };
@@ -103,7 +104,7 @@ export function TipsCarousel({ stats, totalIncome, totalExpenses }: TipsCarousel
 
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % tips.length);
-    }, 5000);
+    }, CAROUSEL_AUTO_PLAY_INTERVAL);
 
     return () => clearInterval(interval);
   }, [isAutoPlaying, tips.length]);
@@ -122,7 +123,7 @@ export function TipsCarousel({ stats, totalIncome, totalExpenses }: TipsCarousel
     if (autoPlayTimeoutRef.current) {
       clearTimeout(autoPlayTimeoutRef.current);
     }
-    autoPlayTimeoutRef.current = setTimeout(() => setIsAutoPlaying(true), 10000);
+    autoPlayTimeoutRef.current = setTimeout(() => setIsAutoPlaying(true), CAROUSEL_RESUME_DELAY);
   };
 
   const goToSlide = (index: number) => {

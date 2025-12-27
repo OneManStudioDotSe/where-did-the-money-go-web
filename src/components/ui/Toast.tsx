@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
+import { TOAST_EXIT_ANIMATION } from '../../constants/timing';
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
 
@@ -91,7 +92,7 @@ export function Toast({ id, type, message, duration = 4000, onClose }: ToastProp
 
   const handleClose = () => {
     setIsLeaving(true);
-    setTimeout(() => onClose(id), 300);
+    setTimeout(() => onClose(id), TOAST_EXIT_ANIMATION);
   };
 
   return (

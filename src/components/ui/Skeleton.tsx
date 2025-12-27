@@ -92,6 +92,43 @@ export function ChartSkeleton() {
   );
 }
 
+export function InsightCardSkeleton() {
+  return (
+    <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-4">
+      <div className="flex items-start gap-3">
+        <Skeleton variant="circular" width={40} height={40} />
+        <div className="flex-1 space-y-2">
+          <Skeleton width="70%" height={18} />
+          <Skeleton width="100%" height={14} />
+          <Skeleton width="80%" height={14} />
+          <div className="flex gap-2 mt-2">
+            <Skeleton width={100} height={20} variant="rectangular" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function InsightsSkeleton() {
+  return (
+    <div className="space-y-4">
+      {/* Summary skeleton */}
+      <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-4">
+        <Skeleton width="100%" height={16} className="mb-2" />
+        <Skeleton width="85%" height={16} className="mb-2" />
+        <Skeleton width="60%" height={16} />
+      </div>
+      {/* Insight cards skeleton */}
+      <div className="grid gap-4 md:grid-cols-2">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <InsightCardSkeleton key={i} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function DashboardSkeleton() {
   return (
     <div className="space-y-6">

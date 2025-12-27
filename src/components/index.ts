@@ -51,7 +51,7 @@ export { Card, CardHeader, CardContent, CardFooter } from './ui/Card';
 export { CategoryIcon } from './ui/CategoryIcon';
 export { Badge, TransactionBadges, getTransactionBadges } from './ui/Badge';
 export type { BadgeType } from './ui/Badge';
-export { Skeleton, TransactionListSkeleton, DashboardSkeleton, ChartSkeleton, StatCardSkeleton } from './ui/Skeleton';
+export { Skeleton, TransactionListSkeleton, DashboardSkeleton, ChartSkeleton, StatCardSkeleton, InsightsSkeleton } from './ui/Skeleton';
 export { LoadingOverlay } from './ui/LoadingOverlay';
 export { EmptyState, TransactionsEmptyState, RecurringEmptyState, ChartEmptyState, SearchEmptyState, MerchantsEmptyState, InsightsEmptyState } from './ui/EmptyState';
 

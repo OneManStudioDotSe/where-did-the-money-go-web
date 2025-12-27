@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import type { Transaction } from '../types/transaction';
 import { getCategoryName, getSubcategoryName, getCategoryColor, getCategoryIcon } from '../utils/category-service';
 import { toTitleCase } from '../utils/text-utils';
+import { formatAmount } from '../utils/format';
 
 interface SpendingCalendarProps {
   transactions: Transaction[];
@@ -17,13 +18,6 @@ interface DailySpending {
   total: number;
   count: number;
   transactions: Transaction[];
-}
-
-function formatAmount(amount: number): string {
-  return Math.abs(amount).toLocaleString('sv-SE', {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  });
 }
 
 /** Spending calendar showing daily totals in a heatmap-style grid */
@@ -191,9 +185,9 @@ export function SpendingCalendar({ transactions, className = '', selectedMonth: 
         <button
           onClick={goToPrevMonth}
           className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
-          title="Previous month"
+          aria-label="Previous month"
         >
-          <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
@@ -216,9 +210,9 @@ export function SpendingCalendar({ transactions, className = '', selectedMonth: 
         <button
           onClick={goToNextMonth}
           className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
-          title="Next month"
+          aria-label="Next month"
         >
-          <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         </button>
