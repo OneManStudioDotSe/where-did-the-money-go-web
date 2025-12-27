@@ -12,6 +12,10 @@ type SectionType =
   | 'spending-calendar'
   | 'top-merchants'
   | 'monthly-comparison'
+  | 'day-of-week'
+  | 'largest-transactions'
+  | 'income-trend'
+  | 'merchant-frequency'
   | 'general';
 
 interface Props {
@@ -80,6 +84,26 @@ const sectionInfo: Record<SectionType, { title: string; icon: string; descriptio
     title: 'Monthly Comparison',
     icon: '📊',
     description: 'The monthly comparison chart could not be loaded.',
+  },
+  'day-of-week': {
+    title: 'Day of Week Analysis',
+    icon: '📆',
+    description: 'The day of week analysis could not be loaded.',
+  },
+  'largest-transactions': {
+    title: 'Largest Transactions',
+    icon: '💰',
+    description: 'The largest transactions section could not be loaded.',
+  },
+  'income-trend': {
+    title: 'Income vs Expense Trend',
+    icon: '📈',
+    description: 'The income and expense trend chart could not be loaded.',
+  },
+  'merchant-frequency': {
+    title: 'Merchant Frequency',
+    icon: '🏪',
+    description: 'The merchant frequency analysis could not be loaded.',
   },
   general: {
     title: 'Section',

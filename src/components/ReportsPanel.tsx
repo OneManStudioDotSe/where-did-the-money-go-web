@@ -3,6 +3,10 @@ import type { Transaction } from '../types/transaction';
 import { TopMerchants } from './TopMerchants';
 import { MonthlyComparisonChart } from './MonthlyComparisonChart';
 import { SpendingCalendar } from './SpendingCalendar';
+import { DayOfWeekAnalysis } from './DayOfWeekAnalysis';
+import { IncomeExpenseTrend } from './IncomeExpenseTrend';
+import { MerchantFrequency } from './MerchantFrequency';
+import { LargestTransactions } from './LargestTransactions';
 import { SectionErrorBoundary } from './SectionErrorBoundary';
 
 interface ReportsPanelProps {
@@ -10,11 +14,11 @@ interface ReportsPanelProps {
   onExport: () => void;
 }
 
-type ReportSection = 'calendar' | 'merchants' | 'comparison';
+type ReportSection = 'calendar' | 'merchants' | 'comparison' | 'dayOfWeek' | 'incomeTrend' | 'merchantFreq' | 'largest';
 
 export function ReportsPanel({ transactions, onExport }: ReportsPanelProps) {
   const [expandedSections, setExpandedSections] = useState<Set<ReportSection>>(
-    new Set(['calendar', 'merchants', 'comparison'])
+    new Set(['calendar', 'merchants', 'comparison', 'dayOfWeek', 'incomeTrend', 'merchantFreq', 'largest'])
   );
 
   const toggleSection = (section: ReportSection) => {
@@ -127,7 +131,7 @@ export function ReportsPanel({ transactions, onExport }: ReportsPanelProps) {
           onToggle={() => toggleSection('calendar')}
         >
           <SectionErrorBoundary section="spending-calendar">
-            <SpendingCalendar transactions={transactions} className="shadow-none border-0 p-0" />
+            <SpendingCalendar transactions={transactions} className="shadow-none border-0 p-0" hideHeader />
           </SectionErrorBoundary>
         </ReportCard>
 
@@ -163,6 +167,78 @@ export function ReportsPanel({ transactions, onExport }: ReportsPanelProps) {
           >
             <SectionErrorBoundary section="monthly-comparison">
               <MonthlyComparisonChart transactions={transactions} maxMonths={12} />
+            </SectionErrorBoundary>
+          </ReportCard>
+        </div>
+
+        {/* Day of Week Analysis */}
+        <ReportCard
+          title="Day of Week Analysis"
+          subtitle="Spending patterns by weekday"
+          icon={
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+            </svg>
+          }
+          isExpanded={expandedSections.has('dayOfWeek')}
+          onToggle={() => toggleSection('dayOfWeek')}
+        >
+          <SectionErrorBoundary section="day-of-week">
+            <DayOfWeekAnalysis transactions={transactions} />
+          </SectionErrorBoundary>
+        </ReportCard>
+
+        {/* Largest Transactions */}
+        <ReportCard
+          title="Largest Transactions"
+          subtitle="Your biggest purchases and income"
+          icon={
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+            </svg>
+          }
+          isExpanded={expandedSections.has('largest')}
+          onToggle={() => toggleSection('largest')}
+        >
+          <SectionErrorBoundary section="largest-transactions">
+            <LargestTransactions transactions={transactions} />
+          </SectionErrorBoundary>
+        </ReportCard>
+
+        {/* Income vs Expense Trend - Full width */}
+        <div className="lg:col-span-2">
+          <ReportCard
+            title="Income vs Expense Trend"
+            subtitle="Monthly cash flow and savings rate"
+            icon={
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+              </svg>
+            }
+            isExpanded={expandedSections.has('incomeTrend')}
+            onToggle={() => toggleSection('incomeTrend')}
+          >
+            <SectionErrorBoundary section="income-trend">
+              <IncomeExpenseTrend transactions={transactions} />
+            </SectionErrorBoundary>
+          </ReportCard>
+        </div>
+
+        {/* Merchant Frequency - Full width */}
+        <div className="lg:col-span-2">
+          <ReportCard
+            title="Merchant Frequency"
+            subtitle="How often you visit each merchant"
+            icon={
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            }
+            isExpanded={expandedSections.has('merchantFreq')}
+            onToggle={() => toggleSection('merchantFreq')}
+          >
+            <SectionErrorBoundary section="merchant-frequency">
+              <MerchantFrequency transactions={transactions} />
             </SectionErrorBoundary>
           </ReportCard>
         </div>

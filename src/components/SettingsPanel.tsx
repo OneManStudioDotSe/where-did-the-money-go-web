@@ -46,6 +46,8 @@ export interface AppSettings {
   highContrast: boolean;
   /** Whether debug mode is enabled (default: false) */
   debugMode: boolean;
+  /** Whether to use mock AI responses for testing (default: false) */
+  useMockAI: boolean;
 }
 
 const defaultSettings: AppSettings = {
@@ -67,6 +69,7 @@ const defaultSettings: AppSettings = {
   reduceMotion: false,
   highContrast: false,
   debugMode: false,
+  useMockAI: false,
 };
 
 const STORAGE_KEY = 'app_settings';
@@ -1192,6 +1195,45 @@ export function SettingsPanel({ isOpen, onClose, settings, onSettingsChange, sub
                     <li>• Raw data shown in transaction details</li>
                     <li>• Console logging enabled</li>
                   </ul>
+                </div>
+              )}
+
+              {/* Mock AI Toggle - only show when debug mode is enabled */}
+              {localSettings.debugMode && (
+                <div className="mb-4">
+                  <label className="flex items-center justify-between cursor-pointer">
+                    <div>
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Mock AI responses
+                      </span>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                        Use dummy data instead of real AI API calls for testing
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={localSettings.useMockAI}
+                      onClick={() => setLocalSettings({ ...localSettings, useMockAI: !localSettings.useMockAI })}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                        localSettings.useMockAI ? 'bg-primary-600' : 'bg-gray-200 dark:bg-slate-600'
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                          localSettings.useMockAI ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                  </label>
+                  {localSettings.useMockAI && (
+                    <div className="mt-2 p-2 bg-purple-50 dark:bg-purple-900/20 rounded border border-purple-200 dark:border-purple-800">
+                      <p className="text-xs text-purple-700 dark:text-purple-300 flex items-center gap-1.5">
+                        <span>🧪</span>
+                        AI insights will use mock data - no API calls will be made
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
 
