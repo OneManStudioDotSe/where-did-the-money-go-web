@@ -10,6 +10,11 @@ interface AIInsightsPanelProps {
   aiProvider: AIProvider | null;
   aiApiKey: string;
   onOpenSettings: () => void;
+  useMockAI?: boolean;
+  /** Controlled state: persisted insights from parent */
+  insights?: AIInsightsResponse | null;
+  /** Controlled state: callback to update insights in parent */
+  onInsightsChange?: (insights: AIInsightsResponse | null) => void;
 }
 
 const INSIGHT_ICONS: Record<AIInsight['type'], string> = {
@@ -118,6 +123,65 @@ async function callGemini(apiKey: string, prompt: string): Promise<string> {
   return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
 }
 
+function generateMockInsights(): AIInsightsResponse {
+  return {
+    generatedAt: new Date().toISOString(),
+    summary: 'Based on your spending patterns, you have several opportunities to save money. Your food & dining expenses are higher than average, and there are some subscriptions that could be optimized.',
+    insights: [
+      {
+        id: 'mock-1',
+        type: 'saving_opportunity',
+        title: 'Reduce food delivery spending',
+        description: 'You\'ve spent significantly on food delivery services this month. Consider cooking at home 2-3 more times per week to save around 1,500 kr monthly.',
+        potentialSavings: 1500,
+        category: 'Food & Dining',
+        priority: 5,
+      },
+      {
+        id: 'mock-2',
+        type: 'spending_pattern',
+        title: 'Weekend spending spike',
+        description: 'Your spending tends to increase by 40% on weekends, primarily on entertainment and dining out. Setting a weekend budget could help manage this.',
+        priority: 4,
+      },
+      {
+        id: 'mock-3',
+        type: 'warning',
+        title: 'Subscription overlap detected',
+        description: 'You appear to have multiple streaming subscriptions (Netflix, HBO, Disney+). Consider if you need all of them or could rotate between services.',
+        potentialSavings: 200,
+        category: 'Subscriptions',
+        priority: 4,
+      },
+      {
+        id: 'mock-4',
+        type: 'positive',
+        title: 'Good savings habit',
+        description: 'Your grocery spending has decreased by 15% compared to the previous period. Keep up the good work with meal planning!',
+        category: 'Groceries',
+        priority: 3,
+      },
+      {
+        id: 'mock-5',
+        type: 'recommendation',
+        title: 'Consider transport alternatives',
+        description: 'Your transportation costs are above average. Using public transport or cycling for shorter trips could save you money and be healthier.',
+        potentialSavings: 800,
+        category: 'Transportation',
+        priority: 3,
+      },
+      {
+        id: 'mock-6',
+        type: 'spending_pattern',
+        title: 'Late-night purchases',
+        description: 'You tend to make impulse purchases after 10 PM. Consider adding items to a wishlist and reviewing them the next day before buying.',
+        priority: 2,
+      },
+    ],
+    rawResponse: '[Mock data - no API call made]',
+  };
+}
+
 function parseAIResponse(response: string): AIInsightsResponse {
   // Try to extract JSON from the response
   let jsonStr = response;
@@ -169,21 +233,45 @@ export function AIInsightsPanel({
   aiProvider,
   aiApiKey,
   onOpenSettings,
+  useMockAI = false,
+  insights: controlledInsights,
+  onInsightsChange,
 }: AIInsightsPanelProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [insights, setInsights] = useState<AIInsightsResponse | null>(null);
+  // Use controlled state if provided, otherwise use local state
+  const [localInsights, setLocalInsights] = useState<AIInsightsResponse | null>(null);
 
-  const isConfigured = aiProvider && aiApiKey;
+  // Determine which insights to use (controlled or local)
+  const insights = controlledInsights !== undefined ? controlledInsights : localInsights;
+  const setInsights = (newInsights: AIInsightsResponse | null) => {
+    if (onInsightsChange) {
+      onInsightsChange(newInsights);
+    } else {
+      setLocalInsights(newInsights);
+    }
+  };
+
+  const isConfigured = useMockAI || (aiProvider && aiApiKey);
   const hasData = transactions.length > 0;
 
   const handleGenerateInsights = async () => {
-    if (!aiProvider || !aiApiKey) return;
+    // Allow mock mode even without provider configured
+    if (!useMockAI && (!aiProvider || !aiApiKey)) return;
 
     setIsLoading(true);
     setError(null);
 
     try {
+      // Use mock data if enabled
+      if (useMockAI) {
+        // Simulate a small delay to mimic API call
+        await new Promise(resolve => setTimeout(resolve, 800));
+        const mockInsights = generateMockInsights();
+        setInsights(mockInsights);
+        return;
+      }
+
       const aggregatedData = aggregateSpendingData(transactions, subscriptions);
       const prompt = buildInsightsPrompt(aggregatedData);
 
@@ -310,9 +398,18 @@ export function AIInsightsPanel({
               </svg>
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900 dark:text-white">AI spending insights</h3>
+              <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                AI spending insights
+                {useMockAI && (
+                  <span className="px-2 py-0.5 text-xs font-medium bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 rounded-full">
+                    Mock Mode
+                  </span>
+                )}
+              </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                Powered by {aiProvider === 'openai' ? 'OpenAI GPT-4o mini' : aiProvider === 'anthropic' ? 'Claude 3.5 Haiku' : 'Gemini 2.0 Flash'}
+                {useMockAI
+                  ? 'Using mock data for testing'
+                  : `Powered by ${aiProvider === 'openai' ? 'OpenAI GPT-4o mini' : aiProvider === 'anthropic' ? 'Claude 3.5 Haiku' : 'Gemini 2.0 Flash'}`}
               </p>
             </div>
           </div>
