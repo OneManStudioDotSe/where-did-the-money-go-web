@@ -107,7 +107,7 @@ export function BulkCategoryModal({
               <button
                 onClick={handleApply}
                 disabled={!selectedCategoryId || !selectedSubcategoryId}
-                className="px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 disabled:bg-gray-300 disabled:dark:bg-slate-600 disabled:cursor-not-allowed rounded-lg transition-colors"
+                className="px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 disabled:bg-gray-300 disabled:dark:bg-slate-600 disabled:cursor-not-allowed rounded-lg transition-colors animate-ripple animate-press"
               >
                 Apply to {selectedCount} transaction{selectedCount !== 1 ? 's' : ''}
               </button>

@@ -191,18 +191,19 @@ export function SubscriptionList({
                     {formatAmount(group.totalMonthly)}
                   </span>
                   <svg
-                    className={`w-5 h-5 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                    className={`w-5 h-5 text-gray-400 animate-icon-rotate ${isExpanded ? 'rotated' : ''}`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
+                    aria-hidden="true"
                   >
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </div>
               </button>
 
-              {/* Expanded Content */}
-              {isExpanded && (
+              {/* Expanded Content with smooth animation */}
+              <div className={`animate-expand ${isExpanded ? 'expanded' : ''}`}>
                 <div className="px-4 pb-3 space-y-2">
                   {group.subscriptions.map((sub) => {
                     const isSelected = selectedSubscription?.id === sub.id;
@@ -340,7 +341,7 @@ export function SubscriptionList({
                     );
                   })}
                 </div>
-              )}
+              </div>
             </div>
           );
         })}

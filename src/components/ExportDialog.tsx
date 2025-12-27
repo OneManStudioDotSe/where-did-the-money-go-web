@@ -119,7 +119,7 @@ export function ExportDialog({
 
       {/* Panel */}
       <div className="flex min-h-full items-center justify-center p-4">
-        <div ref={modalRef} className="relative bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-lg w-full overflow-hidden animate-slide-up">
+        <div ref={modalRef} className="relative bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-lg w-full overflow-hidden animate-modal-enter">
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-slate-700">
             <div className="flex items-center gap-3">

@@ -125,7 +125,7 @@ export function SubscriptionGrid({
             <div
               key={sub.id}
               onClick={() => handleCardClick(sub)}
-              className={`p-4 rounded-xl border-2 cursor-pointer transition-all animate-card-hover ${
+              className={`p-4 rounded-xl border-2 cursor-pointer animate-card-interactive animate-selection ${
                 isSelected
                   ? 'border-primary-500 dark:border-primary-600 bg-primary-50 dark:bg-primary-900/20 shadow-md'
                   : 'border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-gray-300 dark:hover:border-slate-600'

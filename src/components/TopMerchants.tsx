@@ -228,7 +228,11 @@ export function TopMerchants({ transactions, maxMerchants = 10 }: TopMerchantsPr
             const barWidth = Math.max(percentage, 2); // Minimum 2% width for visibility
 
             return (
-              <div key={merchant.name} className="group">
+              <div
+                key={merchant.name}
+                className="group animate-list-item"
+                style={{ '--item-index': index } as React.CSSProperties}
+              >
                 <div className="flex items-center gap-3">
                   {/* Rank */}
                   <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${

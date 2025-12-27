@@ -451,6 +451,248 @@ html.dark .animate-shimmer {
 }
 
 /* ============================================
+   ENHANCED UI ANIMATIONS
+   ============================================ */
+
+/* Smooth expand/collapse for accordion sections */
+.animate-expand {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s ease-out, opacity 0.2s ease-out;
+  opacity: 0;
+}
+
+.animate-expand.expanded {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.animate-expand > * {
+  overflow: hidden;
+}
+
+/* Enhanced modal animation with scale + slide */
+@keyframes modal-enter {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-modal-enter {
+  animation: modal-enter 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* List item stagger with CSS custom property */
+.animate-list-item {
+  opacity: 0;
+  animation: list-item-enter 0.3s ease-out forwards;
+  animation-delay: calc(var(--item-index, 0) * 50ms);
+}
+
+@keyframes list-item-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Interactive card with lift and glow effect */
+.animate-card-interactive {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.animate-card-interactive:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 10px 25px -5px rgb(0 0 0 / 0.1),
+    0 8px 10px -6px rgb(0 0 0 / 0.1),
+    0 0 0 1px rgb(20 184 166 / 0.1);
+}
+
+.animate-card-interactive:active {
+  transform: translateY(-1px);
+}
+
+html.dark .animate-card-interactive:hover {
+  box-shadow:
+    0 10px 25px -5px rgb(0 0 0 / 0.3),
+    0 8px 10px -6px rgb(0 0 0 / 0.2),
+    0 0 0 1px rgb(45 212 191 / 0.15);
+}
+
+/* Number value change highlight */
+@keyframes number-change {
+  0% {
+    color: var(--color-primary-500);
+    transform: scale(1.05);
+  }
+  100% {
+    color: inherit;
+    transform: scale(1);
+  }
+}
+
+.animate-number-change {
+  animation: number-change 0.4s ease-out;
+}
+
+/* Gentle pulse for attention-grabbing elements */
+@keyframes gentle-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgb(20 184 166 / 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgb(20 184 166 / 0);
+  }
+}
+
+.animate-attention-pulse {
+  animation: gentle-pulse 2s ease-in-out infinite;
+}
+
+/* Ripple effect for buttons */
+.animate-ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.animate-ripple::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgb(255 255 255 / 0.3);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.3s ease, height 0.3s ease, opacity 0.3s ease;
+  opacity: 0;
+}
+
+.animate-ripple:active::after {
+  width: 200%;
+  height: 200%;
+  opacity: 1;
+  transition: width 0s, height 0s, opacity 0s;
+}
+
+/* Selection state transition */
+.animate-selection {
+  transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* Smooth icon rotation */
+.animate-icon-rotate {
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.animate-icon-rotate.rotated {
+  transform: rotate(180deg);
+}
+
+/* Slide and fade for content transitions */
+@keyframes content-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-content-enter {
+  animation: content-enter 0.3s ease-out forwards;
+}
+
+/* Badge pop-in animation */
+@keyframes badge-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  70% {
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-badge-pop {
+  animation: badge-pop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Success checkmark animation */
+@keyframes success-check {
+  0% {
+    stroke-dashoffset: 100;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-success-check {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: success-check 0.4s ease-out forwards;
+  animation-delay: 0.1s;
+}
+
+/* Skeleton wave effect (enhanced shimmer) */
+@keyframes skeleton-wave {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-skeleton-wave {
+  position: relative;
+  overflow: hidden;
+}
+
+.animate-skeleton-wave::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(255 255 255 / 0.4),
+    transparent
+  );
+  animation: skeleton-wave 1.5s infinite;
+}
+
+html.dark .animate-skeleton-wave::after {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(255 255 255 / 0.1),
+    transparent
+  );
+}
+
+/* ============================================
    ACCESSIBILITY: Reduced motion preference
    ============================================ */
 
@@ -484,7 +726,20 @@ html.dark .animate-shimmer {
   .animate-check,
   .animate-slide-down,
   .animate-slide-in-right,
-  .animate-rotate {
+  .animate-rotate,
+  .animate-expand,
+  .animate-modal-enter,
+  .animate-list-item,
+  .animate-card-interactive,
+  .animate-number-change,
+  .animate-attention-pulse,
+  .animate-ripple,
+  .animate-selection,
+  .animate-icon-rotate,
+  .animate-content-enter,
+  .animate-badge-pop,
+  .animate-success-check,
+  .animate-skeleton-wave {
     animation: none !important;
     transition: none !important;
   }
@@ -524,7 +779,20 @@ html.reduce-motion .animate-progress,
 html.reduce-motion .animate-check,
 html.reduce-motion .animate-slide-down,
 html.reduce-motion .animate-slide-in-right,
-html.reduce-motion .animate-rotate {
+html.reduce-motion .animate-rotate,
+html.reduce-motion .animate-expand,
+html.reduce-motion .animate-modal-enter,
+html.reduce-motion .animate-list-item,
+html.reduce-motion .animate-card-interactive,
+html.reduce-motion .animate-number-change,
+html.reduce-motion .animate-attention-pulse,
+html.reduce-motion .animate-ripple,
+html.reduce-motion .animate-selection,
+html.reduce-motion .animate-icon-rotate,
+html.reduce-motion .animate-content-enter,
+html.reduce-motion .animate-badge-pop,
+html.reduce-motion .animate-success-check,
+html.reduce-motion .animate-skeleton-wave {
   animation: none !important;
   transition: none !important;
 }
