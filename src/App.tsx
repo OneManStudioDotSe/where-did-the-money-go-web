@@ -25,6 +25,7 @@ import { preloadIconSet } from './config/icon-sets'
 import { detectSubscriptions, createSubscription, markTransactionsAsRecurring, loadSubscriptions, saveSubscriptions, debugSubscriptionDetection } from './utils/subscription-detection'
 import { validateTransactions, applyDismissedStatus, saveDismissedWarnings, getDismissedWarnings, getSuspiciousWarningId, markSuspiciousTransactions, removeSuspiciousBadge } from './utils/transaction-validation'
 import type { RecurringType, SuspiciousTransaction } from './types/transaction'
+import type { AIInsightsResponse } from './types/insights'
 import { AIInsightsPanel } from './components/AIInsightsPanel'
 import { useToast } from './context/ToastContext'
 import { saveTransactions, loadTransactions, clearTransactions } from './utils/transaction-persistence'
@@ -79,6 +80,7 @@ function App() {
   const [filters, setFilters] = useState<TransactionFilters>(defaultFilters)
   const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod | null>(null)
   const [lastUpdated, setLastUpdated] = useState<string | null>(null)
+  const [aiInsights, setAiInsights] = useState<AIInsightsResponse | null>(null)
 
   // Hooks
   const { isDark, toggleDark, setMode } = useDarkMode()
@@ -94,6 +96,8 @@ function App() {
 
   // Ref for search input to focus with keyboard shortcut
   const searchInputRef = useRef<HTMLInputElement>(null)
+  // Ref to prevent duplicate toast in StrictMode
+  const hasShownRestoreToast = useRef(false)
 
   // Keyboard shortcuts
   useKeyboardShortcuts({
@@ -180,7 +184,11 @@ function App() {
       setFileName(metadata.fileName)
       setIsDemoMode(metadata.isDemoMode)
       setLastUpdated(metadata.savedAt)
-      toast.info(`Restored ${savedTransactions.length} transactions from your last session`)
+      // Prevent duplicate toast in StrictMode (effect runs twice in dev)
+      if (!hasShownRestoreToast.current) {
+        hasShownRestoreToast.current = true
+        toast.info(`Restored ${savedTransactions.length} transactions from your last session`)
+      }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) // Only run on mount
@@ -1147,6 +1155,9 @@ function App() {
                   aiProvider={appSettings.aiProvider}
                   aiApiKey={appSettings.aiApiKey}
                   onOpenSettings={() => setShowSettingsPanel(true)}
+                  useMockAI={appSettings.useMockAI}
+                  insights={aiInsights}
+                  onInsightsChange={setAiInsights}
                 />
               </SectionErrorBoundary>
             </div>

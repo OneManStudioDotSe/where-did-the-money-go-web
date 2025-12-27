@@ -25,18 +25,12 @@
 - [x] Export enhancements - PDF reports, filtered exports, custom date ranges
 - [x] Hide ad placeholders toggle in settings
 - [x] Onboarding tour - First-time user walkthrough
-
-### Critical Fixes ✅
 - [x] Error boundaries for each major section (not just one global)
 - [x] Empty states for all lists and panels
 - [x] Mobile responsiveness audit and fixes
 
----
-
-## Future Phases
-
 ### Phase 5: AI & Smart Features
-- [ ] AI-powered spending insights and recommendations
+- [x] AI-powered spending insights and recommendations
 - [x] Anomaly detection for unusual spending patterns
 - [ ] Natural language search ("show me all coffee purchases last month")
 
@@ -44,10 +38,6 @@
 - [ ] Support for additional CSV formats (Swedbank, Handelsbanken, Nordea)
 - [ ] Data import from previous sessions
 - [ ] Data export in multiple formats (CSV, JSON, Excel)
-
----
-
-## Known Issues & Technical Debt
 
 ### Performance ✅
 - [x] Implement virtualized transaction list for handling 10,000+ transactions
@@ -65,22 +55,13 @@
 - [x] Document component props with JSDoc/TSDoc
 - [x] Create Storybook for component library (v10.1 with autodocs, a11y addon)
 
----
-
 ## Quick Wins (Low Effort, High Impact) ✅
-
 - [x] Add "Last updated" timestamp to transaction list
 - [x] Show transaction count in category breakdown
 - [x] Add "Copy to clipboard" for export data
 - [x] Keyboard shortcuts (Ctrl+F for search, +S for settings, +E for export, Alt+1/2/3 for tabs)
 - [x] Remember last used tab (Overview/Transactions/Subscriptions)
 - [x] Change settings from modal dialog to sliding side panel
-
----
-
-## Quick Wins - Round 2
-
-### UI/UX Enhancements ✅
 - [x] Double-click to edit transaction category - Inline category change without opening a menu
 - [x] Sticky table headers - Keep column headers visible when scrolling through long lists
 - [x] Transaction row hover preview - Tooltip with full merchant name and notes for truncated text
