@@ -78,9 +78,13 @@ export const defaultCategoryMappings: CategoryMapping[] = [
 
   // === TRANSPORTATION - PUBLIC TRANSIT ===
   createMapping('SL', 'transportation', 'public_transit', 'exact', 90),  // Exact match for "SL"
-  createMapping('SL ', 'transportation', 'public_transit', 'starts_with', 80),
+  createMapping('SL ', 'transportation', 'public_transit', 'starts_with', 80),  // "SL " at start
+  // More specific SL patterns to avoid false positives
+  createMapping(' SL$', 'transportation', 'public_transit', 'regex', 85),  // SL at end of description only (e.g., "Kortköp 241227 SL")
+  createMapping('KORTKÖP.*SL$', 'transportation', 'public_transit', 'regex', 85),  // Kortköp ending with SL
   createMapping('AB STORSTOCK', 'transportation', 'public_transit', 'contains', 80),
   createMapping('SJ PENDELTAG', 'transportation', 'public_transit', 'contains', 80),
+  createMapping('STORSTOCKHOLM', 'transportation', 'public_transit', 'contains', 80),
 
   // === TRANSPORTATION - TAXI/RIDESHARE ===
   createMapping('UBER', 'transportation', 'taxi', 'contains', 75),
@@ -91,6 +95,31 @@ export const defaultCategoryMappings: CategoryMapping[] = [
   createMapping('FORDONSSKATT', 'transportation', 'vehicle_tax', 'contains', 85),
   createMapping('TRÄNGSELSKATT', 'transportation', 'vehicle_tax', 'contains', 85),
   createMapping('TRANGSELSKATT', 'transportation', 'vehicle_tax', 'contains', 85),
+
+  // === TRANSPORTATION - CAR SERVICE/MAINTENANCE ===
+  //createMapping('VOLVO', 'transportation', 'car_maintenance', 'contains', 70),
+  //createMapping('VOLKSWAGEN', 'transportation', 'car_maintenance', 'contains', 70),
+  //createMapping('PEUGEOT', 'transportation', 'car_maintenance', 'contains', 70),
+  //createMapping('RENAULT', 'transportation', 'car_maintenance', 'contains', 70),
+  //createMapping('TOYOTA', 'transportation', 'car_maintenance', 'contains', 70),
+  //createMapping('BMW ', 'transportation', 'car_maintenance', 'starts_with', 70),
+  //createMapping(' BMW ', 'transportation', 'car_maintenance', 'contains', 70),
+  //createMapping(' BMW', 'transportation', 'car_maintenance', 'contains', 70),  // BMW at end
+  //createMapping('MERCEDES', 'transportation', 'car_maintenance', 'contains', 70),
+  //createMapping('AUDI', 'transportation', 'car_maintenance', 'contains', 70),
+  //createMapping('FORD ', 'transportation', 'car_maintenance', 'starts_with', 65),  // Ford with space to avoid FORDONSSKATT
+  //createMapping(' FORD ', 'transportation', 'car_maintenance', 'contains', 65),
+  //createMapping('KIA ', 'transportation', 'car_maintenance', 'starts_with', 65),  // Kia with space to avoid LEKIA
+  //createMapping(' KIA ', 'transportation', 'car_maintenance', 'contains', 65),
+  //createMapping('HYUNDAI', 'transportation', 'car_maintenance', 'contains', 70),
+  //createMapping('NISSAN', 'transportation', 'car_maintenance', 'contains', 70),
+  //createMapping('MAZDA', 'transportation', 'car_maintenance', 'contains', 70),
+  //createMapping('HONDA', 'transportation', 'car_maintenance', 'contains', 70),
+  //createMapping('SKODA', 'transportation', 'car_maintenance', 'contains', 70),
+  createMapping('BILSERVICE', 'transportation', 'car_maintenance', 'contains', 80),
+  createMapping('BILVERKSTAD', 'transportation', 'car_maintenance', 'contains', 80),
+  createMapping('MEKONOMEN', 'transportation', 'car_maintenance', 'contains', 80),
+  createMapping('DÄCK', 'transportation', 'car_maintenance', 'contains', 70),
 
   // === FOOD & DINING - COFFEE ===
   createMapping('ESPRESSO HOU', 'food_dining', 'coffee', 'contains', 70),
@@ -140,7 +169,17 @@ export const defaultCategoryMappings: CategoryMapping[] = [
   createMapping('SULTAN EN SM', 'food_dining', 'restaurant', 'contains', 70),
   createMapping('BRON RESTAUR', 'food_dining', 'restaurant', 'contains', 70),
   createMapping('GRILLPALATSE', 'food_dining', 'restaurant', 'contains', 70),
+  createMapping('BISTRO', 'food_dining', 'restaurant', 'contains', 65),
+  createMapping('INDIAN', 'food_dining', 'restaurant', 'contains', 55),
+  createMapping('LOTUS', 'food_dining', 'restaurant', 'contains', 55),
   createMapping('RESTAURANG', 'food_dining', 'restaurant', 'contains', 60),
+
+  // === ENTERTAINMENT - BARS ===
+  createMapping('STAMPEN', 'entertainment', 'bars', 'contains', 70),
+  createMapping(' PUB ', 'entertainment', 'bars', 'contains', 60),  // PUB with spaces to avoid false matches
+  createMapping(' PUB', 'entertainment', 'bars', 'contains', 60),  // PUB at end
+  createMapping('SOUTHSIDE', 'entertainment', 'bars', 'contains', 65),
+  createMapping('LANDET', 'entertainment', 'bars', 'contains', 65),
 
   // === FOOD & DINING - DELIVERY ===
   createMapping('FOODORA', 'food_dining', 'delivery', 'contains', 75),
@@ -163,6 +202,12 @@ export const defaultCategoryMappings: CategoryMapping[] = [
 
   // === INSURANCE ===
   createMapping('TRYGG-HANSA', 'subscriptions', 'insurance', 'contains', 85),
+  createMapping('IF SKADEFÖRS', 'subscriptions', 'insurance', 'contains', 85),
+  createMapping('IF SKADEFORS', 'subscriptions', 'insurance', 'contains', 85),
+  createMapping('LÄNSFÖRSÄKR', 'subscriptions', 'insurance', 'contains', 85),
+  createMapping('LANSFORSÄKR', 'subscriptions', 'insurance', 'contains', 85),
+  createMapping('LANSFORSAKR', 'subscriptions', 'insurance', 'contains', 85),
+  createMapping('FOLKSAM', 'subscriptions', 'insurance', 'contains', 85),
   createMapping('ICA FÖRSÄKR', 'subscriptions', 'insurance', 'contains', 85),
   createMapping('ICA FORSAKR', 'subscriptions', 'insurance', 'contains', 85),
   createMapping('HEDVIG', 'subscriptions', 'insurance', 'contains', 85),
@@ -183,6 +228,7 @@ export const defaultCategoryMappings: CategoryMapping[] = [
   // === MEMBERSHIPS ===
   createMapping('UNIONEN', 'subscriptions', 'membership', 'contains', 85),
   createMapping('AKAD.A-KASSA', 'subscriptions', 'membership', 'contains', 85),
+  createMapping('AEA AKADEMIK', 'subscriptions', 'membership', 'contains', 85),
   createMapping('SV INGENJ', 'subscriptions', 'membership', 'contains', 85),
 
   // === DONATIONS ===
@@ -201,6 +247,7 @@ export const defaultCategoryMappings: CategoryMapping[] = [
   createMapping('CDON', 'shopping', 'online', 'contains', 70),
   createMapping('SMARTPHOTO', 'shopping', 'online', 'contains', 70),
   createMapping('ZALANDO', 'shopping', 'online', 'contains', 70),
+  createMapping('ZETTLE', 'shopping', 'online', 'contains', 70),  // Zettle (PayPal) point-of-sale
   createMapping('K*', 'shopping', 'online', 'starts_with', 40), // Klarna purchases
 
   // === SHOPPING - HOME GOODS ===
@@ -251,14 +298,65 @@ export const defaultCategoryMappings: CategoryMapping[] = [
   // === FINANCIAL ===
   createMapping('LÅN ', 'financial', 'loans', 'starts_with', 85),
   createMapping('LÃN ', 'financial', 'loans', 'starts_with', 85),
+  createMapping('BOLÅN', 'financial', 'loans', 'contains', 90),
+  createMapping('BOLAN', 'financial', 'loans', 'contains', 90),
   createMapping('BANKAKTIEBOL', 'financial', 'bank_fees', 'contains', 70),
 
   // === INCOME ===
-  createMapping('LÖN', 'income', 'salary', 'contains', 90),
-  createMapping('LON', 'income', 'salary', 'contains', 90),
+  createMapping('LÖN', 'income', 'salary', 'exact', 95),  // Exact match for Swedish salary
+  createMapping('LÖN ', 'income', 'salary', 'starts_with', 90),  // Salary with description after
   createMapping('FKASSA', 'income', 'benefits', 'contains', 85),
   createMapping('BARNBDR', 'income', 'benefits', 'contains', 85),
+  createMapping('BARNBIDRAG', 'income', 'benefits', 'contains', 85),
   createMapping('KLARNA REFUN', 'income', 'refund', 'contains', 80),
+
+  // === TRAVEL ===
+  createMapping('BOOKING.COM', 'travel', 'hotels', 'contains', 80),
+  createMapping('AIRBNB', 'travel', 'hotels', 'contains', 80),
+  createMapping('HOTELS.COM', 'travel', 'hotels', 'contains', 80),
+  createMapping('EXPEDIA', 'travel', 'hotels', 'contains', 80),
+  createMapping('SCANDIC', 'travel', 'hotels', 'contains', 75),
+  createMapping('RADISSON', 'travel', 'hotels', 'contains', 75),
+  createMapping('NORDIC CHOICE', 'travel', 'hotels', 'contains', 75),
+  createMapping('SAS ', 'travel', 'flights', 'starts_with', 75),  // SAS airline (with space to avoid false matches)
+  createMapping(' SAS ', 'travel', 'flights', 'contains', 75),  // SAS in middle of description
+  createMapping('NORWEGIAN AIR', 'travel', 'flights', 'contains', 75),
+  createMapping('NORWEGIAN ', 'travel', 'flights', 'starts_with', 75),
+  createMapping('RYANAIR', 'travel', 'flights', 'contains', 75),
+  createMapping('WIZZ AIR', 'travel', 'flights', 'contains', 75),
+  createMapping('LUFTHANSA', 'travel', 'flights', 'contains', 75),
+  createMapping('KLM ', 'travel', 'flights', 'starts_with', 75),  // KLM airline (with space to avoid false matches)
+  createMapping(' KLM ', 'travel', 'flights', 'contains', 75),  // KLM in middle of description
+  createMapping('FINNAIR', 'travel', 'flights', 'contains', 75),
+  createMapping('HERTZ', 'travel', 'car_rental', 'contains', 75),
+  createMapping('AVIS', 'travel', 'car_rental', 'contains', 75),
+  createMapping('SIXT', 'travel', 'car_rental', 'contains', 75),
+  createMapping('EUROPCAR', 'travel', 'car_rental', 'contains', 75),
+
+  // === FINANCIAL - INVESTMENTS/TRANSFERS ===
+  createMapping('AVANZA', 'financial', 'investments', 'contains', 80),
+  createMapping('NORDNET', 'financial', 'investments', 'contains', 80),
+
+  // === SWISH TRANSFERS ===
+  createMapping('SWISH', 'financial', 'transfers', 'contains', 75),
+  createMapping('467', 'financial', 'transfers', 'starts_with', 70),  // Swish phone numbers starting with 467 (Swedish +46 7xx)
+  createMapping('123', 'financial', 'transfers', 'starts_with', 70),  // Swish business numbers starting with 123
+
+  // === FINANCIAL - BANK FEES ===
+  createMapping('NORDEA VARDAG', 'financial', 'bank_fees', 'contains', 85),
+  createMapping('MÅNADSAVGIFT', 'financial', 'bank_fees', 'contains', 85),
+  createMapping('RÄNTA', 'income', 'other_income', 'contains', 80),
+
+  // === ATM WITHDRAWALS & TRANSFERS ===
+  createMapping('BANKOMAT', 'financial', 'transfers', 'contains', 75),
+  createMapping('UTTAG', 'financial', 'transfers', 'contains', 70),
+  createMapping('ÖVERFÖRING', 'financial', 'transfers', 'contains', 75),
+  createMapping('OVERFORING', 'financial', 'transfers', 'contains', 75),
+
+  // === SOFTWARE/CLOUD SERVICES ===
+  createMapping('AWS ', 'subscriptions', 'software', 'contains', 80),
+  createMapping('AWS EMEA', 'subscriptions', 'software', 'contains', 85),
+  createMapping('GOOGLE', 'subscriptions', 'software', 'contains', 60),
 
   // === PUBLIC SERVICES ===
   // Municipal fees (kommunala avgifter)
