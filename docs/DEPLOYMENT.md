@@ -87,11 +87,7 @@ Most FTP clients (FileZilla, Cyberduck) upload with correct permissions by defau
 
 ## 3. Preventing Website Copying
 
-### Reality Check
-
 Since this is a client-side React app, the code is inherently visible to browsers. However, you can make it harder to copy.
-
-### Already in Place
 
 - Code is **minified** (variable names shortened, whitespace removed)
 - Code is **bundled** (113 modules combined into single files)
@@ -139,8 +135,6 @@ autoindex off;
 #### Rate Limiting
 
 Configure at server/CDN level to prevent bulk downloads.
-
-### Honest Assessment
 
 Complete copy protection is impossible for client-side apps. Your best protection is:
 
@@ -216,14 +210,6 @@ Umami is a privacy-focused, GDPR-compliant alternative to Google Analytics. It's
         data-website-id="abc123-your-website-id"></script>
 ```
 
-#### Why Umami?
-
-- No cookies required
-- GDPR/CCPA compliant by default
-- Lightweight (~1KB script)
-- Self-hostable for complete control
-- Matches your privacy-first brand
-
 ### Google Analytics 4
 
 #### Setup Steps
@@ -243,10 +229,6 @@ Umami is a privacy-focused, GDPR-compliant alternative to Google Analytics. It's
   gtag('config', 'G-XXXXXXXXXX');
 </script>
 ```
-
-### Using Both Analytics
-
-You can use both Umami and Google Analytics simultaneously if needed. Just uncomment both script blocks.
 
 ---
 
@@ -335,19 +317,6 @@ npm run build
 ```bash
 ls -la dist/
 du -sh dist/
-```
-
-### Upload via rsync (SSH Access)
-
-```bash
-rsync -avz --delete dist/ user@yourserver.com:/var/www/yoursite/
-```
-
-### Upload via FTP (Create ZIP First)
-
-```bash
-cd dist && zip -r ../site.zip . && cd ..
-# Then upload site.zip via FTP and extract on server
 ```
 
 ### Preview Locally Before Deploying

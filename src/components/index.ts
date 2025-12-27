@@ -31,8 +31,10 @@ export { ReportsPanel } from './ReportsPanel';
 export { TipsCarousel } from './TipsCarousel';
 export { ResetConfirmationDialog } from './ResetConfirmationDialog';
 export { TabNavigation } from './TabNavigation';
-export type { DashboardTab } from './TabNavigation';
-export type { TimePeriod } from './TimePeriodSelector';
+export { CompactTimePeriodSelector } from './CompactTimePeriodSelector';
+export { InlineTimePeriodSelector } from './InlineTimePeriodSelector';
+export { EnhancedTimePeriodSelector } from './EnhancedTimePeriodSelector';
+export type { DashboardTab, TimePeriod } from './TabNavigation';
 export type { AppSettings, SubscriptionViewVariation, SubscriptionPlacement } from './SettingsPanel';
 
 // Layout components

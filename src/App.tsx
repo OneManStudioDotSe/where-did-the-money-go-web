@@ -2,7 +2,7 @@ import { useState, useEffect, useTransition, useMemo, useCallback, useRef } from
 import './index.css'
 import { defaultCategories } from './data/categories'
 import { defaultCategoryMappings } from './data/category-mappings'
-import { FileUpload, TransactionList, FilterPanel, defaultFilters, ProjectRoadmap, TimePeriodSelector, SpendingVisualization, SettingsPanel, loadSettings, TransactionEditModal, UncategorizedCarousel, CsvConfirmationDialog, ExportDialog, SubscriptionConfirmationDialog, SubscriptionPanel, SubscriptionCard, SubscriptionEditModal, ErrorBoundary, LoadingOverlay, MappingRulesModal, AddMappingRuleModal, BulkCategoryModal, SuspiciousTransactionsDialog, OnboardingModal, DebugPanel, ReportsPanel, TipsCarousel, ResetConfirmationDialog, TabNavigation } from './components'
+import { FileUpload, TransactionList, FilterPanel, defaultFilters, ProjectRoadmap, SpendingVisualization, SettingsPanel, loadSettings, TransactionEditModal, UncategorizedCarousel, CsvConfirmationDialog, ExportDialog, SubscriptionConfirmationDialog, SubscriptionPanel, SubscriptionCard, SubscriptionEditModal, ErrorBoundary, LoadingOverlay, MappingRulesModal, AddMappingRuleModal, BulkCategoryModal, SuspiciousTransactionsDialog, OnboardingModal, DebugPanel, ReportsPanel, TipsCarousel, ResetConfirmationDialog, TabNavigation } from './components'
 import type { DashboardTab } from './components'
 import { SectionErrorBoundary } from './components/SectionErrorBoundary'
 import { AddSubcategoryModal } from './components/AddSubcategoryModal'
@@ -1017,28 +1017,22 @@ function App() {
             />
           </div>
 
-          {/* Tab Navigation */}
+          {/* Tab Navigation with Period Selector */}
           <TabNavigation
             activeTab={activeTab}
             onTabChange={(tab) => startTransition(() => setActiveTab(tab))}
             showSubscriptionsTab={appSettings.subscriptionPlacement === 'tab' || appSettings.subscriptionPlacement === 'both'}
             subscriptionCount={subscriptions.length}
             isPending={isPending}
+            transactions={transactions}
+            selectedPeriod={selectedPeriod}
+            onPeriodChange={setSelectedPeriod}
           />
 
           {/* Tab Content */}
           <div className={`relative ${isPending ? 'opacity-70 pointer-events-none' : ''}`}>
           {activeTab === 'overview' && (
             <div className="animate-tab-content">
-              {/* Time Period Selector */}
-              <SectionErrorBoundary section="time-period">
-                <TimePeriodSelector
-                  transactions={transactions}
-                  selectedPeriod={selectedPeriod}
-                  onPeriodChange={setSelectedPeriod}
-                />
-              </SectionErrorBoundary>
-
               {/* Filter Panel */}
               <SectionErrorBoundary section="filters">
                 <FilterPanel
@@ -1089,15 +1083,6 @@ function App() {
 
           {activeTab === 'transactions' && (
             <div className="animate-tab-content">
-              {/* Time Period Selector */}
-              <SectionErrorBoundary section="time-period">
-                <TimePeriodSelector
-                  transactions={transactions}
-                  selectedPeriod={selectedPeriod}
-                  onPeriodChange={setSelectedPeriod}
-                />
-              </SectionErrorBoundary>
-
               {/* Filter Panel */}
               <SectionErrorBoundary section="filters">
                 <FilterPanel
